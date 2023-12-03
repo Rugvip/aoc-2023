@@ -1,0 +1,9 @@
+{
+  "name": "advent-2023",
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "dependencies": {
+    "typescript": "^5.3.2"
+  }
+}
