@@ -1,5 +1,5 @@
 {
-  "include": ["src/day-02.ts"],
+  "include": ["src/day-04.ts"],
   "compilerOptions": {
     "rootDir": ".",
     "allowJs": false,
