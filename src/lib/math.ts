@@ -229,4 +229,64 @@ export namespace dec {
       Test<Add<'123', '123'>, 246>
     ]
   >;
+
+  type CompareResult = 'lesser' | 'equal' | 'greater';
+  type FlipCompareResult<T extends CompareResult> = T extends 'lesser'
+    ? 'greater'
+    : T extends 'greater'
+    ? 'lesser'
+    : 'equal';
+
+  type CompareDigits<TA extends Digit[], TB extends Digit[]> = [
+    TA,
+    TB
+  ] extends [
+    [infer IAHead extends Digit, ...infer IARest extends Digit[]],
+    [infer IBHead extends Digit, ...infer IBRest extends Digit[]]
+  ]
+    ? IAHead extends IBHead
+      ? CompareDigits<IARest, IBRest>
+      : '0123456789' extends `${string}${IAHead}${string}${IBHead}${string}`
+      ? 'lesser'
+      : 'greater'
+    : 'equal';
+
+  type CompareIntegers<
+    TA extends Integer,
+    TB extends Integer
+  > = TA['sign'] extends TB['sign']
+    ? (
+        TA['digits']['length'] extends TB['digits']['length']
+          ? CompareDigits<TA['digits'], TB['digits']>
+          : Compare<TA['digits']['length'], TB['digits']['length']>
+      ) extends infer IResult extends CompareResult
+      ? TA['sign'] extends '-'
+        ? FlipCompareResult<IResult>
+        : IResult
+      : never
+    : TA['sign'] extends '-'
+    ? 'lesser'
+    : 'greater';
+
+  export type Compare<TA extends number, TB extends number> = CompareIntegers<
+    ToInteger<TA>,
+    ToInteger<TB>
+  >;
+
+  declare const testCompare: Tests<
+    [
+      Test<Compare<5, 8>, 'lesser'>,
+      Test<Compare<10, 5>, 'greater'>,
+      Test<Compare<0, 0>, 'equal'>,
+      Test<Compare<-5, -2>, 'lesser'>,
+      Test<Compare<-10, -15>, 'greater'>,
+      Test<Compare<100, 100>, 'equal'>,
+      Test<Compare<-50, -50>, 'equal'>,
+      Test<Compare<1000000, 999999>, 'greater'>,
+      Test<Compare<-999999, -1000000>, 'greater'>,
+      Test<Compare<42, 42>, 'equal'>,
+      Test<Compare<-73, 73>, 'lesser'>,
+      Test<Compare<999, -999>, 'greater'>
+    ]
+  >;
 }
