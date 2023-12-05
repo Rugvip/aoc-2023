@@ -41,3 +41,15 @@ type OnlyFailingTests<
 export type Tests<T extends TestResult<true>[]> = ExpandRecursively<
   OnlyFailingTests<T>
 >;
+
+export type UnionToIntersection<U> = (
+  U extends any ? (k: U) => void : never
+) extends (k: infer I) => void
+  ? I
+  : never;
+
+export type PopUnion<U> = UnionToIntersection<
+  U extends any ? () => U : never
+> extends () => infer R
+  ? { rest: Exclude<U, R>; next: R }
+  : undefined;
