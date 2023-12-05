@@ -56,7 +56,7 @@ type ScoreRows<
     >
   : TResult;
 
-type Solution1 = ScoreRows<ParseInput<Input>>;
+export declare const solution1: ScoreRows<ParseInput<Input>>;
 
 type SizeUnion<U, TResult extends any[] = [], TLast = PopUnion<U>> = [
   U
@@ -101,4 +101,4 @@ type ReduceRows<
     : never
   : TResult;
 
-type Solution2 = ReduceRows<ParseInput<Input>>;
+export declare const solution2: ReduceRows<ParseInput<Input>>;
