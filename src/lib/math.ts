@@ -212,16 +212,16 @@ export namespace dec {
     '+': {
       '+': Integer<'+', DigitwiseAdd<TA['digits'], TB['digits']>>;
       '-': {
-        lesser: Integer<'-', DigitwiseSubtract<TB['digits'], TA['digits']>>;
-        equal: Integer<'+', [0]>;
-        greater: Integer<'+', DigitwiseSubtract<TA['digits'], TB['digits']>>;
+        lt: Integer<'-', DigitwiseSubtract<TB['digits'], TA['digits']>>;
+        eq: Integer<'+', [0]>;
+        gt: Integer<'+', DigitwiseSubtract<TA['digits'], TB['digits']>>;
       }[CompareDigits<TA['digits'], TB['digits']>];
     };
     '-': {
       '+': {
-        lesser: Integer<'+', DigitwiseSubtract<TB['digits'], TA['digits']>>;
-        equal: Integer<'+', [0]>;
-        greater: Integer<'-', DigitwiseSubtract<TA['digits'], TB['digits']>>;
+        lt: Integer<'+', DigitwiseSubtract<TB['digits'], TA['digits']>>;
+        eq: Integer<'+', [0]>;
+        gt: Integer<'-', DigitwiseSubtract<TA['digits'], TB['digits']>>;
       }[CompareDigits<TA['digits'], TB['digits']>];
       '-': Integer<'-', DigitwiseAdd<TA['digits'], TB['digits']>>;
     };
@@ -254,12 +254,12 @@ export namespace dec {
     ]
   >;
 
-  type CompareResult = 'lesser' | 'equal' | 'greater';
-  type FlipCompareResult<T extends CompareResult> = T extends 'lesser'
-    ? 'greater'
-    : T extends 'greater'
-    ? 'lesser'
-    : 'equal';
+  type CompareResult = 'lt' | 'eq' | 'gt';
+  type FlipCompareResult<T extends CompareResult> = T extends 'lt'
+    ? 'gt'
+    : T extends 'gt'
+    ? 'lt'
+    : 'eq';
 
   type CompareSameLengthDigits<TA extends Digit[], TB extends Digit[]> = [
     TA,
@@ -271,9 +271,9 @@ export namespace dec {
     ? IAHead extends IBHead
       ? CompareDigits<IARest, IBRest>
       : '0123456789' extends `${string}${IAHead}${string}${IBHead}${string}`
-      ? 'lesser'
-      : 'greater'
-    : 'equal';
+      ? 'lt'
+      : 'gt'
+    : 'eq';
 
   type CompareDigits<
     TA extends Digit[],
@@ -295,8 +295,8 @@ export namespace dec {
         : IResult
       : never
     : TA['sign'] extends '-'
-    ? 'lesser'
-    : 'greater';
+    ? 'lt'
+    : 'gt';
 
   export type Compare<TA extends number, TB extends number> = CompareIntegers<
     ToInteger<TA>,
@@ -305,18 +305,18 @@ export namespace dec {
 
   declare const testCompare: Tests<
     [
-      Test<Compare<5, 8>, 'lesser'>,
-      Test<Compare<10, 5>, 'greater'>,
-      Test<Compare<0, 0>, 'equal'>,
-      Test<Compare<-5, -2>, 'lesser'>,
-      Test<Compare<-10, -15>, 'greater'>,
-      Test<Compare<100, 100>, 'equal'>,
-      Test<Compare<-50, -50>, 'equal'>,
-      Test<Compare<1000000, 999999>, 'greater'>,
-      Test<Compare<-999999, -1000000>, 'greater'>,
-      Test<Compare<42, 42>, 'equal'>,
-      Test<Compare<-73, 73>, 'lesser'>,
-      Test<Compare<999, -999>, 'greater'>
+      Test<Compare<5, 8>, 'lt'>,
+      Test<Compare<10, 5>, 'gt'>,
+      Test<Compare<0, 0>, 'eq'>,
+      Test<Compare<-5, -2>, 'lt'>,
+      Test<Compare<-10, -15>, 'gt'>,
+      Test<Compare<100, 100>, 'eq'>,
+      Test<Compare<-50, -50>, 'eq'>,
+      Test<Compare<1000000, 999999>, 'gt'>,
+      Test<Compare<-999999, -1000000>, 'gt'>,
+      Test<Compare<42, 42>, 'eq'>,
+      Test<Compare<-73, 73>, 'lt'>,
+      Test<Compare<999, -999>, 'gt'>
     ]
   >;
 
