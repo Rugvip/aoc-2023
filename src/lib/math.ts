@@ -289,4 +289,173 @@ export namespace dec {
       Test<Compare<999, -999>, 'greater'>
     ]
   >;
+
+  type RotateDigitAddResultRowRight<T extends DigitAddResult[]> = T extends [
+    ...infer IRest extends DigitAddResult[],
+    [0, infer IResult extends Digit]
+  ]
+    ? [[1, IResult], ...IRest]
+    : never;
+  type MakeDigitSubtractMap<
+    T extends DigitAddResult[],
+    TResult extends DigitAddResult[][] = []
+  > = TResult['length'] extends 10
+    ? TResult
+    : MakeDigitSubtractMap<RotateDigitAddResultRowRight<T>, [...TResult, T]>;
+
+  // [borrow][subtrahend][minuend]
+  type DigitSubtractMap = [
+    MakeDigitSubtractMap<FirstDigitAddResultRow>,
+    MakeDigitSubtractMap<RotateDigitAddResultRowRight<FirstDigitAddResultRow>>
+  ];
+
+  declare const testDigitSubtractMap: Tests<
+    [
+      Test<DigitSubtractMap[0][0][0], [0, 0]>,
+      Test<DigitSubtractMap[0][0][1], [0, 1]>,
+      Test<DigitSubtractMap[0][1][0], [1, 9]>,
+      Test<DigitSubtractMap[1][0][0], [1, 9]>,
+      Test<DigitSubtractMap[0][1][1], [0, 0]>,
+      Test<DigitSubtractMap[1][1][0], [1, 8]>,
+      Test<DigitSubtractMap[1][0][1], [0, 0]>,
+      Test<DigitSubtractMap[0][0][9], [0, 9]>,
+      Test<DigitSubtractMap[0][9][0], [1, 1]>,
+      Test<DigitSubtractMap[1][0][9], [0, 8]>,
+      Test<DigitSubtractMap[1][9][0], [1, 0]>,
+      Test<DigitSubtractMap[0][9][9], [0, 0]>,
+      Test<DigitSubtractMap[1][9][9], [1, 9]>
+    ]
+  >;
+
+  type TrimLeading0<T extends Digit[]> = T extends [
+    0,
+    ...infer IRest extends Digit[]
+  ]
+    ? TrimLeading0<IRest>
+    : T extends []
+    ? [0]
+    : T;
+
+  export type DigitwiseSubtract<
+    TA extends Digit[],
+    TB extends Digit[],
+    TC extends Bit = 0,
+    TResult extends Digit[] = []
+  > = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
+    ? TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
+      ? DigitSubtractMap[TC][IB0][IA0] extends [
+          infer IC extends Bit,
+          infer IR extends Digit
+        ]
+        ? DigitwiseSubtract<IARest, IBRest, IC, [IR, ...TResult]>
+        : never
+      : DigitSubtractMap[TC][0][IA0] extends [
+          infer IC extends Bit,
+          infer IR extends Digit
+        ]
+      ? DigitwiseSubtract<IARest, [], IC, [IR, ...TResult]>
+      : never
+    : TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
+    ? DigitSubtractMap[0][IB0][TC] extends [
+        infer IC extends Bit,
+        infer IR extends Digit
+      ]
+      ? DigitwiseSubtract<[], IBRest, IC, [IR, ...TResult]>
+      : never
+    : TC extends 1
+    ? never // subtraction should always be aligned to not result in a borrow
+    : TrimLeading0<TResult>;
+
+  declare const testSubtractDigits: Tests<
+    [
+      Test<DigitwiseSubtract<[], []>, [0]>,
+      Test<DigitwiseSubtract<[], [0]>, [0]>,
+      Test<DigitwiseSubtract<[0], []>, [0]>,
+      Test<DigitwiseSubtract<[1], []>, [1]>,
+      Test<DigitwiseSubtract<[], [1]>, never>,
+      Test<DigitwiseSubtract<[1], [1]>, [0]>,
+      Test<DigitwiseSubtract<[1, 0, 1], [1, 0]>, [9, 1]>,
+      Test<DigitwiseSubtract<[1, 0, 0], [9, 9]>, [1]>,
+      Test<
+        DigitwiseSubtract<
+          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        >,
+        [0]
+      >
+    ]
+  >;
+
+  export type Subtract<
+    TA extends number | string,
+    TB extends number | string
+  > = [ToInteger<TA>, ToInteger<TB>] extends [
+    infer IA extends Integer,
+    infer IB extends Integer
+  ]
+    ? FromInteger<
+        {
+          '+': {
+            '+': {
+              lesser: Integer<
+                '-',
+                DigitwiseSubtract<IB['digits'], IA['digits']>
+              >;
+              equal: Integer<'+', [0]>;
+              greater: Integer<
+                '+',
+                DigitwiseSubtract<IA['digits'], IB['digits']>
+              >;
+            }[CompareIntegers<IA, IB>];
+            '-': Integer<'+', DigitwiseAdd<IA['digits'], IB['digits']>>;
+          };
+          '-': {
+            '+': Integer<'-', DigitwiseAdd<IA['digits'], IB['digits']>>;
+            '-': {
+              lesser: Integer<
+                '+',
+                DigitwiseSubtract<IB['digits'], IA['digits']>
+              >;
+              equal: Integer<'+', [0]>;
+              greater: Integer<
+                '-',
+                DigitwiseSubtract<IA['digits'], IB['digits']>
+              >;
+            }[CompareIntegers<IA, IB>];
+          };
+        }[IA['sign']][IB['sign']]
+      >
+    : never;
+
+  declare const testSubtract: Tests<
+    [
+      Test<Subtract<0, 0>, 0>,
+      Test<Subtract<0, 1>, -1>,
+      Test<Subtract<1, 0>, 1>,
+      Test<Subtract<1, 1>, 0>,
+      Test<Subtract<-1, 1>, -2>,
+      Test<Subtract<1, -1>, 2>,
+      Test<Subtract<-1, -1>, 0>,
+      Test<Subtract<0, 100>, -100>,
+      Test<Subtract<200, 100>, 100>,
+      Test<Subtract<1000, 200>, 800>,
+      Test<Subtract<123, 456>, -333>,
+      Test<Subtract<123, -456>, 579>,
+      Test<Subtract<123, -123>, 246>,
+      Test<
+        Subtract<
+          1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000123,
+          1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        >,
+        0 // numeric integers loose precision, bigints need to use strings
+      >,
+      Test<
+        Subtract<
+          '1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000123',
+          '1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        >,
+        123
+      >
+    ]
+  >;
 }
