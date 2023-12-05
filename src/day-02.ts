@@ -118,4 +118,41 @@ type SumPossibleGames<
     : SumPossibleGames<IRest, [...TResult, ...MakeTuple<IGame['index']>]>
   : TResult['length'];
 
-export type Solution1 = SumPossibleGames<PossibleGames>;
+export declare const solution1: SumPossibleGames<PossibleGames>;
+
+// type MinimumCubes<TRounds extends Round[]> = {
+//   [KColor in CubeColor]: Max<TRounds[number][KColor]>;
+// };
+
+// type MakeMaxTable<
+//   T extends number,
+//   TCount extends any[] = [],
+//   TTable extends Record<number, number> = { 0: 0 }
+// > = TCount['length'] extends T
+//   ? TTable
+//   : TTable &
+//       MakeMaxTable<
+//         T,
+//         [...TCount, any],
+//         {
+//           [_ in [...TCount, any]['length']]:
+//             | [...TCount, any]['length']
+//             | TTable[TCount['length']];
+//         }
+//       >;
+
+// type MaxTable = MakeMaxTable<21>;
+
+// type MaxImpl<
+//   T extends keyof MaxTable,
+//   TCount extends any[] = []
+// > = TCount['length'] extends T
+//   ? MaxImpl<T, [...TCount, any]>
+//   : TCount extends [...infer IRest, any]
+//   ? IRest['length']
+//   : 0;
+// type Max<T extends number> = T extends keyof MaxTable
+//   ? MaxImpl<MaxTable[T]>
+//   : never;
+
+// type t0 = Max<test>;
