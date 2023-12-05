@@ -62,76 +62,72 @@ export namespace dec {
     TDigits extends Digit[] = Digit[]
   > = { sign: TSign; digits: TDigits };
 
-  type MakeDigitAddMapB<
-    TBase extends any[],
-    TMap extends [Bit, Digit][][] = []
-  > = TMap['length'] extends 10
-    ? TMap
-    : MakeDigitAddMapB<
-        TBase,
-        [
-          ...TMap,
-          [
-            [...TBase, ...TMap]['length'] extends infer N extends number
-              ? `${N}` extends `1${infer IN extends Digit}`
-                ? [1, IN]
-                : [0, N & Digit]
-              : never,
-            [...TBase, ...TMap, any]['length'] extends infer N extends number
-              ? `${N}` extends `1${infer IN extends Digit}`
-                ? [1, IN]
-                : [0, N & Digit]
-              : never
-          ]
-        ]
-      >;
+  type DigitAddResult = [carry: Bit, result: Digit];
 
-  type MakeDigitAddMapA<TMap extends [Bit, Digit][][][]> =
-    TMap['length'] extends 10
-      ? TMap
-      : MakeDigitAddMapA<[...TMap, MakeDigitAddMapB<TMap>]>;
-  type DigitAddMap = MakeDigitAddMapA<[]>;
+  type MakeDigitAddResultRow<T extends DigitAddResult[]> =
+    T['length'] extends 10
+      ? T
+      : MakeDigitAddResultRow<[...T, [0, T['length'] & Digit]]>;
+  type FirstDigitAddResultRow = MakeDigitAddResultRow<[]>;
+  type RotateDigitAddResultRowLeft<T extends DigitAddResult[]> = T extends [
+    [0, infer IResult extends Digit],
+    ...infer IRest extends DigitAddResult[]
+  ]
+    ? [...IRest, [1, IResult]]
+    : never;
+  type MakeDigitAddMap<
+    T extends DigitAddResult[],
+    TResult extends DigitAddResult[][] = []
+  > = TResult['length'] extends 10
+    ? TResult
+    : MakeDigitAddMap<RotateDigitAddResultRowLeft<T>, [...TResult, T]>;
+
+  // [carry][digit][digit]
+  type DigitAddMap = [
+    MakeDigitAddMap<FirstDigitAddResultRow>,
+    MakeDigitAddMap<RotateDigitAddResultRowLeft<FirstDigitAddResultRow>>
+  ];
 
   declare const testDigitAddMap: Tests<
     [
       Test<DigitAddMap[0][0][0], [0, 0]>,
-      Test<DigitAddMap[1][0][0], [0, 1]>,
       Test<DigitAddMap[0][1][0], [0, 1]>,
       Test<DigitAddMap[0][0][1], [0, 1]>,
-      Test<DigitAddMap[1][1][0], [0, 2]>,
+      Test<DigitAddMap[1][0][0], [0, 1]>,
       Test<DigitAddMap[0][1][1], [0, 2]>,
       Test<DigitAddMap[1][0][1], [0, 2]>,
-      Test<DigitAddMap[9][0][0], [0, 9]>,
+      Test<DigitAddMap[1][1][0], [0, 2]>,
       Test<DigitAddMap[0][9][0], [0, 9]>,
-      Test<DigitAddMap[9][0][1], [1, 0]>,
-      Test<DigitAddMap[0][9][1], [1, 0]>,
-      Test<DigitAddMap[9][9][0], [1, 8]>,
-      Test<DigitAddMap[9][9][1], [1, 9]>
+      Test<DigitAddMap[0][0][9], [0, 9]>,
+      Test<DigitAddMap[1][9][0], [1, 0]>,
+      Test<DigitAddMap[1][0][9], [1, 0]>,
+      Test<DigitAddMap[0][9][9], [1, 8]>,
+      Test<DigitAddMap[1][9][9], [1, 9]>
     ]
   >;
 
   export type DigitwiseAdd<
     TA extends Digit[],
     TB extends Digit[],
-    TC extends Digit = 0,
+    TC extends Bit = 0,
     TResult extends Digit[] = []
   > = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
     ? TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-      ? DigitAddMap[IA0][IB0][TC] extends [
-          infer IC extends Digit,
+      ? DigitAddMap[TC][IA0][IB0] extends [
+          infer IC extends Bit,
           infer IR extends Digit
         ]
         ? DigitwiseAdd<IARest, IBRest, IC, [IR, ...TResult]>
         : never
-      : DigitAddMap[IA0][0][TC] extends [
-          infer IC extends Digit,
+      : DigitAddMap[TC][IA0][0] extends [
+          infer IC extends Bit,
           infer IR extends Digit
         ]
       ? DigitwiseAdd<IARest, [], IC, [IR, ...TResult]>
       : never
     : TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-    ? DigitAddMap[0][IB0][TC] extends [
-        infer IC extends Digit,
+    ? DigitAddMap[TC][0][IB0] extends [
+        infer IC extends Bit,
         infer IR extends Digit
       ]
       ? DigitwiseAdd<[], IBRest, IC, [IR, ...TResult]>
