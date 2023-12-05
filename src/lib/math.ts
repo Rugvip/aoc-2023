@@ -1,4 +1,5 @@
 import { Test, Tests } from './utils';
+import { PopUnion } from './utils';
 
 export namespace bin {
   export type Bit = 0 | 1;
@@ -455,6 +456,32 @@ export namespace dec {
         >,
         123
       >
+    ]
+  >;
+
+  export type Min<
+    N extends number,
+    TMin extends number | undefined = undefined,
+    TPop = PopUnion<N>
+  > = TPop extends {
+    rest: infer IRest extends number;
+    next: infer INext extends number;
+  }
+    ? Min<
+        IRest,
+        undefined extends TMin
+          ? INext
+          : Compare<INext, TMin & number> extends 'lt'
+          ? INext
+          : TMin
+      >
+    : TMin;
+
+  declare const testMin: Tests<
+    [
+      Test<Min<5 | 2 | 3>, 2>,
+      Test<Min<-5 | -12345 | 123456 | 123>, -12345>,
+      Test<Min<0>, 0>
     ]
   >;
 }
