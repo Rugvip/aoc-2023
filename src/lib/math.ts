@@ -57,6 +57,8 @@ export namespace dec {
   export type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   export type Sign = '+' | '-';
 
+  type FlipSign<T extends Sign> = T extends '+' ? '-' : '+';
+
   export type Integer<
     TSign extends Sign = Sign,
     TDigits extends Digit[] = Digit[]
@@ -206,14 +208,31 @@ export namespace dec {
     ]
   >;
 
-  // TODO: Only addition of positive integers for now
-  export type Add<
-    TA extends number | string,
-    TB extends number | string
-  > = FromInteger<{
-    sign: '+';
-    digits: DigitwiseAdd<ToInteger<TA>['digits'], ToInteger<TB>['digits']>;
-  }>;
+  export type AddIntegers<TA extends Integer, TB extends Integer> = {
+    '+': {
+      '+': Integer<'+', DigitwiseAdd<TA['digits'], TB['digits']>>;
+      '-': {
+        lesser: Integer<'-', DigitwiseSubtract<TB['digits'], TA['digits']>>;
+        equal: Integer<'+', [0]>;
+        greater: Integer<'+', DigitwiseSubtract<TA['digits'], TB['digits']>>;
+      }[CompareDigits<TA['digits'], TB['digits']>];
+    };
+    '-': {
+      '+': {
+        lesser: Integer<'+', DigitwiseSubtract<TB['digits'], TA['digits']>>;
+        equal: Integer<'+', [0]>;
+        greater: Integer<'-', DigitwiseSubtract<TA['digits'], TB['digits']>>;
+      }[CompareDigits<TA['digits'], TB['digits']>];
+      '-': Integer<'-', DigitwiseAdd<TA['digits'], TB['digits']>>;
+    };
+  }[TA['sign']][TB['sign']];
+
+  export type Add<TA extends number | string, TB extends number | string> = [
+    ToInteger<TA>,
+    ToInteger<TB>
+  ] extends [infer IA extends Integer, infer IB extends Integer]
+    ? FromInteger<AddIntegers<IA, IB>>
+    : never;
 
   declare const testAdd: Tests<
     [
@@ -226,7 +245,12 @@ export namespace dec {
       Test<Add<123, 123>, 246>,
       Test<Add<'123', 123>, 246>,
       Test<Add<123, '123'>, 246>,
-      Test<Add<'123', '123'>, 246>
+      Test<Add<'123', '123'>, 246>,
+      Test<Add<123, -123>, 0>,
+      Test<Add<-123, -123>, -246>,
+      Test<Add<-123, 0>, -123>,
+      Test<Add<0, -123>, -123>,
+      Test<Add<123, 123>, 246>
     ]
   >;
 
@@ -237,7 +261,7 @@ export namespace dec {
     ? 'lesser'
     : 'equal';
 
-  type CompareDigits<TA extends Digit[], TB extends Digit[]> = [
+  type CompareSameLengthDigits<TA extends Digit[], TB extends Digit[]> = [
     TA,
     TB
   ] extends [
@@ -251,15 +275,21 @@ export namespace dec {
       : 'greater'
     : 'equal';
 
+  type CompareDigits<
+    TA extends Digit[],
+    TB extends Digit[]
+  > = TA['length'] extends TB['length']
+    ? CompareSameLengthDigits<TA, TB>
+    : Compare<TA['length'], TB['length']>;
+
   type CompareIntegers<
     TA extends Integer,
     TB extends Integer
   > = TA['sign'] extends TB['sign']
-    ? (
-        TA['digits']['length'] extends TB['digits']['length']
-          ? CompareDigits<TA['digits'], TB['digits']>
-          : Compare<TA['digits']['length'], TB['digits']['length']>
-      ) extends infer IResult extends CompareResult
+    ? CompareDigits<
+        TA['digits'],
+        TB['digits']
+      > extends infer IResult extends CompareResult
       ? TA['sign'] extends '-'
         ? FlipCompareResult<IResult>
         : IResult
@@ -393,38 +423,7 @@ export namespace dec {
     infer IA extends Integer,
     infer IB extends Integer
   ]
-    ? FromInteger<
-        {
-          '+': {
-            '+': {
-              lesser: Integer<
-                '-',
-                DigitwiseSubtract<IB['digits'], IA['digits']>
-              >;
-              equal: Integer<'+', [0]>;
-              greater: Integer<
-                '+',
-                DigitwiseSubtract<IA['digits'], IB['digits']>
-              >;
-            }[CompareIntegers<IA, IB>];
-            '-': Integer<'+', DigitwiseAdd<IA['digits'], IB['digits']>>;
-          };
-          '-': {
-            '+': Integer<'-', DigitwiseAdd<IA['digits'], IB['digits']>>;
-            '-': {
-              lesser: Integer<
-                '+',
-                DigitwiseSubtract<IB['digits'], IA['digits']>
-              >;
-              equal: Integer<'+', [0]>;
-              greater: Integer<
-                '-',
-                DigitwiseSubtract<IA['digits'], IB['digits']>
-              >;
-            }[CompareIntegers<IA, IB>];
-          };
-        }[IA['sign']][IB['sign']]
-      >
+    ? FromInteger<AddIntegers<IA, Integer<FlipSign<IB['sign']>, IB['digits']>>>
     : never;
 
   declare const testSubtract: Tests<
@@ -447,7 +446,7 @@ export namespace dec {
           1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000123,
           1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
         >,
-        0 // numeric integers loose precision, bigints need to use strings
+        0 // numeric integers loose precision, big ints need to use strings
       >,
       Test<
         Subtract<
