@@ -459,29 +459,42 @@ export namespace int {
     ]
   >;
 
-  export type Min<
+  type MinMax<
     N extends number,
-    TMin extends number | undefined = undefined,
+    TOp extends 'lt' | 'gt',
+    TCurrent extends number | undefined = undefined,
     TPop = PopUnion<N>
   > = TPop extends {
     rest: infer IRest extends number;
     next: infer INext extends number;
   }
-    ? Min<
+    ? MinMax<
         IRest,
-        undefined extends TMin
+        TOp,
+        undefined extends TCurrent
           ? INext
-          : Compare<INext, TMin & number> extends 'lt'
+          : Compare<INext, TCurrent & number> extends TOp
           ? INext
-          : TMin
+          : TCurrent
       >
-    : TMin;
+    : TCurrent;
+
+  export type Min<N extends number> = MinMax<N, 'lt'>;
+  export type Max<N extends number> = MinMax<N, 'gt'>;
 
   declare const testMin: Tests<
     [
       Test<Min<5 | 2 | 3>, 2>,
       Test<Min<-5 | -12345 | 123456 | 123>, -12345>,
       Test<Min<0>, 0>
+    ]
+  >;
+
+  declare const testMax: Tests<
+    [
+      Test<Max<5 | 2 | 3>, 5>,
+      Test<Max<-5 | -12345 | 123456 | 123>, 123456>,
+      Test<Max<0>, 0>
     ]
   >;
 }
