@@ -1,5 +1,5 @@
 import { Input } from '../input/03';
-import { dec } from './lib/math';
+import { int } from './lib/math';
 
 type ToArray<S extends string> = S extends `${infer Char}${infer Rest}`
   ? [Char, ...ToArray<Rest>]
@@ -37,7 +37,7 @@ type GridNumber = {
   str: string;
 };
 
-type StrDigit = `${dec.Digit}`;
+type StrDigit = `${int.Digit}`;
 
 type FindGridNumber<
   S extends string,
@@ -125,7 +125,7 @@ type Sum<
   infer IHead extends number,
   ...infer IRest extends number[]
 ]
-  ? Sum<IRest, dec.Add<IHead, TResult>>
+  ? Sum<IRest, int.Add<IHead, TResult>>
   : TResult;
 
 export declare const solution1: Sum<MatchingNumbers>;

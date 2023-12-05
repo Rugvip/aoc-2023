@@ -1,5 +1,5 @@
 import { Input } from '../input/04';
-import { dec } from './lib/math';
+import { int } from './lib/math';
 
 type TrimRight<S extends string> = S extends ` ${infer IRest}`
   ? TrimLeft<IRest>
@@ -52,7 +52,7 @@ type ScoreRows<
 > = TRows extends [infer IRow extends Row, ...infer IRest extends Row[]]
   ? ScoreRows<
       IRest,
-      dec.Add<TResult, ScoreUnion<IRow['cards'] & IRow['winning']>>
+      int.Add<TResult, ScoreUnion<IRow['cards'] & IRow['winning']>>
     >
   : TResult;
 
@@ -76,7 +76,7 @@ type Intersperse<
       infer INestedHead extends number,
       ...infer INestedRest extends number[]
     ]
-    ? [dec.Add<INestedHead, TSize>, ...Intersperse<INestedRest, IRest, TSize>]
+    ? [int.Add<INestedHead, TSize>, ...Intersperse<INestedRest, IRest, TSize>]
     : [TSize, ...Intersperse<[], IRest, TSize>]
   : TNested;
 
@@ -96,7 +96,7 @@ type ReduceRows<
           SizeUnion<IRow['cards'] & IRow['winning']>,
           ICopies
         >,
-        dec.Add<TResult, ICopies>
+        int.Add<TResult, ICopies>
       >
     : never
   : TResult;

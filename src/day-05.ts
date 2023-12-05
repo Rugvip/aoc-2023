@@ -1,5 +1,5 @@
 import { Input } from '../input/05';
-import { dec } from './lib/math';
+import { int } from './lib/math';
 
 // type Input = `seeds: 79 14 55 13
 
@@ -69,11 +69,11 @@ type ParseInput<S extends string> =
 type ApplyNumberMap<
   TNumber extends number,
   TNumberMap extends NumberMap
-> = dec.Compare<TNumber, TNumberMap['from']> extends 'lt'
+> = int.Compare<TNumber, TNumberMap['from']> extends 'lt'
   ? TNumber
-  : dec.Subtract<TNumber, TNumberMap['from']> extends infer IDiff extends number
-  ? dec.Compare<IDiff, TNumberMap['length']> extends 'lt'
-    ? dec.Add<TNumberMap['to'], IDiff>
+  : int.Subtract<TNumber, TNumberMap['from']> extends infer IDiff extends number
+  ? int.Compare<IDiff, TNumberMap['length']> extends 'lt'
+    ? int.Add<TNumberMap['to'], IDiff>
     : TNumber
   : never;
 
@@ -105,7 +105,7 @@ type ApplyNumberMapGroups<
     : never
   : TNumber;
 
-type Solve1<T extends { init: number; groups: NumberMap[][] }> = dec.Min<
+type Solve1<T extends { init: number; groups: NumberMap[][] }> = int.Min<
   ApplyNumberMapGroups<T['init'], T['groups']>
 >;
 
