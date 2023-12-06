@@ -1,6 +1,6 @@
 node_modules
 .vscode
-input
+input/*.ts
 
 # Yarn 3 files
 .pnp.*
