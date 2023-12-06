@@ -25,7 +25,7 @@ be implemented in other ways. For example, this is a naive implementation of
 addition:
 
 ```ts
-// This creates a tuple of N elements by recursively adding one element at a time until the length is N
+// Create a tuple of N items by recursively adding one item at a time until the length is N
 type MakeCounter<N extends number, TResult extends any[] = []> = TResult['length'] extends N
   ? TResult
   : MakeCounter<N, [...TResult, any]>;
