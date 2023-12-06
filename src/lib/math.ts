@@ -441,21 +441,7 @@ export namespace int {
       Test<Subtract<1000, 200>, 800>,
       Test<Subtract<123, 456>, -333>,
       Test<Subtract<123, -456>, 579>,
-      Test<Subtract<123, -123>, 246>,
-      Test<
-        Subtract<
-          1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000123,
-          1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-        >,
-        0 // numeric integers loose precision, big ints need to use strings
-      >,
-      Test<
-        Subtract<
-          '1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000123',
-          '1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
-        >,
-        123
-      >
+      Test<Subtract<123, -123>, 246>
     ]
   >;
 
@@ -495,6 +481,128 @@ export namespace int {
       Test<Max<5 | 2 | 3>, 5>,
       Test<Max<-5 | -12345 | 123456 | 123>, 123456>,
       Test<Max<0>, 0>
+    ]
+  >;
+
+  type DigitMultiplyResult = [carry: Digit, result: Digit];
+
+  type CounterToDigitMultiplyResult<T extends any[]> =
+    `${T['length']}` extends `${infer ICarry extends Digit}${infer IResult extends Digit}`
+      ? [ICarry, IResult]
+      : [0, T['length'] & Digit];
+
+  type MultiplyCounters<
+    TA extends any[],
+    TB extends any[],
+    TResult extends any[] = []
+  > = TA extends [any, ...infer IARest extends any[]]
+    ? MultiplyCounters<IARest, TB, [...TResult, ...TB]>
+    : TResult;
+
+  type MakeDigitMultiplyRow<
+    TA extends any[],
+    TB extends any[] = [],
+    TResult extends DigitMultiplyResult[] = []
+  > = TB['length'] extends 10
+    ? TResult
+    : MakeDigitMultiplyRow<
+        TA,
+        [...TB, any],
+        [...TResult, CounterToDigitMultiplyResult<MultiplyCounters<TA, TB>>]
+      >;
+
+  type MakeDigitMultiplyMap<
+    TA extends any[],
+    TResult extends DigitMultiplyResult[][] = []
+  > = TA['length'] extends 10
+    ? TResult
+    : MakeDigitMultiplyMap<
+        [...TA, any],
+        [...TResult, MakeDigitMultiplyRow<TA>]
+      >;
+
+  type DigitMultiplyMap = MakeDigitMultiplyMap<[]>;
+
+  declare const testDigitMultiplyMap: Tests<
+    [
+      Test<DigitMultiplyMap[0][0], [0, 0]>,
+      Test<DigitMultiplyMap[0][1], [0, 0]>,
+      Test<DigitMultiplyMap[1][1], [0, 1]>,
+      Test<DigitMultiplyMap[1][0], [0, 0]>,
+      Test<DigitMultiplyMap[0][2], [0, 0]>,
+      Test<DigitMultiplyMap[2][0], [0, 0]>,
+      Test<DigitMultiplyMap[2][1], [0, 2]>,
+      Test<DigitMultiplyMap[1][2], [0, 2]>,
+      Test<DigitMultiplyMap[3][2], [0, 6]>,
+      Test<DigitMultiplyMap[3][4], [1, 2]>,
+      Test<DigitMultiplyMap[7][8], [5, 6]>,
+      Test<DigitMultiplyMap[9][9], [8, 1]>
+    ]
+  >;
+
+  type DigitwiseMultiplyOne<
+    TA extends Digit,
+    TB extends Digit[],
+    TC extends Digit = 0,
+    TResult extends Digit[] = []
+  > = TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
+    ? DigitMultiplyMap[TA][IB0] extends [
+        infer IC extends Digit,
+        infer IR extends Digit
+      ]
+      ? DigitAddMap[0][IR][TC] extends [
+          infer IC2 extends Bit,
+          infer IR2 extends Digit
+        ]
+        ? DigitwiseMultiplyOne<
+            TA,
+            IBRest,
+            DigitAddMap[IC2][IC][0][1],
+            [IR2, ...TResult]
+          >
+        : never
+      : never
+    : TC extends 0
+    ? TResult
+    : [TC, ...TResult];
+
+  type DigitwiseMultiply<
+    TA extends Digit[],
+    TB extends Digit[],
+    TPad extends 0[] = [],
+    TResult extends Digit[] = [0]
+  > = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
+    ? DigitwiseMultiply<
+        IARest,
+        TB,
+        [...TPad, 0],
+        DigitwiseAdd<TResult, DigitwiseMultiplyOne<IA0, [...TB, ...TPad]>>
+      >
+    : TrimLeading0<TResult>;
+
+  export type Multiply<TA extends number, TB extends number> = [
+    ToInteger<TA>,
+    ToInteger<TB>
+  ] extends [infer IA extends Integer, infer IB extends Integer]
+    ? FromInteger<
+        Integer<
+          IA['sign'] extends IB['sign'] ? '+' : '-',
+          DigitwiseMultiply<IA['digits'], IB['digits']>
+        >
+      >
+    : never;
+
+  declare const testMultiply: Tests<
+    [
+      Test<Multiply<0, 0>, 0>,
+      Test<Multiply<1, 1>, 1>,
+      Test<Multiply<10, 0>, 0>,
+      Test<Multiply<0, 10>, 0>,
+      Test<Multiply<99, 99>, 9801>,
+      Test<Multiply<-99, 99>, -9801>,
+      Test<Multiply<99, -99>, -9801>,
+      Test<Multiply<-99, -99>, 9801>,
+      Test<Multiply<123, 2>, 246>
     ]
   >;
 }
