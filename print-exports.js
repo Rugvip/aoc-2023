@@ -6,9 +6,7 @@ const { resolve: resolvePath } = require('path');
 const { compilerOptions } = require('./tsconfig.json');
 
 function main(/** @type {string} */ path) {
-  const filePath = resolvePath(
-    path.endsWith('.ts') ? path : `src/day-${path.padStart(2, '0')}.ts`
-  );
+  const filePath = resolvePath(path.endsWith('.ts') ? path : `src/day-${path.padStart(2, '0')}.ts`);
 
   if (!fs.existsSync(filePath)) {
     throw new Error(`File not found: ${filePath}`);
@@ -36,8 +34,8 @@ function main(/** @type {string} */ path) {
       `${exp.name} = ${checker.typeToString(
         expType,
         undefined,
-        typescript.TypeFormatFlags.NoTruncation
-      )}`
+        typescript.TypeFormatFlags.NoTruncation,
+      )}`,
     );
   }
 }

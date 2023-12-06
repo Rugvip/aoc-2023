@@ -26,15 +26,11 @@ addition:
 
 ```ts
 // This creates a tuple of N elements by recursively adding one element at a time until the length is N
-type MakeCounter<
-  N extends number,
-  TResult extends any[] = []
-> = TResult['length'] extends N ? TResult : MakeCounter<N, [...TResult, any]>;
+type MakeCounter<N extends number, TResult extends any[] = []> = TResult['length'] extends N
+  ? TResult
+  : MakeCounter<N, [...TResult, any]>;
 
-type Add<A extends number, B extends number> = [
-  ...MakeCounter<A>,
-  ...MakeCounter<B>
-]['length'];
+type Add<A extends number, B extends number> = [...MakeCounter<A>, ...MakeCounter<B>]['length'];
 
 declare const result: Add<2, 3>; // 5
 ```

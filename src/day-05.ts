@@ -43,15 +43,14 @@ type Range<TStart extends number = number, TLength extends number = number> = {
 type NumberMap<
   TStart extends number = number,
   TLength extends number = number,
-  TTo extends number = number
+  TTo extends number = number,
 > = Range<TStart, TLength> & { to: TTo };
 
-type ParseInit<S extends string> =
-  S extends `${infer INext extends number} ${infer IRest}`
-    ? [INext, ...ParseInit<IRest>]
-    : S extends `${infer ILast extends number}`
-    ? [ILast]
-    : never;
+type ParseInit<S extends string> = S extends `${infer INext extends number} ${infer IRest}`
+  ? [INext, ...ParseInit<IRest>]
+  : S extends `${infer ILast extends number}`
+  ? [ILast]
+  : never;
 
 type ParseMap<S extends string> =
   S extends `${infer ITo extends number} ${infer IStart extends number} ${infer ILength extends number}`
@@ -62,27 +61,22 @@ type ParseMaps<S extends string> = S extends `${infer IEntry}\n${infer IRest}`
   ? [ParseMap<IEntry>, ...ParseMaps<IRest>]
   : [ParseMap<S>];
 
-type ParseGroup<S extends string> =
-  S extends `${string}:\n${infer IMap}\n\n${infer IRest}`
-    ? [ParseMaps<IMap>, ...ParseGroup<IRest>]
-    : S extends `${string}:\n${infer IMap}${'\n'}`
-    ? [ParseMaps<IMap>]
-    : never;
+type ParseGroup<S extends string> = S extends `${string}:\n${infer IMap}\n\n${infer IRest}`
+  ? [ParseMaps<IMap>, ...ParseGroup<IRest>]
+  : S extends `${string}:\n${infer IMap}${'\n'}`
+  ? [ParseMaps<IMap>]
+  : never;
 
-type ParseInput<S extends string> =
-  S extends `${string}: ${infer IInit}\n\n${infer IRest}`
-    ? { init: ParseInit<IInit>; groups: ParseGroup<IRest> }
-    : never;
+type ParseInput<S extends string> = S extends `${string}: ${infer IInit}\n\n${infer IRest}`
+  ? { init: ParseInit<IInit>; groups: ParseGroup<IRest> }
+  : never;
 
-type ApplyNumberMap<
-  TNumber extends number,
-  TNumberMap extends NumberMap
-> = int.Compare<TNumber, TNumberMap['start']> extends 'lt'
+type ApplyNumberMap<TNumber extends number, TNumberMap extends NumberMap> = int.Compare<
+  TNumber,
+  TNumberMap['start']
+> extends 'lt'
   ? TNumber
-  : int.Subtract<
-      TNumber,
-      TNumberMap['start']
-    > extends infer IDiff extends number
+  : int.Subtract<TNumber, TNumberMap['start']> extends infer IDiff extends number
   ? int.Compare<IDiff, TNumberMap['length']> extends 'lt'
     ? int.Add<TNumberMap['to'], IDiff>
     : TNumber
@@ -90,11 +84,8 @@ type ApplyNumberMap<
 
 type ApplyNumberMaps<
   TNumber extends number,
-  TNumberMaps extends NumberMap[]
-> = TNumberMaps extends [
-  infer IFirst extends NumberMap,
-  ...infer IRest extends NumberMap[]
-]
+  TNumberMaps extends NumberMap[],
+> = TNumberMaps extends [infer IFirst extends NumberMap, ...infer IRest extends NumberMap[]]
   ? TNumber extends any
     ? ApplyNumberMap<TNumber, IFirst> extends infer IResult
       ? IResult extends TNumber
@@ -104,12 +95,9 @@ type ApplyNumberMaps<
     : never
   : TNumber;
 
-type ApplyNumberMapGroups<
-  TNumber extends number,
-  TGroup extends NumberMap[][]
-> = TGroup extends [
+type ApplyNumberMapGroups<TNumber extends number, TGroup extends NumberMap[][]> = TGroup extends [
   infer IFirst extends NumberMap[],
-  ...infer IRest extends NumberMap[][]
+  ...infer IRest extends NumberMap[][],
 ]
   ? TNumber extends any
     ? ApplyNumberMapGroups<ApplyNumberMaps<TNumber, IFirst>, IRest>
@@ -127,18 +115,17 @@ export declare const solution1: Solve1<ParseInput<Input>>;
 type InitToRanges<TInit extends number[]> = TInit extends [
   infer IStart extends number,
   infer ILength extends number,
-  ...infer IRest extends number[]
+  ...infer IRest extends number[],
 ]
   ? [Range<IStart, ILength>, ...InitToRanges<IRest>]
   : [];
 
-type ParseRangeInput<S extends string> =
-  ParseInput<S> extends infer IResult extends {
-    init: number[];
-    groups: NumberMap[][];
-  }
-    ? { init: InitToRanges<IResult['init']>; groups: IResult['groups'] }
-    : never;
+type ParseRangeInput<S extends string> = ParseInput<S> extends infer IResult extends {
+  init: number[];
+  groups: NumberMap[][];
+}
+  ? { init: InitToRanges<IResult['init']>; groups: IResult['groups'] }
+  : never;
 
 type IntersectRange<TA extends Range, TB extends Range> = [
   TA['start'],
@@ -146,14 +133,14 @@ type IntersectRange<TA extends Range, TB extends Range> = [
   int.Add<TA['start'], TA['length']>,
   TB['start'],
   TB['length'],
-  int.Add<TB['start'], TB['length']>
+  int.Add<TB['start'], TB['length']>,
 ] extends [
   infer AStart extends number,
   infer ALen extends number,
   infer AEnd extends number,
   infer BStart extends number,
   infer BLen extends number,
-  infer BEnd extends number
+  infer BEnd extends number,
 ]
   ? int.Compare<BEnd, AStart> extends 'lt' | 'eq'
     ? { slice: never; rest: TA }
@@ -196,20 +183,18 @@ type IntersectRange<TA extends Range, TB extends Range> = [
 
 type IntersectRanges<
   TRanges extends Range, // union
-  TB extends Range
-> = (
-  TRanges extends any ? IntersectRange<TRanges, TB> : never
-) extends infer I extends { slice: Range; rest: Range }
+  TB extends Range,
+> = (TRanges extends any ? IntersectRange<TRanges, TB> : never) extends infer I extends {
+  slice: Range;
+  rest: Range;
+}
   ? { slice: I['slice']; rest: I['rest'] }
   : never;
 
 type RangeApplyNumberMaps<
   TRange extends Range,
-  TNumberMaps extends NumberMap[]
-> = TNumberMaps extends [
-  infer IMapHead extends NumberMap,
-  ...infer IMapRest extends NumberMap[]
-]
+  TNumberMaps extends NumberMap[],
+> = TNumberMaps extends [infer IMapHead extends NumberMap, ...infer IMapRest extends NumberMap[]]
   ? IntersectRanges<TRange, IMapHead> extends {
       slice: infer ISlice extends Range;
       rest: infer IRest extends Range;
@@ -219,10 +204,7 @@ type RangeApplyNumberMaps<
             ? never
             : ISlice extends any
             ? Range<
-                int.Add<
-                  ISlice['start'],
-                  int.Subtract<IMapHead['to'], IMapHead['start']>
-                >,
+                int.Add<ISlice['start'], int.Subtract<IMapHead['to'], IMapHead['start']>>,
                 ISlice['length']
               >
             : never)
@@ -232,11 +214,8 @@ type RangeApplyNumberMaps<
 
 type RangeApplyNumberMapGroups<
   TRange extends Range,
-  TGroup extends NumberMap[][]
-> = TGroup extends [
-  infer IFirst extends NumberMap[],
-  ...infer IRest extends NumberMap[][]
-]
+  TGroup extends NumberMap[][],
+> = TGroup extends [infer IFirst extends NumberMap[], ...infer IRest extends NumberMap[][]]
   ? RangeApplyNumberMapGroups<RangeApplyNumberMaps<TRange, IFirst>, IRest>
   : TRange;
 

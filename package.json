@@ -7,5 +7,10 @@
   "dependencies": {
     "typescript": "patch:typescript@npm%3A5.3.2#~/.yarn/patches/typescript-npm-5.3.2-a11892b3bc.patch"
   },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
   "packageManager": "yarn@4.0.2"
 }

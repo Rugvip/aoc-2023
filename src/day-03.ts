@@ -17,10 +17,7 @@ import { PopUnion } from './lib/utils';
 type ToArray<S extends string> = S extends `${infer Char}${infer Rest}`
   ? [Char, ...ToArray<Rest>]
   : [];
-type ToGrid<
-  S extends string,
-  Rows extends any[] = []
-> = S extends `${infer Line}\n${infer Rest}`
+type ToGrid<S extends string, Rows extends any[] = []> = S extends `${infer Line}\n${infer Rest}`
   ? ToGrid<Rest, [...Rows, ToArray<Line>]>
   : { width: Rows[0]['length']; height: Rows['length']; cells: Rows };
 
@@ -33,15 +30,8 @@ type Grid = {
 type InputGrid = ToGrid<Input>;
 type InputGridNumbers = FindGridNumbers<Input>;
 
-type GridItem<
-  TGrid extends Grid,
-  TX extends number,
-  TY extends number
-> = TY extends any
-  ? Exclude<
-      undefined extends TGrid['cells'][TY] ? undefined : TGrid['cells'][TY][TX],
-      undefined
-    >
+type GridItem<TGrid extends Grid, TX extends number, TY extends number> = TY extends any
+  ? Exclude<undefined extends TGrid['cells'][TY] ? undefined : TGrid['cells'][TY][TX], undefined>
   : never;
 
 type GridNumber = {
@@ -57,7 +47,7 @@ type FindGridNumber<
   TNumbers extends GridNumber[],
   TXArr extends any[],
   TYArr extends any[],
-  TNumber extends GridNumber
+  TNumber extends GridNumber,
 > = S extends `${infer IChar}${infer IRest}`
   ? IChar extends StrDigit
     ? [...TXArr, any] extends infer IXArr extends any[]
@@ -82,7 +72,7 @@ type FindGridNumbers<
   S extends string,
   TNumbers extends GridNumber[] = [],
   TXArr extends any[] = [],
-  TYArr extends any[] = []
+  TYArr extends any[] = [],
 > = S extends `${infer IChar}${infer IRest}`
   ? IChar extends '\n'
     ? FindGridNumbers<IRest, TNumbers, [], [...TYArr, any]>
@@ -110,33 +100,22 @@ type FindGridNumbers<
 type FilterGridNumbers<
   TGrid extends Grid,
   TNumbers extends GridNumber[],
-  TResult extends number[] = []
-> = TNumbers extends [
-  infer IHead extends GridNumber,
-  ...infer IRest extends GridNumber[]
-]
-  ? [Exclude<GridItem<TGrid, IHead['x'], IHead['y']>, StrDigit | '.'>] extends [
-      never
-    ]
+  TResult extends number[] = [],
+> = TNumbers extends [infer IHead extends GridNumber, ...infer IRest extends GridNumber[]]
+  ? [Exclude<GridItem<TGrid, IHead['x'], IHead['y']>, StrDigit | '.'>] extends [never]
     ? FilterGridNumbers<TGrid, IRest, TResult>
     : FilterGridNumbers<
         TGrid,
         IRest,
-        [
-          ...TResult,
-          IHead['str'] extends `${infer INum extends number}` ? INum : never
-        ]
+        [...TResult, IHead['str'] extends `${infer INum extends number}` ? INum : never]
       >
   : TResult;
 
 type MatchingNumbers = FilterGridNumbers<InputGrid, InputGridNumbers>;
 
-type Sum<
-  TNumbers extends number[],
-  TResult extends number = 0
-> = TNumbers extends [
+type Sum<TNumbers extends number[], TResult extends number = 0> = TNumbers extends [
   infer IHead extends number,
-  ...infer IRest extends number[]
+  ...infer IRest extends number[],
 ]
   ? Sum<IRest, int.Add<IHead, TResult>>
   : TResult;
@@ -148,7 +127,7 @@ type Gear = { x: number; y: number };
 type FindGridGears<
   TGrid extends Grid,
   TXCounter extends any[] = [],
-  TYCounter extends any[] = []
+  TYCounter extends any[] = [],
 > = TXCounter['length'] extends TGrid['width']
   ? FindGridGears<TGrid, [], [...TYCounter, any]>
   : TYCounter['length'] extends TGrid['height']
@@ -156,13 +135,13 @@ type FindGridGears<
   : GridItem<TGrid, TXCounter['length'], TYCounter['length']> extends '*'
   ? [
       { x: TXCounter['length']; y: TYCounter['length'] },
-      ...FindGridGears<TGrid, [...TXCounter, any], TYCounter>
+      ...FindGridGears<TGrid, [...TXCounter, any], TYCounter>,
     ]
   : FindGridGears<TGrid, [...TXCounter, any], TYCounter>;
 
 type FindGearNumbers<
   TGear extends Gear,
-  TNumbers extends GridNumber // union
+  TNumbers extends GridNumber, // union
 > = TNumbers extends any
   ? TGear extends Pick<TNumbers, 'y' | 'x'>
     ? TNumbers['str'] extends `${infer N extends number}`
@@ -183,16 +162,13 @@ type GearNumberProduct<N extends number> = PopUnion<N> extends {
     : 0
   : 0;
 
-type SumGridGears<
-  TGears extends Gear[],
-  TNumbers extends GridNumber
-> = TGears extends [infer IHead extends Gear, ...infer IRest extends Gear[]]
+type SumGridGears<TGears extends Gear[], TNumbers extends GridNumber> = TGears extends [
+  infer IHead extends Gear,
+  ...infer IRest extends Gear[],
+]
   ? FindGearNumbers<IHead, TNumbers> extends infer INumbers extends number
     ? int.Add<SumGridGears<IRest, TNumbers>, GearNumberProduct<INumbers>>
     : SumGridGears<IRest, TNumbers>
   : 0;
 
-export declare const solution2: SumGridGears<
-  FindGridGears<InputGrid>,
-  InputGridNumbers[number]
->;
+export declare const solution2: SumGridGears<FindGridGears<InputGrid>, InputGridNumbers[number]>;

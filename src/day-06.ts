@@ -20,28 +20,27 @@ type ParseNumbers<S extends string> =
 
 type PairEntries<TTimes extends number[], TDistances extends number[]> = [
   TTimes,
-  TDistances
+  TDistances,
 ] extends [
   [infer ITime extends number, ...infer IRestTimes extends number[]],
-  [infer IDistance extends number, ...infer IRestDistances extends number[]]
+  [infer IDistance extends number, ...infer IRestDistances extends number[]],
 ]
   ? [Race<ITime, IDistance>, ...PairEntries<IRestTimes, IRestDistances>]
   : [];
 
-type ParseInput<S extends string> =
-  S extends `Time:${infer ITimes}\nDistance:${infer IDistances}\n`
-    ? PairEntries<ParseNumbers<ITimes>, ParseNumbers<IDistances>>
-    : never;
+type ParseInput<S extends string> = S extends `Time:${infer ITimes}\nDistance:${infer IDistances}\n`
+  ? PairEntries<ParseNumbers<ITimes>, ParseNumbers<IDistances>>
+  : never;
 
-type ScoreAttempt<
-  TTotalTime extends number,
-  THoldTime extends number
-> = int.Multiply<int.Subtract<TTotalTime, THoldTime>, THoldTime>;
+type ScoreAttempt<TTotalTime extends number, THoldTime extends number> = int.Multiply<
+  int.Subtract<TTotalTime, THoldTime>,
+  THoldTime
+>;
 
 type FindFirstSolution<
   TRace extends Race<number, number>,
   THoldBase extends number = 0,
-  THoldCounter extends any[] = []
+  THoldCounter extends any[] = [],
 > = int.Compare<
   ScoreAttempt<TRace['time'], int.Add<THoldCounter['length'], THoldBase>>,
   TRace['distance']
@@ -52,27 +51,21 @@ type FindFirstSolution<
 type FindAfterLastSolution<
   TRace extends Race,
   THoldBase extends number = TRace['time'],
-  THoldCounter extends any[] = []
+  THoldCounter extends any[] = [],
 > = int.Compare<
   ScoreAttempt<TRace['time'], int.Subtract<THoldBase, THoldCounter['length']>>,
   TRace['distance']
 > extends 'gt'
-  ? int.Subtract<
-      THoldBase,
-      (THoldCounter extends [any, ...infer IRest] ? IRest : never)['length']
-    >
+  ? int.Subtract<THoldBase, (THoldCounter extends [any, ...infer IRest] ? IRest : never)['length']>
   : FindAfterLastSolution<TRace, THoldBase, [...THoldCounter, any]>;
 
-type Solve1<
-  TRaces extends Race[],
-  TResult extends number = 1
-> = TRaces extends [infer IRace extends Race, ...infer IRest extends Race[]]
+type Solve1<TRaces extends Race[], TResult extends number = 1> = TRaces extends [
+  infer IRace extends Race,
+  ...infer IRest extends Race[],
+]
   ? Solve1<
       IRest,
-      int.Multiply<
-        TResult,
-        int.Subtract<FindAfterLastSolution<IRace>, FindFirstSolution<IRace>>
-      >
+      int.Multiply<TResult, int.Subtract<FindAfterLastSolution<IRace>, FindFirstSolution<IRace>>>
     >
   : TResult;
 
@@ -90,11 +83,8 @@ type DropTwoOrdersOfMagnitude<N extends number> =
 type SearchFirstSolution<
   TRace extends Race<number, number>,
   TIncrement extends number = DropTwoOrdersOfMagnitude<TRace['time']>,
-  THold extends number = 0
-> = int.Compare<
-  ScoreAttempt<TRace['time'], THold>,
-  TRace['distance']
-> extends 'gt'
+  THold extends number = 0,
+> = int.Compare<ScoreAttempt<TRace['time'], THold>, TRace['distance']> extends 'gt'
   ? int.Compare<TIncrement, 1000> extends 'lt'
     ? FindFirstSolution<TRace, int.Subtract<THold, TIncrement>>
     : SearchFirstSolution<
@@ -107,11 +97,8 @@ type SearchFirstSolution<
 type SearchAfterLastSolution<
   TRace extends Race<number, number>,
   TIncrement extends number = DropTwoOrdersOfMagnitude<TRace['time']>,
-  THold extends number = TRace['time']
-> = int.Compare<
-  ScoreAttempt<TRace['time'], THold>,
-  TRace['distance']
-> extends 'gt'
+  THold extends number = TRace['time'],
+> = int.Compare<ScoreAttempt<TRace['time'], THold>, TRace['distance']> extends 'gt'
   ? int.Compare<TIncrement, 1000> extends 'lt'
     ? FindAfterLastSolution<TRace, int.Add<THold, TIncrement>>
     : SearchAfterLastSolution<

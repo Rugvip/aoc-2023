@@ -16,10 +16,8 @@ type StrDigitMap = {
 
 type AnyDigitMap = { [K in string]: number };
 
-type FirstDigit<
-  S extends string,
-  TDigitMap extends AnyDigitMap
-> = S extends `${string & keyof TDigitMap}${infer IRest}`
+type FirstDigit<S extends string, TDigitMap extends AnyDigitMap> = S extends `${string &
+  keyof TDigitMap}${infer IRest}`
   ? S extends `${infer D extends string & keyof TDigitMap}${IRest}`
     ? TDigitMap[D]
     : never
@@ -27,10 +25,8 @@ type FirstDigit<
   ? FirstDigit<IRest, TDigitMap>
   : never;
 
-type LastDigit<
-  S extends string,
-  TDigitMap extends AnyDigitMap
-> = S extends `${string & keyof TDigitMap}${infer IRest}`
+type LastDigit<S extends string, TDigitMap extends AnyDigitMap> = S extends `${string &
+  keyof TDigitMap}${infer IRest}`
   ? S extends `${string}${infer IRestNext}`
     ? LastDigit<IRestNext, TDigitMap> extends infer INext
       ? [INext] extends [never]
@@ -52,7 +48,7 @@ type Digits<S extends string, TDigitMap extends AnyDigitMap> = `${FirstDigit<
 type Solve<
   TInput extends string,
   TDigitMap extends AnyDigitMap,
-  TResult extends number = 0
+  TResult extends number = 0,
 > = TInput extends `${infer Line}\n${infer Rest}`
   ? Solve<Rest, TDigitMap, dec.Add<TResult, Digits<Line, TDigitMap>>>
   : TResult;

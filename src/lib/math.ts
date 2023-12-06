@@ -7,28 +7,19 @@ export namespace bin {
 
   export type Integer = { sign: Sign; digits: Bit[] };
 
-  type BitAddMap = [
-    [[[0, 0], [0, 1]], [[0, 1], [1, 0]]],
-    [[[0, 1], [1, 0]], [[1, 0], [1, 1]]]
-  ];
+  type BitAddMap = [[[[0, 0], [0, 1]], [[0, 1], [1, 0]]], [[[0, 1], [1, 0]], [[1, 0], [1, 1]]]];
 
   export type BitwiseAdd<
     TA extends Bit[],
     TB extends Bit[],
     TC extends Bit = 0,
-    TResult extends Bit[] = []
+    TResult extends Bit[] = [],
   > = TA extends [...infer IARest extends Bit[], infer IA0 extends Bit]
     ? TB extends [...infer IBRest extends Bit[], infer IB0 extends Bit]
-      ? BitAddMap[IA0][IB0][TC] extends [
-          infer IC extends Bit,
-          infer IR extends Bit
-        ]
+      ? BitAddMap[IA0][IB0][TC] extends [infer IC extends Bit, infer IR extends Bit]
         ? BitwiseAdd<IARest, IBRest, IC, [IR, ...TResult]>
         : never
-      : BitAddMap[IA0][0][TC] extends [
-          infer IC extends Bit,
-          infer IR extends Bit
-        ]
+      : BitAddMap[IA0][0][TC] extends [infer IC extends Bit, infer IR extends Bit]
       ? BitwiseAdd<IARest, [], IC, [IR, ...TResult]>
       : never
     : TB extends [...infer IBRest extends Bit[], infer IB0 extends Bit]
@@ -48,7 +39,7 @@ export namespace bin {
       Test<BitwiseAdd<[], [1]>, [1]>,
       Test<BitwiseAdd<[1], [1]>, [1, 0]>,
       Test<BitwiseAdd<[1, 0], [1, 0, 1]>, [1, 1, 1]>,
-      Test<BitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 0, 0, 1]>
+      Test<BitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 0, 0, 1]>,
     ]
   >;
 }
@@ -60,27 +51,26 @@ export namespace int {
 
   type FlipSign<T extends Sign> = T extends '+' ? '-' : '+';
 
-  export type Integer<
-    TSign extends Sign = Sign,
-    TDigits extends Digit[] = Digit[]
-  > = { sign: TSign; digits: TDigits };
+  export type Integer<TSign extends Sign = Sign, TDigits extends Digit[] = Digit[]> = {
+    sign: TSign;
+    digits: TDigits;
+  };
 
   type DigitAddResult = [carry: Bit, result: Digit];
 
-  type MakeDigitAddResultRow<T extends DigitAddResult[]> =
-    T['length'] extends 10
-      ? T
-      : MakeDigitAddResultRow<[...T, [0, T['length'] & Digit]]>;
+  type MakeDigitAddResultRow<T extends DigitAddResult[]> = T['length'] extends 10
+    ? T
+    : MakeDigitAddResultRow<[...T, [0, T['length'] & Digit]]>;
   type FirstDigitAddResultRow = MakeDigitAddResultRow<[]>;
   type RotateDigitAddResultRowLeft<T extends DigitAddResult[]> = T extends [
     [0, infer IResult extends Digit],
-    ...infer IRest extends DigitAddResult[]
+    ...infer IRest extends DigitAddResult[],
   ]
     ? [...IRest, [1, IResult]]
     : never;
   type MakeDigitAddMap<
     T extends DigitAddResult[],
-    TResult extends DigitAddResult[][] = []
+    TResult extends DigitAddResult[][] = [],
   > = TResult['length'] extends 10
     ? TResult
     : MakeDigitAddMap<RotateDigitAddResultRowLeft<T>, [...TResult, T]>;
@@ -88,7 +78,7 @@ export namespace int {
   // [carry][digit][digit]
   type DigitAddMap = [
     MakeDigitAddMap<FirstDigitAddResultRow>,
-    MakeDigitAddMap<RotateDigitAddResultRowLeft<FirstDigitAddResultRow>>
+    MakeDigitAddMap<RotateDigitAddResultRowLeft<FirstDigitAddResultRow>>,
   ];
 
   declare const testDigitAddMap: Tests<
@@ -105,7 +95,7 @@ export namespace int {
       Test<DigitAddMap[1][9][0], [1, 0]>,
       Test<DigitAddMap[1][0][9], [1, 0]>,
       Test<DigitAddMap[0][9][9], [1, 8]>,
-      Test<DigitAddMap[1][9][9], [1, 9]>
+      Test<DigitAddMap[1][9][9], [1, 9]>,
     ]
   >;
 
@@ -113,26 +103,17 @@ export namespace int {
     TA extends Digit[],
     TB extends Digit[],
     TC extends Bit = 0,
-    TResult extends Digit[] = []
+    TResult extends Digit[] = [],
   > = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
     ? TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-      ? DigitAddMap[TC][IA0][IB0] extends [
-          infer IC extends Bit,
-          infer IR extends Digit
-        ]
+      ? DigitAddMap[TC][IA0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
         ? DigitwiseAdd<IARest, IBRest, IC, [IR, ...TResult]>
         : never
-      : DigitAddMap[TC][IA0][0] extends [
-          infer IC extends Bit,
-          infer IR extends Digit
-        ]
+      : DigitAddMap[TC][IA0][0] extends [infer IC extends Bit, infer IR extends Digit]
       ? DigitwiseAdd<IARest, [], IC, [IR, ...TResult]>
       : never
     : TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-    ? DigitAddMap[TC][0][IB0] extends [
-        infer IC extends Bit,
-        infer IR extends Digit
-      ]
+    ? DigitAddMap[TC][0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
       ? DigitwiseAdd<[], IBRest, IC, [IR, ...TResult]>
       : never
     : TC extends 1
@@ -148,31 +129,29 @@ export namespace int {
       Test<DigitwiseAdd<[], [1]>, [1]>,
       Test<DigitwiseAdd<[1], [1]>, [2]>,
       Test<DigitwiseAdd<[1, 0], [1, 0, 1]>, [1, 1, 1]>,
-      Test<DigitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 2, 1]>
+      Test<DigitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 2, 1]>,
     ]
   >;
 
-  type StrToDigits<S extends string> =
-    S extends `${infer IChar extends Digit}${infer IRest}`
-      ? [IChar, ...StrToDigits<IRest>]
-      : [];
+  type StrToDigits<S extends string> = S extends `${infer IChar extends Digit}${infer IRest}`
+    ? [IChar, ...StrToDigits<IRest>]
+    : [];
   type DigitsToStr<T extends Digit[]> = T extends [
     infer IChar extends Digit,
-    ...infer IRest extends Digit[]
+    ...infer IRest extends Digit[],
   ]
     ? `${IChar}${DigitsToStr<IRest>}`
     : '';
 
-  export type ToInteger<T extends number | string> =
-    `${T}` extends `-${infer I}`
-      ? {
-          sign: '-';
-          digits: StrToDigits<I>;
-        }
-      : {
-          sign: '+';
-          digits: StrToDigits<`${T}`>;
-        };
+  export type ToInteger<T extends number | string> = `${T}` extends `-${infer I}`
+    ? {
+        sign: '-';
+        digits: StrToDigits<I>;
+      }
+    : {
+        sign: '+';
+        digits: StrToDigits<`${T}`>;
+      };
 
   declare const testToInteger: Tests<
     [
@@ -186,7 +165,7 @@ export namespace int {
       Test<ToInteger<1>, Integer<'+', [1]>>,
       Test<ToInteger<123>, Integer<'+', [1, 2, 3]>>,
       Test<ToInteger<-1>, Integer<'-', [1]>>,
-      Test<ToInteger<-123>, Integer<'-', [1, 2, 3]>>
+      Test<ToInteger<-123>, Integer<'-', [1, 2, 3]>>,
     ]
   >;
 
@@ -205,7 +184,7 @@ export namespace int {
       Test<FromInteger<Integer<'+', [1, 2, 3]>>, 123>,
       Test<FromInteger<Integer<'-', [0]>>, 0>,
       Test<FromInteger<Integer<'-', [1]>>, -1>,
-      Test<FromInteger<Integer<'-', [1, 2, 3]>>, -123>
+      Test<FromInteger<Integer<'-', [1, 2, 3]>>, -123>,
     ]
   >;
 
@@ -230,7 +209,7 @@ export namespace int {
 
   export type Add<TA extends number | string, TB extends number | string> = [
     ToInteger<TA>,
-    ToInteger<TB>
+    ToInteger<TB>,
   ] extends [infer IA extends Integer, infer IB extends Integer]
     ? FromInteger<AddIntegers<IA, IB>>
     : never;
@@ -251,7 +230,7 @@ export namespace int {
       Test<Add<-123, -123>, -246>,
       Test<Add<-123, 0>, -123>,
       Test<Add<0, -123>, -123>,
-      Test<Add<123, 123>, 246>
+      Test<Add<123, 123>, 246>,
     ]
   >;
 
@@ -262,12 +241,9 @@ export namespace int {
     ? 'lt'
     : 'eq';
 
-  type CompareSameLengthDigits<TA extends Digit[], TB extends Digit[]> = [
-    TA,
-    TB
-  ] extends [
+  type CompareSameLengthDigits<TA extends Digit[], TB extends Digit[]> = [TA, TB] extends [
     [infer IAHead extends Digit, ...infer IARest extends Digit[]],
-    [infer IBHead extends Digit, ...infer IBRest extends Digit[]]
+    [infer IBHead extends Digit, ...infer IBRest extends Digit[]],
   ]
     ? IAHead extends IBHead
       ? CompareDigits<IARest, IBRest>
@@ -276,21 +252,12 @@ export namespace int {
       : 'gt'
     : 'eq';
 
-  type CompareDigits<
-    TA extends Digit[],
-    TB extends Digit[]
-  > = TA['length'] extends TB['length']
+  type CompareDigits<TA extends Digit[], TB extends Digit[]> = TA['length'] extends TB['length']
     ? CompareSameLengthDigits<TA, TB>
     : Compare<TA['length'], TB['length']>;
 
-  type CompareIntegers<
-    TA extends Integer,
-    TB extends Integer
-  > = TA['sign'] extends TB['sign']
-    ? CompareDigits<
-        TA['digits'],
-        TB['digits']
-      > extends infer IResult extends CompareResult
+  type CompareIntegers<TA extends Integer, TB extends Integer> = TA['sign'] extends TB['sign']
+    ? CompareDigits<TA['digits'], TB['digits']> extends infer IResult extends CompareResult
       ? TA['sign'] extends '-'
         ? FlipCompareResult<IResult>
         : IResult
@@ -317,19 +284,19 @@ export namespace int {
       Test<Compare<-999999, -1000000>, 'gt'>,
       Test<Compare<42, 42>, 'eq'>,
       Test<Compare<-73, 73>, 'lt'>,
-      Test<Compare<999, -999>, 'gt'>
+      Test<Compare<999, -999>, 'gt'>,
     ]
   >;
 
   type RotateDigitAddResultRowRight<T extends DigitAddResult[]> = T extends [
     ...infer IRest extends DigitAddResult[],
-    [0, infer IResult extends Digit]
+    [0, infer IResult extends Digit],
   ]
     ? [[1, IResult], ...IRest]
     : never;
   type MakeDigitSubtractMap<
     T extends DigitAddResult[],
-    TResult extends DigitAddResult[][] = []
+    TResult extends DigitAddResult[][] = [],
   > = TResult['length'] extends 10
     ? TResult
     : MakeDigitSubtractMap<RotateDigitAddResultRowRight<T>, [...TResult, T]>;
@@ -337,7 +304,7 @@ export namespace int {
   // [borrow][subtrahend][minuend]
   type DigitSubtractMap = [
     MakeDigitSubtractMap<FirstDigitAddResultRow>,
-    MakeDigitSubtractMap<RotateDigitAddResultRowRight<FirstDigitAddResultRow>>
+    MakeDigitSubtractMap<RotateDigitAddResultRowRight<FirstDigitAddResultRow>>,
   ];
 
   declare const testDigitSubtractMap: Tests<
@@ -354,14 +321,11 @@ export namespace int {
       Test<DigitSubtractMap[1][0][9], [0, 8]>,
       Test<DigitSubtractMap[1][9][0], [1, 0]>,
       Test<DigitSubtractMap[0][9][9], [0, 0]>,
-      Test<DigitSubtractMap[1][9][9], [1, 9]>
+      Test<DigitSubtractMap[1][9][9], [1, 9]>,
     ]
   >;
 
-  type TrimLeading0<T extends Digit[]> = T extends [
-    0,
-    ...infer IRest extends Digit[]
-  ]
+  type TrimLeading0<T extends Digit[]> = T extends [0, ...infer IRest extends Digit[]]
     ? TrimLeading0<IRest>
     : T extends []
     ? [0]
@@ -371,26 +335,17 @@ export namespace int {
     TA extends Digit[],
     TB extends Digit[],
     TC extends Bit = 0,
-    TResult extends Digit[] = []
+    TResult extends Digit[] = [],
   > = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
     ? TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-      ? DigitSubtractMap[TC][IB0][IA0] extends [
-          infer IC extends Bit,
-          infer IR extends Digit
-        ]
+      ? DigitSubtractMap[TC][IB0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
         ? DigitwiseSubtract<IARest, IBRest, IC, [IR, ...TResult]>
         : never
-      : DigitSubtractMap[TC][0][IA0] extends [
-          infer IC extends Bit,
-          infer IR extends Digit
-        ]
+      : DigitSubtractMap[TC][0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
       ? DigitwiseSubtract<IARest, [], IC, [IR, ...TResult]>
       : never
     : TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-    ? DigitSubtractMap[0][IB0][TC] extends [
-        infer IC extends Bit,
-        infer IR extends Digit
-      ]
+    ? DigitSubtractMap[0][IB0][TC] extends [infer IC extends Bit, infer IR extends Digit]
       ? DigitwiseSubtract<[], IBRest, IC, [IR, ...TResult]>
       : never
     : TC extends 1
@@ -413,17 +368,14 @@ export namespace int {
           [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         >,
         [0]
-      >
+      >,
     ]
   >;
 
-  export type Subtract<
-    TA extends number | string,
-    TB extends number | string
-  > = [ToInteger<TA>, ToInteger<TB>] extends [
-    infer IA extends Integer,
-    infer IB extends Integer
-  ]
+  export type Subtract<TA extends number | string, TB extends number | string> = [
+    ToInteger<TA>,
+    ToInteger<TB>,
+  ] extends [infer IA extends Integer, infer IB extends Integer]
     ? FromInteger<AddIntegers<IA, Integer<FlipSign<IB['sign']>, IB['digits']>>>
     : never;
 
@@ -441,7 +393,7 @@ export namespace int {
       Test<Subtract<1000, 200>, 800>,
       Test<Subtract<123, 456>, -333>,
       Test<Subtract<123, -456>, 579>,
-      Test<Subtract<123, -123>, 246>
+      Test<Subtract<123, -123>, 246>,
     ]
   >;
 
@@ -449,7 +401,7 @@ export namespace int {
     N extends number,
     TOp extends 'lt' | 'gt',
     TCurrent extends number | undefined = undefined,
-    TPop = PopUnion<N>
+    TPop = PopUnion<N>,
   > = TPop extends {
     rest: infer IRest extends number;
     next: infer INext extends number;
@@ -469,19 +421,11 @@ export namespace int {
   export type Max<N extends number> = MinMax<N, 'gt'>;
 
   declare const testMin: Tests<
-    [
-      Test<Min<5 | 2 | 3>, 2>,
-      Test<Min<-5 | -12345 | 123456 | 123>, -12345>,
-      Test<Min<0>, 0>
-    ]
+    [Test<Min<5 | 2 | 3>, 2>, Test<Min<-5 | -12345 | 123456 | 123>, -12345>, Test<Min<0>, 0>]
   >;
 
   declare const testMax: Tests<
-    [
-      Test<Max<5 | 2 | 3>, 5>,
-      Test<Max<-5 | -12345 | 123456 | 123>, 123456>,
-      Test<Max<0>, 0>
-    ]
+    [Test<Max<5 | 2 | 3>, 5>, Test<Max<-5 | -12345 | 123456 | 123>, 123456>, Test<Max<0>, 0>]
   >;
 
   type DigitMultiplyResult = [carry: Digit, result: Digit];
@@ -494,7 +438,7 @@ export namespace int {
   type MultiplyCounters<
     TA extends any[],
     TB extends any[],
-    TResult extends any[] = []
+    TResult extends any[] = [],
   > = TA extends [any, ...infer IARest extends any[]]
     ? MultiplyCounters<IARest, TB, [...TResult, ...TB]>
     : TResult;
@@ -502,7 +446,7 @@ export namespace int {
   type MakeDigitMultiplyRow<
     TA extends any[],
     TB extends any[] = [],
-    TResult extends DigitMultiplyResult[] = []
+    TResult extends DigitMultiplyResult[] = [],
   > = TB['length'] extends 10
     ? TResult
     : MakeDigitMultiplyRow<
@@ -513,13 +457,10 @@ export namespace int {
 
   type MakeDigitMultiplyMap<
     TA extends any[],
-    TResult extends DigitMultiplyResult[][] = []
+    TResult extends DigitMultiplyResult[][] = [],
   > = TA['length'] extends 10
     ? TResult
-    : MakeDigitMultiplyMap<
-        [...TA, any],
-        [...TResult, MakeDigitMultiplyRow<TA>]
-      >;
+    : MakeDigitMultiplyMap<[...TA, any], [...TResult, MakeDigitMultiplyRow<TA>]>;
 
   type DigitMultiplyMap = MakeDigitMultiplyMap<[]>;
 
@@ -536,7 +477,7 @@ export namespace int {
       Test<DigitMultiplyMap[3][2], [0, 6]>,
       Test<DigitMultiplyMap[3][4], [1, 2]>,
       Test<DigitMultiplyMap[7][8], [5, 6]>,
-      Test<DigitMultiplyMap[9][9], [8, 1]>
+      Test<DigitMultiplyMap[9][9], [8, 1]>,
     ]
   >;
 
@@ -544,22 +485,11 @@ export namespace int {
     TA extends Digit,
     TB extends Digit[],
     TC extends Digit = 0,
-    TResult extends Digit[] = []
+    TResult extends Digit[] = [],
   > = TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-    ? DigitMultiplyMap[TA][IB0] extends [
-        infer IC extends Digit,
-        infer IR extends Digit
-      ]
-      ? DigitAddMap[0][IR][TC] extends [
-          infer IC2 extends Bit,
-          infer IR2 extends Digit
-        ]
-        ? DigitwiseMultiplyOne<
-            TA,
-            IBRest,
-            DigitAddMap[IC2][IC][0][1],
-            [IR2, ...TResult]
-          >
+    ? DigitMultiplyMap[TA][IB0] extends [infer IC extends Digit, infer IR extends Digit]
+      ? DigitAddMap[0][IR][TC] extends [infer IC2 extends Bit, infer IR2 extends Digit]
+        ? DigitwiseMultiplyOne<TA, IBRest, DigitAddMap[IC2][IC][0][1], [IR2, ...TResult]>
         : never
       : never
     : TC extends 0
@@ -570,7 +500,7 @@ export namespace int {
     TA extends Digit[],
     TB extends Digit[],
     TPad extends 0[] = [],
-    TResult extends Digit[] = [0]
+    TResult extends Digit[] = [0],
   > = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
     ? DigitwiseMultiply<
         IARest,
@@ -582,7 +512,7 @@ export namespace int {
 
   export type Multiply<TA extends number, TB extends number> = [
     ToInteger<TA>,
-    ToInteger<TB>
+    ToInteger<TB>,
   ] extends [infer IA extends Integer, infer IB extends Integer]
     ? FromInteger<
         Integer<
@@ -602,7 +532,7 @@ export namespace int {
       Test<Multiply<-99, 99>, -9801>,
       Test<Multiply<99, -99>, -9801>,
       Test<Multiply<-99, -99>, 9801>,
-      Test<Multiply<123, 2>, 246>
+      Test<Multiply<123, 2>, 246>,
     ]
   >;
 }

@@ -17,29 +17,26 @@ type Round = {
 type CubeColor = keyof Round;
 type Game = { index: number; rounds: Round[] };
 
-type ParseGames<TInput extends string> =
-  TInput extends `${infer IGame}\n${infer IRest}`
-    ? [ParseGame<IGame>, ...ParseGames<IRest>]
-    : [];
+type ParseGames<TInput extends string> = TInput extends `${infer IGame}\n${infer IRest}`
+  ? [ParseGame<IGame>, ...ParseGames<IRest>]
+  : [];
 
 type ParseGame<TLine extends string> =
   TLine extends `Game ${infer IIndex extends number}: ${infer IRoundsStr}`
     ? { index: IIndex; rounds: ParseRounds<IRoundsStr> }
     : never;
 
-type ParseRounds<TRoundsStr extends string> =
-  TRoundsStr extends `${infer IRound}; ${infer IRest}`
-    ? [DefaultRound<ParseRound<IRound>>, ...ParseRounds<IRest>]
-    : [DefaultRound<ParseRound<TRoundsStr>>];
+type ParseRounds<TRoundsStr extends string> = TRoundsStr extends `${infer IRound}; ${infer IRest}`
+  ? [DefaultRound<ParseRound<IRound>>, ...ParseRounds<IRest>]
+  : [DefaultRound<ParseRound<TRoundsStr>>];
 
 type DefaultRound<TRound extends Partial<Round>> = TRound extends infer O
   ? { [K in CubeColor]: K extends keyof O ? O[K] : 0 }
   : never;
 
-type ParseRound<TRoundStr extends string> =
-  TRoundStr extends `${infer ICubes}, ${infer IRest}`
-    ? ParseCubes<ICubes> & ParseRound<IRest>
-    : ParseCubes<TRoundStr>;
+type ParseRound<TRoundStr extends string> = TRoundStr extends `${infer ICubes}, ${infer IRest}`
+  ? ParseCubes<ICubes> & ParseRound<IRest>
+  : ParseCubes<TRoundStr>;
 
 type ParseCubes<TDieStr extends string> =
   TDieStr extends `${infer ICount extends number} ${infer IColor extends CubeColor}`
@@ -47,17 +44,15 @@ type ParseCubes<TDieStr extends string> =
     : never;
 
 type FilterRound<TRound extends Round, TLimits extends Round> = {
-  [KColor in CubeColor]: LessThan<TLimits[KColor], TRound[KColor]> extends true
-    ? false
-    : true;
+  [KColor in CubeColor]: LessThan<TLimits[KColor], TRound[KColor]> extends true ? false : true;
 }[CubeColor] extends true
   ? true
   : false;
 
-type FilterRounds<
-  TRounds extends Round[],
-  TLimits extends Round
-> = TRounds extends [infer IRound extends Round, ...infer IRest extends Round[]]
+type FilterRounds<TRounds extends Round[], TLimits extends Round> = TRounds extends [
+  infer IRound extends Round,
+  ...infer IRest extends Round[],
+]
   ? FilterRound<IRound, TLimits> extends false
     ? false
     : FilterRounds<IRest, TLimits>
@@ -70,10 +65,10 @@ type FilterGame<TGame extends Game, TLimits extends Round> = FilterRounds<
   ? TGame
   : never;
 
-type FilterGames<
-  TGames extends Game[],
-  TLimits extends Round
-> = TGames extends [infer IGame extends Game, ...infer IRest extends Game[]]
+type FilterGames<TGames extends Game[], TLimits extends Round> = TGames extends [
+  infer IGame extends Game,
+  ...infer IRest extends Game[],
+]
   ? [FilterGame<IGame, TLimits>, ...FilterGames<IRest, TLimits>]
   : [];
 
@@ -81,11 +76,7 @@ type MakeTuple<N extends number, T extends 0[] = []> = T['length'] extends N
   ? T
   : MakeTuple<N, [...T, 0]>;
 
-type LessThan<
-  A extends number,
-  B extends number,
-  T extends any[] = []
-> = T['length'] extends B
+type LessThan<A extends number, B extends number, T extends any[] = []> = T['length'] extends B
   ? false
   : T['length'] extends A
   ? true
@@ -102,10 +93,10 @@ type PossibleGames = FilterGames<
   }
 >;
 
-type SumPossibleGames<
-  TItems extends Game[],
-  TResult extends any[] = []
-> = TItems extends [infer IGame extends Game, ...infer IRest extends Game[]]
+type SumPossibleGames<TItems extends Game[], TResult extends any[] = []> = TItems extends [
+  infer IGame extends Game,
+  ...infer IRest extends Game[],
+]
   ? [IGame] extends [never]
     ? SumPossibleGames<IRest, TResult>
     : SumPossibleGames<IRest, [...TResult, ...MakeTuple<IGame['index']>]>
@@ -122,10 +113,10 @@ type CubePower<TCubes extends Round> = int.Multiply<
   TCubes['blue']
 >;
 
-type Solve2<
-  TGames extends Game[],
-  TResult extends number = 0
-> = TGames extends [infer IGame extends Game, ...infer IRest extends Game[]]
+type Solve2<TGames extends Game[], TResult extends number = 0> = TGames extends [
+  infer IGame extends Game,
+  ...infer IRest extends Game[],
+]
   ? Solve2<IRest, int.Add<TResult, CubePower<MinimumCubes<IGame['rounds']>>>>
   : TResult;
 
