@@ -1,4 +1,4 @@
-import { Test, Tests } from './utils';
+import { test } from './test';
 import { PopUnion } from './utils';
 
 export namespace bin {
@@ -30,17 +30,15 @@ export namespace bin {
     ? [TC, ...TResult]
     : TResult;
 
-  declare const testBitwiseAdd: Tests<
-    [
-      Test<BitwiseAdd<[], []>, []>,
-      Test<BitwiseAdd<[], [0]>, [0]>,
-      Test<BitwiseAdd<[0], []>, [0]>,
-      Test<BitwiseAdd<[1], []>, [1]>,
-      Test<BitwiseAdd<[], [1]>, [1]>,
-      Test<BitwiseAdd<[1], [1]>, [1, 0]>,
-      Test<BitwiseAdd<[1, 0], [1, 0, 1]>, [1, 1, 1]>,
-      Test<BitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 0, 0, 1]>,
-    ]
+  declare const testBitwiseAdd: test.Describe<
+    test.Expect<BitwiseAdd<[], []>, []>,
+    test.Expect<BitwiseAdd<[], [0]>, [0]>,
+    test.Expect<BitwiseAdd<[0], []>, [0]>,
+    test.Expect<BitwiseAdd<[1], []>, [1]>,
+    test.Expect<BitwiseAdd<[], [1]>, [1]>,
+    test.Expect<BitwiseAdd<[1], [1]>, [1, 0]>,
+    test.Expect<BitwiseAdd<[1, 0], [1, 0, 1]>, [1, 1, 1]>,
+    test.Expect<BitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 0, 0, 1]>
   >;
 }
 
@@ -81,22 +79,20 @@ export namespace int {
     MakeDigitAddMap<RotateDigitAddResultRowLeft<FirstDigitAddResultRow>>,
   ];
 
-  declare const testDigitAddMap: Tests<
-    [
-      Test<DigitAddMap[0][0][0], [0, 0]>,
-      Test<DigitAddMap[0][1][0], [0, 1]>,
-      Test<DigitAddMap[0][0][1], [0, 1]>,
-      Test<DigitAddMap[1][0][0], [0, 1]>,
-      Test<DigitAddMap[0][1][1], [0, 2]>,
-      Test<DigitAddMap[1][0][1], [0, 2]>,
-      Test<DigitAddMap[1][1][0], [0, 2]>,
-      Test<DigitAddMap[0][9][0], [0, 9]>,
-      Test<DigitAddMap[0][0][9], [0, 9]>,
-      Test<DigitAddMap[1][9][0], [1, 0]>,
-      Test<DigitAddMap[1][0][9], [1, 0]>,
-      Test<DigitAddMap[0][9][9], [1, 8]>,
-      Test<DigitAddMap[1][9][9], [1, 9]>,
-    ]
+  declare const testDigitAddMap: test.Describe<
+    test.Expect<DigitAddMap[0][0][0], [0, 0]>,
+    test.Expect<DigitAddMap[0][1][0], [0, 1]>,
+    test.Expect<DigitAddMap[0][0][1], [0, 1]>,
+    test.Expect<DigitAddMap[1][0][0], [0, 1]>,
+    test.Expect<DigitAddMap[0][1][1], [0, 2]>,
+    test.Expect<DigitAddMap[1][0][1], [0, 2]>,
+    test.Expect<DigitAddMap[1][1][0], [0, 2]>,
+    test.Expect<DigitAddMap[0][9][0], [0, 9]>,
+    test.Expect<DigitAddMap[0][0][9], [0, 9]>,
+    test.Expect<DigitAddMap[1][9][0], [1, 0]>,
+    test.Expect<DigitAddMap[1][0][9], [1, 0]>,
+    test.Expect<DigitAddMap[0][9][9], [1, 8]>,
+    test.Expect<DigitAddMap[1][9][9], [1, 9]>
   >;
 
   export type DigitwiseAdd<
@@ -120,17 +116,15 @@ export namespace int {
     ? [TC, ...TResult]
     : TResult;
 
-  declare const testDigitwiseAdd: Tests<
-    [
-      Test<DigitwiseAdd<[], []>, []>,
-      Test<DigitwiseAdd<[], [0]>, [0]>,
-      Test<DigitwiseAdd<[0], []>, [0]>,
-      Test<DigitwiseAdd<[1], []>, [1]>,
-      Test<DigitwiseAdd<[], [1]>, [1]>,
-      Test<DigitwiseAdd<[1], [1]>, [2]>,
-      Test<DigitwiseAdd<[1, 0], [1, 0, 1]>, [1, 1, 1]>,
-      Test<DigitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 2, 1]>,
-    ]
+  declare const testDigitwiseAdd: test.Describe<
+    test.Expect<DigitwiseAdd<[], []>, []>,
+    test.Expect<DigitwiseAdd<[], [0]>, [0]>,
+    test.Expect<DigitwiseAdd<[0], []>, [0]>,
+    test.Expect<DigitwiseAdd<[1], []>, [1]>,
+    test.Expect<DigitwiseAdd<[], [1]>, [1]>,
+    test.Expect<DigitwiseAdd<[1], [1]>, [2]>,
+    test.Expect<DigitwiseAdd<[1, 0], [1, 0, 1]>, [1, 1, 1]>,
+    test.Expect<DigitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 2, 1]>
   >;
 
   type StrToDigits<S extends string> = S extends `${infer IChar extends Digit}${infer IRest}`
@@ -153,20 +147,18 @@ export namespace int {
         digits: StrToDigits<`${T}`>;
       };
 
-  declare const testToInteger: Tests<
-    [
-      Test<ToInteger<'0'>, Integer<'+', [0]>>,
-      Test<ToInteger<'1'>, Integer<'+', [1]>>,
-      Test<ToInteger<'123'>, Integer<'+', [1, 2, 3]>>,
-      Test<ToInteger<'-0'>, Integer<'-', [0]>>,
-      Test<ToInteger<'-1'>, Integer<'-', [1]>>,
-      Test<ToInteger<'-123'>, Integer<'-', [1, 2, 3]>>,
-      Test<ToInteger<0>, Integer<'+', [0]>>,
-      Test<ToInteger<1>, Integer<'+', [1]>>,
-      Test<ToInteger<123>, Integer<'+', [1, 2, 3]>>,
-      Test<ToInteger<-1>, Integer<'-', [1]>>,
-      Test<ToInteger<-123>, Integer<'-', [1, 2, 3]>>,
-    ]
+  declare const testToInteger: test.Describe<
+    test.Expect<ToInteger<'0'>, Integer<'+', [0]>>,
+    test.Expect<ToInteger<'1'>, Integer<'+', [1]>>,
+    test.Expect<ToInteger<'123'>, Integer<'+', [1, 2, 3]>>,
+    test.Expect<ToInteger<'-0'>, Integer<'-', [0]>>,
+    test.Expect<ToInteger<'-1'>, Integer<'-', [1]>>,
+    test.Expect<ToInteger<'-123'>, Integer<'-', [1, 2, 3]>>,
+    test.Expect<ToInteger<0>, Integer<'+', [0]>>,
+    test.Expect<ToInteger<1>, Integer<'+', [1]>>,
+    test.Expect<ToInteger<123>, Integer<'+', [1, 2, 3]>>,
+    test.Expect<ToInteger<-1>, Integer<'-', [1]>>,
+    test.Expect<ToInteger<-123>, Integer<'-', [1, 2, 3]>>
   >;
 
   export type FromInteger<T extends Integer> = T['digits'] extends [0]
@@ -177,15 +169,13 @@ export namespace int {
     ? N
     : never;
 
-  declare const testFromInteger: Tests<
-    [
-      Test<FromInteger<Integer<'+', [0]>>, 0>,
-      Test<FromInteger<Integer<'+', [1]>>, 1>,
-      Test<FromInteger<Integer<'+', [1, 2, 3]>>, 123>,
-      Test<FromInteger<Integer<'-', [0]>>, 0>,
-      Test<FromInteger<Integer<'-', [1]>>, -1>,
-      Test<FromInteger<Integer<'-', [1, 2, 3]>>, -123>,
-    ]
+  declare const testFromInteger: test.Describe<
+    test.Expect<FromInteger<Integer<'+', [0]>>, 0>,
+    test.Expect<FromInteger<Integer<'+', [1]>>, 1>,
+    test.Expect<FromInteger<Integer<'+', [1, 2, 3]>>, 123>,
+    test.Expect<FromInteger<Integer<'-', [0]>>, 0>,
+    test.Expect<FromInteger<Integer<'-', [1]>>, -1>,
+    test.Expect<FromInteger<Integer<'-', [1, 2, 3]>>, -123>
   >;
 
   export type AddIntegers<TA extends Integer, TB extends Integer> = {
@@ -214,24 +204,22 @@ export namespace int {
     ? FromInteger<AddIntegers<IA, IB>>
     : never;
 
-  declare const testAdd: Tests<
-    [
-      Test<Add<0, 0>, 0>,
-      Test<Add<1, 1>, 2>,
-      Test<Add<0, 1>, 1>,
-      Test<Add<1, 0>, 1>,
-      Test<Add<12, 23>, 35>,
-      Test<Add<875, 125>, 1000>,
-      Test<Add<123, 123>, 246>,
-      Test<Add<'123', 123>, 246>,
-      Test<Add<123, '123'>, 246>,
-      Test<Add<'123', '123'>, 246>,
-      Test<Add<123, -123>, 0>,
-      Test<Add<-123, -123>, -246>,
-      Test<Add<-123, 0>, -123>,
-      Test<Add<0, -123>, -123>,
-      Test<Add<123, 123>, 246>,
-    ]
+  declare const testAdd: test.Describe<
+    test.Expect<Add<0, 0>, 0>,
+    test.Expect<Add<1, 1>, 2>,
+    test.Expect<Add<0, 1>, 1>,
+    test.Expect<Add<1, 0>, 1>,
+    test.Expect<Add<12, 23>, 35>,
+    test.Expect<Add<875, 125>, 1000>,
+    test.Expect<Add<123, 123>, 246>,
+    test.Expect<Add<'123', 123>, 246>,
+    test.Expect<Add<123, '123'>, 246>,
+    test.Expect<Add<'123', '123'>, 246>,
+    test.Expect<Add<123, -123>, 0>,
+    test.Expect<Add<-123, -123>, -246>,
+    test.Expect<Add<-123, 0>, -123>,
+    test.Expect<Add<0, -123>, -123>,
+    test.Expect<Add<123, 123>, 246>
   >;
 
   type CompareResult = 'lt' | 'eq' | 'gt';
@@ -271,21 +259,19 @@ export namespace int {
     ToInteger<TB>
   >;
 
-  declare const testCompare: Tests<
-    [
-      Test<Compare<5, 8>, 'lt'>,
-      Test<Compare<10, 5>, 'gt'>,
-      Test<Compare<0, 0>, 'eq'>,
-      Test<Compare<-5, -2>, 'lt'>,
-      Test<Compare<-10, -15>, 'gt'>,
-      Test<Compare<100, 100>, 'eq'>,
-      Test<Compare<-50, -50>, 'eq'>,
-      Test<Compare<1000000, 999999>, 'gt'>,
-      Test<Compare<-999999, -1000000>, 'gt'>,
-      Test<Compare<42, 42>, 'eq'>,
-      Test<Compare<-73, 73>, 'lt'>,
-      Test<Compare<999, -999>, 'gt'>,
-    ]
+  declare const testCompare: test.Describe<
+    test.Expect<Compare<5, 8>, 'lt'>,
+    test.Expect<Compare<10, 5>, 'gt'>,
+    test.Expect<Compare<0, 0>, 'eq'>,
+    test.Expect<Compare<-5, -2>, 'lt'>,
+    test.Expect<Compare<-10, -15>, 'gt'>,
+    test.Expect<Compare<100, 100>, 'eq'>,
+    test.Expect<Compare<-50, -50>, 'eq'>,
+    test.Expect<Compare<1000000, 999999>, 'gt'>,
+    test.Expect<Compare<-999999, -1000000>, 'gt'>,
+    test.Expect<Compare<42, 42>, 'eq'>,
+    test.Expect<Compare<-73, 73>, 'lt'>,
+    test.Expect<Compare<999, -999>, 'gt'>
   >;
 
   type RotateDigitAddResultRowRight<T extends DigitAddResult[]> = T extends [
@@ -307,22 +293,20 @@ export namespace int {
     MakeDigitSubtractMap<RotateDigitAddResultRowRight<FirstDigitAddResultRow>>,
   ];
 
-  declare const testDigitSubtractMap: Tests<
-    [
-      Test<DigitSubtractMap[0][0][0], [0, 0]>,
-      Test<DigitSubtractMap[0][0][1], [0, 1]>,
-      Test<DigitSubtractMap[0][1][0], [1, 9]>,
-      Test<DigitSubtractMap[1][0][0], [1, 9]>,
-      Test<DigitSubtractMap[0][1][1], [0, 0]>,
-      Test<DigitSubtractMap[1][1][0], [1, 8]>,
-      Test<DigitSubtractMap[1][0][1], [0, 0]>,
-      Test<DigitSubtractMap[0][0][9], [0, 9]>,
-      Test<DigitSubtractMap[0][9][0], [1, 1]>,
-      Test<DigitSubtractMap[1][0][9], [0, 8]>,
-      Test<DigitSubtractMap[1][9][0], [1, 0]>,
-      Test<DigitSubtractMap[0][9][9], [0, 0]>,
-      Test<DigitSubtractMap[1][9][9], [1, 9]>,
-    ]
+  declare const testDigitSubtractMap: test.Describe<
+    test.Expect<DigitSubtractMap[0][0][0], [0, 0]>,
+    test.Expect<DigitSubtractMap[0][0][1], [0, 1]>,
+    test.Expect<DigitSubtractMap[0][1][0], [1, 9]>,
+    test.Expect<DigitSubtractMap[1][0][0], [1, 9]>,
+    test.Expect<DigitSubtractMap[0][1][1], [0, 0]>,
+    test.Expect<DigitSubtractMap[1][1][0], [1, 8]>,
+    test.Expect<DigitSubtractMap[1][0][1], [0, 0]>,
+    test.Expect<DigitSubtractMap[0][0][9], [0, 9]>,
+    test.Expect<DigitSubtractMap[0][9][0], [1, 1]>,
+    test.Expect<DigitSubtractMap[1][0][9], [0, 8]>,
+    test.Expect<DigitSubtractMap[1][9][0], [1, 0]>,
+    test.Expect<DigitSubtractMap[0][9][9], [0, 0]>,
+    test.Expect<DigitSubtractMap[1][9][9], [1, 9]>
   >;
 
   type TrimLeading0<T extends Digit[]> = T extends [0, ...infer IRest extends Digit[]]
@@ -352,24 +336,22 @@ export namespace int {
     ? never // subtraction should always be aligned to not result in a borrow
     : TrimLeading0<TResult>;
 
-  declare const testSubtractDigits: Tests<
-    [
-      Test<DigitwiseSubtract<[], []>, [0]>,
-      Test<DigitwiseSubtract<[], [0]>, [0]>,
-      Test<DigitwiseSubtract<[0], []>, [0]>,
-      Test<DigitwiseSubtract<[1], []>, [1]>,
-      Test<DigitwiseSubtract<[], [1]>, never>,
-      Test<DigitwiseSubtract<[1], [1]>, [0]>,
-      Test<DigitwiseSubtract<[1, 0, 1], [1, 0]>, [9, 1]>,
-      Test<DigitwiseSubtract<[1, 0, 0], [9, 9]>, [1]>,
-      Test<
-        DigitwiseSubtract<
-          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        >,
-        [0]
+  declare const testSubtractDigits: test.Describe<
+    test.Expect<DigitwiseSubtract<[], []>, [0]>,
+    test.Expect<DigitwiseSubtract<[], [0]>, [0]>,
+    test.Expect<DigitwiseSubtract<[0], []>, [0]>,
+    test.Expect<DigitwiseSubtract<[1], []>, [1]>,
+    test.Expect<DigitwiseSubtract<[], [1]>, never>,
+    test.Expect<DigitwiseSubtract<[1], [1]>, [0]>,
+    test.Expect<DigitwiseSubtract<[1, 0, 1], [1, 0]>, [9, 1]>,
+    test.Expect<DigitwiseSubtract<[1, 0, 0], [9, 9]>, [1]>,
+    test.Expect<
+      DigitwiseSubtract<
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       >,
-    ]
+      [0]
+    >
   >;
 
   export type Subtract<TA extends number | string, TB extends number | string> = [
@@ -379,22 +361,20 @@ export namespace int {
     ? FromInteger<AddIntegers<IA, Integer<FlipSign<IB['sign']>, IB['digits']>>>
     : never;
 
-  declare const testSubtract: Tests<
-    [
-      Test<Subtract<0, 0>, 0>,
-      Test<Subtract<0, 1>, -1>,
-      Test<Subtract<1, 0>, 1>,
-      Test<Subtract<1, 1>, 0>,
-      Test<Subtract<-1, 1>, -2>,
-      Test<Subtract<1, -1>, 2>,
-      Test<Subtract<-1, -1>, 0>,
-      Test<Subtract<0, 100>, -100>,
-      Test<Subtract<200, 100>, 100>,
-      Test<Subtract<1000, 200>, 800>,
-      Test<Subtract<123, 456>, -333>,
-      Test<Subtract<123, -456>, 579>,
-      Test<Subtract<123, -123>, 246>,
-    ]
+  declare const testSubtract: test.Describe<
+    test.Expect<Subtract<0, 0>, 0>,
+    test.Expect<Subtract<0, 1>, -1>,
+    test.Expect<Subtract<1, 0>, 1>,
+    test.Expect<Subtract<1, 1>, 0>,
+    test.Expect<Subtract<-1, 1>, -2>,
+    test.Expect<Subtract<1, -1>, 2>,
+    test.Expect<Subtract<-1, -1>, 0>,
+    test.Expect<Subtract<0, 100>, -100>,
+    test.Expect<Subtract<200, 100>, 100>,
+    test.Expect<Subtract<1000, 200>, 800>,
+    test.Expect<Subtract<123, 456>, -333>,
+    test.Expect<Subtract<123, -456>, 579>,
+    test.Expect<Subtract<123, -123>, 246>
   >;
 
   type MinMax<
@@ -420,12 +400,16 @@ export namespace int {
   export type Min<N extends number> = MinMax<N, 'lt'>;
   export type Max<N extends number> = MinMax<N, 'gt'>;
 
-  declare const testMin: Tests<
-    [Test<Min<5 | 2 | 3>, 2>, Test<Min<-5 | -12345 | 123456 | 123>, -12345>, Test<Min<0>, 0>]
+  declare const testMin: test.Describe<
+    test.Expect<Min<5 | 2 | 3>, 2>,
+    test.Expect<Min<-5 | -12345 | 123456 | 123>, -12345>,
+    test.Expect<Min<0>, 0>
   >;
 
-  declare const testMax: Tests<
-    [Test<Max<5 | 2 | 3>, 5>, Test<Max<-5 | -12345 | 123456 | 123>, 123456>, Test<Max<0>, 0>]
+  declare const testMax: test.Describe<
+    test.Expect<Max<5 | 2 | 3>, 5>,
+    test.Expect<Max<-5 | -12345 | 123456 | 123>, 123456>,
+    test.Expect<Max<0>, 0>
   >;
 
   type DigitMultiplyResult = [carry: Digit, result: Digit];
@@ -464,21 +448,19 @@ export namespace int {
 
   type DigitMultiplyMap = MakeDigitMultiplyMap<[]>;
 
-  declare const testDigitMultiplyMap: Tests<
-    [
-      Test<DigitMultiplyMap[0][0], [0, 0]>,
-      Test<DigitMultiplyMap[0][1], [0, 0]>,
-      Test<DigitMultiplyMap[1][1], [0, 1]>,
-      Test<DigitMultiplyMap[1][0], [0, 0]>,
-      Test<DigitMultiplyMap[0][2], [0, 0]>,
-      Test<DigitMultiplyMap[2][0], [0, 0]>,
-      Test<DigitMultiplyMap[2][1], [0, 2]>,
-      Test<DigitMultiplyMap[1][2], [0, 2]>,
-      Test<DigitMultiplyMap[3][2], [0, 6]>,
-      Test<DigitMultiplyMap[3][4], [1, 2]>,
-      Test<DigitMultiplyMap[7][8], [5, 6]>,
-      Test<DigitMultiplyMap[9][9], [8, 1]>,
-    ]
+  declare const testDigitMultiplyMap: test.Describe<
+    test.Expect<DigitMultiplyMap[0][0], [0, 0]>,
+    test.Expect<DigitMultiplyMap[0][1], [0, 0]>,
+    test.Expect<DigitMultiplyMap[1][1], [0, 1]>,
+    test.Expect<DigitMultiplyMap[1][0], [0, 0]>,
+    test.Expect<DigitMultiplyMap[0][2], [0, 0]>,
+    test.Expect<DigitMultiplyMap[2][0], [0, 0]>,
+    test.Expect<DigitMultiplyMap[2][1], [0, 2]>,
+    test.Expect<DigitMultiplyMap[1][2], [0, 2]>,
+    test.Expect<DigitMultiplyMap[3][2], [0, 6]>,
+    test.Expect<DigitMultiplyMap[3][4], [1, 2]>,
+    test.Expect<DigitMultiplyMap[7][8], [5, 6]>,
+    test.Expect<DigitMultiplyMap[9][9], [8, 1]>
   >;
 
   type DigitwiseMultiplyOne<
@@ -522,17 +504,15 @@ export namespace int {
       >
     : never;
 
-  declare const testMultiply: Tests<
-    [
-      Test<Multiply<0, 0>, 0>,
-      Test<Multiply<1, 1>, 1>,
-      Test<Multiply<10, 0>, 0>,
-      Test<Multiply<0, 10>, 0>,
-      Test<Multiply<99, 99>, 9801>,
-      Test<Multiply<-99, 99>, -9801>,
-      Test<Multiply<99, -99>, -9801>,
-      Test<Multiply<-99, -99>, 9801>,
-      Test<Multiply<123, 2>, 246>,
-    ]
+  declare const testMultiply: test.Describe<
+    test.Expect<Multiply<0, 0>, 0>,
+    test.Expect<Multiply<1, 1>, 1>,
+    test.Expect<Multiply<10, 0>, 0>,
+    test.Expect<Multiply<0, 10>, 0>,
+    test.Expect<Multiply<99, 99>, 9801>,
+    test.Expect<Multiply<-99, 99>, -9801>,
+    test.Expect<Multiply<99, -99>, -9801>,
+    test.Expect<Multiply<-99, -99>, 9801>,
+    test.Expect<Multiply<123, 2>, 246>
   >;
 }
