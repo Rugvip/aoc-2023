@@ -1,5 +1,18 @@
 import { Input } from '../input/03';
 import { int } from './lib/math';
+import { PopUnion } from './lib/utils';
+
+// type Input = `467..114..
+// ...*......
+// ..35..633.
+// ......#...
+// 617*......
+// .....+.58.
+// ..592.....
+// ......755.
+// ...$.*....
+// .664.598..
+// `;
 
 type ToArray<S extends string> = S extends `${infer Char}${infer Rest}`
   ? [Char, ...ToArray<Rest>]
@@ -129,3 +142,57 @@ type Sum<
   : TResult;
 
 export declare const solution1: Sum<MatchingNumbers>;
+
+type Gear = { x: number; y: number };
+
+type FindGridGears<
+  TGrid extends Grid,
+  TXCounter extends any[] = [],
+  TYCounter extends any[] = []
+> = TXCounter['length'] extends TGrid['width']
+  ? FindGridGears<TGrid, [], [...TYCounter, any]>
+  : TYCounter['length'] extends TGrid['height']
+  ? []
+  : GridItem<TGrid, TXCounter['length'], TYCounter['length']> extends '*'
+  ? [
+      { x: TXCounter['length']; y: TYCounter['length'] },
+      ...FindGridGears<TGrid, [...TXCounter, any], TYCounter>
+    ]
+  : FindGridGears<TGrid, [...TXCounter, any], TYCounter>;
+
+type FindGearNumbers<
+  TGear extends Gear,
+  TNumbers extends GridNumber // union
+> = TNumbers extends any
+  ? TGear extends Pick<TNumbers, 'y' | 'x'>
+    ? TNumbers['str'] extends `${infer N extends number}`
+      ? N
+      : never
+    : never
+  : never;
+
+type GearNumberProduct<N extends number> = PopUnion<N> extends {
+  next: infer A extends number;
+  rest: infer R extends number;
+}
+  ? PopUnion<R> extends {
+      next: infer B extends number;
+      rest: never;
+    }
+    ? int.Multiply<A, B>
+    : 0
+  : 0;
+
+type SumGridGears<
+  TGears extends Gear[],
+  TNumbers extends GridNumber
+> = TGears extends [infer IHead extends Gear, ...infer IRest extends Gear[]]
+  ? FindGearNumbers<IHead, TNumbers> extends infer INumbers extends number
+    ? int.Add<SumGridGears<IRest, TNumbers>, GearNumberProduct<INumbers>>
+    : SumGridGears<IRest, TNumbers>
+  : 0;
+
+export declare const solution2: SumGridGears<
+  FindGridGears<InputGrid>,
+  InputGridNumbers[number]
+>;
