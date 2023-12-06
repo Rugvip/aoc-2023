@@ -5,6 +5,7 @@
     "print": "node --stack-size=16384 --max-old-space-size=16384 print-exports.js"
   },
   "dependencies": {
-    "typescript": "^5.3.2"
-  }
+    "typescript": "patch:typescript@npm%3A5.3.2#~/.yarn/patches/typescript-npm-5.3.2-a11892b3bc.patch"
+  },
+  "packageManager": "yarn@4.0.2"
 }
