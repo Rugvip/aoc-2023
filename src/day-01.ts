@@ -1,7 +1,7 @@
 import { Input } from '../input/01';
-import { dec } from './lib/math';
+import { int } from './lib/math';
 
-type DigitMap = { [K in dec.Digit as `${K}`]: K };
+type DigitMap = { [K in int.Digit as `${K}`]: K };
 type StrDigitMap = {
   one: 1;
   two: 2;
@@ -50,7 +50,7 @@ type Solve<
   TDigitMap extends AnyDigitMap,
   TResult extends number = 0,
 > = TInput extends `${infer Line}\n${infer Rest}`
-  ? Solve<Rest, TDigitMap, dec.Add<TResult, Digits<Line, TDigitMap>>>
+  ? Solve<Rest, TDigitMap, int.Add<TResult, Digits<Line, TDigitMap>>>
   : TResult;
 
 export declare const solution1: Solve<Input, DigitMap>;
