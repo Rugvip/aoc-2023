@@ -93,3 +93,14 @@ yarn run print <day>
 ```
 
 For example, `yarn run print 4` prints the output of day 4.
+
+## Progress
+
+| Day | Stars   |
+| --- | ------- |
+| 1   | ⭐️ ⭐️ |
+| 2   | ⭐️     |
+| 3   | ⭐️     |
+| 4   | ⭐️ ⭐️ |
+| 5   | ⭐️     |
+| 6   | ⭐️ ⭐️ |
