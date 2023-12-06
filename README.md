@@ -99,7 +99,7 @@ For example, `yarn run print 4` prints the output of day 4.
 | Day | Stars   |
 | --- | ------- |
 | 1   | ⭐️ ⭐️ |
-| 2   | ⭐️     |
+| 2   | ⭐️ ⭐️ |
 | 3   | ⭐️     |
 | 4   | ⭐️ ⭐️ |
 | 5   | ⭐️     |

@@ -1,4 +1,5 @@
 import { Input } from '../input/02';
+import { int } from './lib/math';
 
 // type Input = `Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 // Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
@@ -6,14 +7,6 @@ import { Input } from '../input/02';
 // Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 // Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
 // `;
-
-/*
-In game 1, the game could have been played with as few as 4 red, 2 green, and 6 blue cubes. If any color had even one fewer cube, the game would have been impossible.
-Game 2 could have been played with a minimum of 1 red, 3 green, and 4 blue cubes.
-Game 3 must have been played with at least 20 red, 13 green, and 6 blue cubes.
-Game 4 required at least 14 red, 3 green, and 15 blue cubes.
-Game 5 needed no fewer than 6 red, 3 green, and 2 blue cubes in the bag.
-*/
 
 type Round = {
   green: number;
@@ -120,39 +113,20 @@ type SumPossibleGames<
 
 export declare const solution1: SumPossibleGames<PossibleGames>;
 
-// type MinimumCubes<TRounds extends Round[]> = {
-//   [KColor in CubeColor]: Max<TRounds[number][KColor]>;
-// };
+type MinimumCubes<TRounds extends Round[]> = {
+  [KColor in CubeColor]: int.Max<TRounds[number][KColor]> & number;
+};
 
-// type MakeMaxTable<
-//   T extends number,
-//   TCount extends any[] = [],
-//   TTable extends Record<number, number> = { 0: 0 }
-// > = TCount['length'] extends T
-//   ? TTable
-//   : TTable &
-//       MakeMaxTable<
-//         T,
-//         [...TCount, any],
-//         {
-//           [_ in [...TCount, any]['length']]:
-//             | [...TCount, any]['length']
-//             | TTable[TCount['length']];
-//         }
-//       >;
+type CubePower<TCubes extends Round> = int.Multiply<
+  int.Multiply<TCubes['red'], TCubes['green']>,
+  TCubes['blue']
+>;
 
-// type MaxTable = MakeMaxTable<21>;
+type Solve2<
+  TGames extends Game[],
+  TResult extends number = 0
+> = TGames extends [infer IGame extends Game, ...infer IRest extends Game[]]
+  ? Solve2<IRest, int.Add<TResult, CubePower<MinimumCubes<IGame['rounds']>>>>
+  : TResult;
 
-// type MaxImpl<
-//   T extends keyof MaxTable,
-//   TCount extends any[] = []
-// > = TCount['length'] extends T
-//   ? MaxImpl<T, [...TCount, any]>
-//   : TCount extends [...infer IRest, any]
-//   ? IRest['length']
-//   : 0;
-// type Max<T extends number> = T extends keyof MaxTable
-//   ? MaxImpl<MaxTable[T]>
-//   : never;
-
-// type t0 = Max<test>;
+export declare const solution2: Solve2<AllGames>;
