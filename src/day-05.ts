@@ -36,18 +36,26 @@ import { int } from './lib/math';
 // 56 93 4
 // `;
 
-type NumberMap = { from: number; to: number; length: number };
+type Range<TStart extends number = number, TLength extends number = number> = {
+  start: TStart;
+  length: TLength;
+};
+type NumberMap<
+  TStart extends number = number,
+  TLength extends number = number,
+  TTo extends number = number
+> = Range<TStart, TLength> & { to: TTo };
 
 type ParseInit<S extends string> =
   S extends `${infer INext extends number} ${infer IRest}`
-    ? INext | ParseInit<IRest>
+    ? [INext, ...ParseInit<IRest>]
     : S extends `${infer ILast extends number}`
-    ? ILast
+    ? [ILast]
     : never;
 
 type ParseMap<S extends string> =
-  S extends `${infer ITo extends number} ${infer IFrom extends number} ${infer ILength extends number}`
-    ? { from: IFrom; to: ITo; length: ILength }
+  S extends `${infer ITo extends number} ${infer IStart extends number} ${infer ILength extends number}`
+    ? { start: IStart; to: ITo; length: ILength }
     : never;
 
 type ParseMaps<S extends string> = S extends `${infer IEntry}\n${infer IRest}`
@@ -69,9 +77,12 @@ type ParseInput<S extends string> =
 type ApplyNumberMap<
   TNumber extends number,
   TNumberMap extends NumberMap
-> = int.Compare<TNumber, TNumberMap['from']> extends 'lt'
+> = int.Compare<TNumber, TNumberMap['start']> extends 'lt'
   ? TNumber
-  : int.Subtract<TNumber, TNumberMap['from']> extends infer IDiff extends number
+  : int.Subtract<
+      TNumber,
+      TNumberMap['start']
+    > extends infer IDiff extends number
   ? int.Compare<IDiff, TNumberMap['length']> extends 'lt'
     ? int.Add<TNumberMap['to'], IDiff>
     : TNumber
@@ -105,8 +116,132 @@ type ApplyNumberMapGroups<
     : never
   : TNumber;
 
-type Solve1<T extends { init: number; groups: NumberMap[][] }> = int.Min<
-  ApplyNumberMapGroups<T['init'], T['groups']>
+type Solve1<T extends { init: number[]; groups: NumberMap[][] }> = int.Min<
+  ApplyNumberMapGroups<T['init'][number], T['groups']>
 >;
 
 export declare const solution1: Solve1<ParseInput<Input>>;
+
+// Part 2
+
+type InitToRanges<TInit extends number[]> = TInit extends [
+  infer IStart extends number,
+  infer ILength extends number,
+  ...infer IRest extends number[]
+]
+  ? [Range<IStart, ILength>, ...InitToRanges<IRest>]
+  : [];
+
+type ParseRangeInput<S extends string> =
+  ParseInput<S> extends infer IResult extends {
+    init: number[];
+    groups: NumberMap[][];
+  }
+    ? { init: InitToRanges<IResult['init']>; groups: IResult['groups'] }
+    : never;
+
+type IntersectRange<TA extends Range, TB extends Range> = [
+  TA['start'],
+  TA['length'],
+  int.Add<TA['start'], TA['length']>,
+  TB['start'],
+  TB['length'],
+  int.Add<TB['start'], TB['length']>
+] extends [
+  infer AStart extends number,
+  infer ALen extends number,
+  infer AEnd extends number,
+  infer BStart extends number,
+  infer BLen extends number,
+  infer BEnd extends number
+]
+  ? int.Compare<BEnd, AStart> extends 'lt' | 'eq'
+    ? { slice: never; rest: TA }
+    : int.Compare<AEnd, BStart> extends 'lt' | 'eq'
+    ? { slice: never; rest: TA }
+    : {
+        lt: int.Subtract<BStart, AStart> extends infer ISliceLen extends number
+          ? int.Compare<AEnd, BEnd> extends 'gt'
+            ? {
+                rest:
+                  | Range<AStart, ISliceLen>
+                  | Range<BEnd, int.Subtract<ALen, int.Add<ISliceLen, BLen>>>;
+                slice: Range<BStart, BLen>;
+              }
+            : {
+                rest: Range<AStart, ISliceLen>;
+                slice: Range<BStart, int.Subtract<ALen, ISliceLen>>;
+              }
+          : never;
+        eq: {
+          lt: { slice: TA; rest: never };
+          eq: { slice: TA; rest: never };
+          gt: {
+            slice: TB;
+            rest: Range<AEnd, int.Subtract<ALen, BLen>>;
+          };
+        }[int.Compare<ALen, BLen>];
+        gt: {
+          lt: { slice: TA; rest: never };
+          eq: { slice: TA; rest: never };
+          gt: int.Subtract<BEnd, AStart> extends infer ISliceLen extends number
+            ? {
+                slice: Range<AStart, ISliceLen>;
+                rest: Range<BEnd, int.Subtract<ALen, ISliceLen>>;
+              }
+            : never;
+        }[int.Compare<AEnd, BEnd>];
+      }[int.Compare<AStart, BStart>]
+  : never;
+
+type IntersectRanges<
+  TRanges extends Range, // union
+  TB extends Range
+> = (
+  TRanges extends any ? IntersectRange<TRanges, TB> : never
+) extends infer I extends { slice: Range; rest: Range }
+  ? { slice: I['slice']; rest: I['rest'] }
+  : never;
+
+type RangeApplyNumberMaps<
+  TRange extends Range,
+  TNumberMaps extends NumberMap[]
+> = TNumberMaps extends [
+  infer IMapHead extends NumberMap,
+  ...infer IMapRest extends NumberMap[]
+]
+  ? IntersectRanges<TRange, IMapHead> extends {
+      slice: infer ISlice extends Range;
+      rest: infer IRest extends Range;
+    }
+    ?
+        | ([ISlice] extends [never]
+            ? never
+            : ISlice extends any
+            ? Range<
+                int.Add<
+                  ISlice['start'],
+                  int.Subtract<IMapHead['to'], IMapHead['start']>
+                >,
+                ISlice['length']
+              >
+            : never)
+        | RangeApplyNumberMaps<IRest, IMapRest>
+    : never
+  : TRange;
+
+type RangeApplyNumberMapGroups<
+  TRange extends Range,
+  TGroup extends NumberMap[][]
+> = TGroup extends [
+  infer IFirst extends NumberMap[],
+  ...infer IRest extends NumberMap[][]
+]
+  ? RangeApplyNumberMapGroups<RangeApplyNumberMaps<TRange, IFirst>, IRest>
+  : TRange;
+
+type Solve2<T extends { init: Range[]; groups: NumberMap[][] }> = int.Min<
+  RangeApplyNumberMapGroups<T['init'][number], T['groups']>['start']
+>;
+
+export declare const solution2: Solve2<ParseRangeInput<Input>>;
