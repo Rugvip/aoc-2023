@@ -100,3 +100,4 @@ For example, `yarn run print 4` prints the output of day 4.
 | 4   | ⭐️ ⭐️ |
 | 5   | ⭐️ ⭐️ |
 | 6   | ⭐️ ⭐️ |
+| 7   | ⭐️     |
