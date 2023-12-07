@@ -11,8 +11,10 @@ import { test } from './lib/test';
 // `;
 
 type OrderedCards = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
-type Card = ArrayIndices<OrderedCards>;
-type CardMap = { [I in Card as OrderedCards[I]]: I };
+type Card = OrderedCards[number];
+
+type CardValueMap = { [_ in Card]: number };
+type DefaultCardValueMap = { [I in ArrayIndices<OrderedCards> as OrderedCards[I]]: I };
 
 type Hand = [Card, Card, Card, Card, Card];
 type Entry<THand extends Hand = Hand, TBid extends number = number> = { hand: THand; bid: TBid };
@@ -20,7 +22,7 @@ type Entry<THand extends Hand = Hand, TBid extends number = number> = { hand: TH
 type ParseHand<S extends string> = S extends
   | `${infer ICard extends OrderedCards[number]}${infer IRest}`
   | `${infer ILastCard extends OrderedCards[number]}`
-  ? [CardMap[ICard & ILastCard], ...ParseHand<IRest>]
+  ? [ICard & ILastCard, ...ParseHand<IRest>]
   : [];
 type ParseEntry<S extends string> = S extends `${infer IHand} ${infer IBid extends number}`
   ? { hand: ParseHand<IHand>; bid: IBid }
@@ -44,18 +46,43 @@ type HandStrength<THand extends Hand> = {
   5: 1; // high card
 }[UnionSize<THand[number]> & (1 | 2 | 3 | 4 | 5)];
 
-type CompareCards<TA extends Card[], TB extends Card[]> = [TA, TB] extends [
+type CompareCards<TA extends Card[], TB extends Card[], TCardValueMap extends CardValueMap> = [
+  TA,
+  TB,
+] extends [
   [infer IA extends Card, ...infer IARest extends Card[]],
   [infer IB extends Card, ...infer IBRest extends Card[]],
 ]
-  ? int.Compare<IA, IB> extends infer IResult extends 'lt' | 'gt'
+  ? int.Compare<TCardValueMap[IA], TCardValueMap[IB]> extends infer IResult extends 'lt' | 'gt'
     ? IResult
-    : CompareCards<IARest, IBRest>
+    : CompareCards<IARest, IBRest, TCardValueMap>
   : 'eq';
 
-type CompareHands<TA extends Hand, TB extends Hand> = {
+declare const CompareCards: test.Describe<
+  test.Expect<CompareCards<ParseHand<'23456'>, ParseHand<'23457'>, DefaultCardValueMap>, 'lt'>,
+  test.Expect<CompareCards<ParseHand<'22222'>, ParseHand<'22223'>, DefaultCardValueMap>, 'lt'>,
+  test.Expect<CompareCards<ParseHand<'3'>, ParseHand<'2'>, DefaultCardValueMap>, 'gt'>,
+  test.Expect<CompareCards<ParseHand<'2'>, ParseHand<'2'>, DefaultCardValueMap>, 'eq'>,
+  test.Expect<CompareCards<ParseHand<'2'>, ParseHand<'3'>, DefaultCardValueMap>, 'lt'>,
+  test.Expect<CompareCards<ParseHand<'K'>, ParseHand<'Q'>, DefaultCardValueMap>, 'gt'>,
+  test.Expect<CompareCards<ParseHand<'J'>, ParseHand<'Q'>, DefaultCardValueMap>, 'lt'>,
+  test.Expect<CompareCards<ParseHand<'J'>, ParseHand<'T'>, DefaultCardValueMap>, 'gt'>,
+  test.Expect<CompareCards<ParseHand<'23456'>, ParseHand<'23457'>, JokerCardValueMap>, 'lt'>,
+  test.Expect<CompareCards<ParseHand<'22222'>, ParseHand<'22223'>, JokerCardValueMap>, 'lt'>,
+  test.Expect<CompareCards<ParseHand<'J'>, ParseHand<'2'>, JokerCardValueMap>, 'lt'>,
+  test.Expect<CompareCards<ParseHand<'2'>, ParseHand<'2'>, JokerCardValueMap>, 'eq'>,
+  test.Expect<CompareCards<ParseHand<'K'>, ParseHand<'Q'>, JokerCardValueMap>, 'gt'>,
+  test.Expect<CompareCards<ParseHand<'J'>, ParseHand<'Q'>, JokerCardValueMap>, 'lt'>,
+  test.Expect<CompareCards<ParseHand<'J'>, ParseHand<'T'>, JokerCardValueMap>, 'lt'>
+>;
+
+type CompareHands<
+  TA extends Hand,
+  TB extends Hand,
+  TCardValueMap extends CardValueMap = DefaultCardValueMap,
+> = {
   lt: 'lt';
-  eq: CompareCards<TA, TB>;
+  eq: CompareCards<TA, TB, TCardValueMap>;
   gt: 'gt';
 }[int.Compare<HandStrength<TA>, HandStrength<TB>>];
 
@@ -71,20 +98,22 @@ declare const testCompareHands: test.Describe<
   test.Expect<CompareHands<ParseHand<'95432'>, ParseHand<'J5432'>>, 'lt'>
 >;
 
-type InsertEntry<TEntries extends Entry[], TEntry extends Entry> = TEntries extends [
-  infer IA extends Entry,
-  ...infer IRest extends Entry[],
-]
-  ? CompareHands<TEntry['hand'], IA['hand']> extends 'gt'
-    ? [IA, ...InsertEntry<IRest, TEntry>]
+type InsertGroupedEntry<
+  TEntries extends Entry[],
+  TEntry extends Entry,
+  TCardValueMap extends CardValueMap,
+> = TEntries extends [infer IA extends Entry, ...infer IRest extends Entry[]]
+  ? CompareCards<TEntry['hand'], IA['hand'], TCardValueMap> extends 'gt'
+    ? [IA, ...InsertGroupedEntry<IRest, TEntry, TCardValueMap>]
     : [TEntry, ...TEntries]
   : [TEntry];
 
-type SortEntries<TEntries extends Entry[], TResult extends Entry[] = []> = TEntries extends [
-  infer IEntry extends Entry,
-  ...infer IRest extends Entry[],
-]
-  ? SortEntries<IRest, InsertEntry<TResult, IEntry>>
+type SortGroupedEntries<
+  TEntries extends Entry[],
+  TCardValueMap extends CardValueMap,
+  TResult extends Entry[] = [],
+> = TEntries extends [infer IEntry extends Entry, ...infer IRest extends Entry[]]
+  ? SortGroupedEntries<IRest, TCardValueMap, InsertGroupedEntry<TResult, IEntry, TCardValueMap>>
   : TResult;
 
 type ScoreEntries<
@@ -112,8 +141,11 @@ type GroupEntiresByStrength<
     >
   : TResult;
 
-type SortEntryGroups<TGroups extends { [_ in Strength]: Entry[] }> = {
-  [S in Strength]: SortEntries<TGroups[S]>;
+type SortEntryGroups<
+  TGroups extends { [_ in Strength]: Entry[] },
+  TCardValueMap extends CardValueMap,
+> = {
+  [S in Strength]: SortGroupedEntries<TGroups[S], TCardValueMap>;
 };
 type ScoreEntryGroups<
   TGroups extends { [_ in Strength]: Entry[] },
@@ -130,7 +162,48 @@ type ScoreEntryGroups<
   : TResult;
 
 export declare const solution1: ScoreEntryGroups<
-  SortEntryGroups<GroupEntiresByStrength<ParseInput<Input>>>
+  SortEntryGroups<GroupEntiresByStrength<ParseInput<Input>>, DefaultCardValueMap>
 >;
 
-export declare const solution2: any;
+type JokerCardValueMap = {
+  [I in ArrayIndices<OrderedCards> as OrderedCards[I]]: OrderedCards[I] extends 'J' ? -1 : I;
+};
+
+type ExpandJokers<THand extends Card[]> = THand extends [
+  infer ICard extends Card,
+  ...infer IRest extends Card[],
+]
+  ? ICard extends 'J'
+    ? Exclude<Card, 'J'> extends infer C extends Card
+      ? C extends any
+        ? [C, ...ExpandJokers<IRest>]
+        : never
+      : never
+    : [ICard, ...ExpandJokers<IRest>]
+  : [];
+
+type JokerHandStrength<THand extends Hand> = int.Max<
+  ExpandJokers<THand> extends infer J extends Hand
+    ? J extends any
+      ? HandStrength<J>
+      : never
+    : never
+>;
+
+type GroupJokerEntriesByStrength<
+  TEntries extends Entry[],
+  TResult extends { [_ in Strength]: Entry[] } = { [_ in Strength]: [] },
+> = TEntries extends [infer IEntry extends Entry, ...infer IRest extends Entry[]]
+  ? GroupJokerEntriesByStrength<
+      IRest,
+      {
+        [S in Strength]: JokerHandStrength<IEntry['hand']> extends S
+          ? [...TResult[S], IEntry]
+          : TResult[S];
+      }
+    >
+  : TResult;
+
+export declare const solution2: ScoreEntryGroups<
+  SortEntryGroups<GroupJokerEntriesByStrength<ParseInput<Input>>, JokerCardValueMap>
+>;
