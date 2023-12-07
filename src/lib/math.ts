@@ -515,4 +515,58 @@ export namespace int {
     test.Expect<Multiply<-99, -99>, 9801>,
     test.Expect<Multiply<123, 2>, 246>
   >;
+
+  type MakeDigitwiseHalfMap<
+    TCounter extends any[] = [],
+    TResult extends DigitAddResult[] = [],
+    TCarryResult extends DigitAddResult[] = [],
+  > = TCounter['length'] extends infer ICount extends Digit
+    ? TResult['length'] extends Digit
+      ? MakeDigitwiseHalfMap<
+          [...TCounter, any],
+          [...TResult, [0, ICount], [1, ICount]],
+          TCarryResult
+        >
+      : MakeDigitwiseHalfMap<
+          [...TCounter, any],
+          TResult,
+          [...TCarryResult, [0, ICount], [1, ICount]]
+        >
+    : [TResult, TCarryResult];
+
+  // [carry][dividend]
+  type DigitwiseHalfMap = MakeDigitwiseHalfMap;
+
+  type DigitwiseHalf<T extends Digit[], TCarry extends Bit = 0> = T extends [
+    infer IHead extends Digit,
+    ...infer IRest extends Digit[],
+  ]
+    ? DigitwiseHalfMap[TCarry][IHead] extends [
+        infer ICarry extends Bit,
+        infer IResult extends Digit,
+      ]
+      ? [IResult, ...DigitwiseHalf<IRest, ICarry>]
+      : never
+    : [];
+
+  export type Half<T extends number> = ToInteger<T> extends {
+    sign: infer ISign extends Sign;
+    digits: infer IDigits extends Digit[];
+  }
+    ? FromInteger<Integer<ISign, TrimLeading0<DigitwiseHalf<IDigits>>>>
+    : never;
+
+  declare const testHalf: test.Describe<
+    test.Expect<Half<0>, 0>,
+    test.Expect<Half<1>, 0>,
+    test.Expect<Half<2>, 1>,
+    test.Expect<Half<3>, 1>,
+    test.Expect<Half<4>, 2>,
+    test.Expect<Half<16>, 8>,
+    test.Expect<Half<15>, 7>,
+    test.Expect<Half<10000>, 5000>,
+    test.Expect<Half<10100>, 5050>,
+    test.Expect<Half<10099>, 5049>,
+    test.Expect<Half<9999>, 4999>
+  >;
 }
