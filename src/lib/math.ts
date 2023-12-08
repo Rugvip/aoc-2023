@@ -130,12 +130,12 @@ export namespace int {
   type StrToDigits<S extends string> = S extends `${infer IChar extends Digit}${infer IRest}`
     ? [IChar, ...StrToDigits<IRest>]
     : [];
-  type DigitsToStr<T extends Digit[]> = T extends [
-    infer IChar extends Digit,
-    ...infer IRest extends Digit[],
-  ]
-    ? `${IChar}${DigitsToStr<IRest>}`
-    : '';
+
+  type TrimLeading0<T extends Digit[]> = T extends [0, ...infer IRest extends Digit[]]
+    ? TrimLeading0<IRest>
+    : T extends []
+    ? [0]
+    : T;
 
   export type ToInteger<T extends number | string> = `${T}` extends `-${infer I}`
     ? {
@@ -144,12 +144,13 @@ export namespace int {
       }
     : {
         sign: '+';
-        digits: StrToDigits<`${T}`>;
+        digits: TrimLeading0<StrToDigits<`${T}`>>;
       };
 
   declare const testToInteger: test.Describe<
     test.Expect<ToInteger<'0'>, Integer<'+', [0]>>,
     test.Expect<ToInteger<'1'>, Integer<'+', [1]>>,
+    test.Expect<ToInteger<'01'>, Integer<'+', [1]>>,
     test.Expect<ToInteger<'123'>, Integer<'+', [1, 2, 3]>>,
     test.Expect<ToInteger<'-0'>, Integer<'-', [0]>>,
     test.Expect<ToInteger<'-1'>, Integer<'-', [1]>>,
@@ -161,10 +162,17 @@ export namespace int {
     test.Expect<ToInteger<-123>, Integer<'-', [1, 2, 3]>>
   >;
 
+  type DigitsToStr<T extends Digit[]> = T extends [
+    infer IChar extends Digit,
+    ...infer IRest extends Digit[],
+  ]
+    ? `${IChar}${DigitsToStr<IRest>}`
+    : '';
+
   export type FromInteger<T extends Integer> = T['digits'] extends [0]
     ? 0
     : `${T['sign'] extends '-' ? '-' : ''}${DigitsToStr<
-        T['digits']
+        TrimLeading0<T['digits']>
       >}` extends `${infer N extends number}`
     ? N
     : never;
@@ -309,12 +317,6 @@ export namespace int {
     test.Expect<DigitSubtractMap[1][9][9], [1, 9]>
   >;
 
-  type TrimLeading0<T extends Digit[]> = T extends [0, ...infer IRest extends Digit[]]
-    ? TrimLeading0<IRest>
-    : T extends []
-    ? [0]
-    : T;
-
   export type DigitwiseSubtract<
     TA extends Digit[],
     TB extends Digit[],
@@ -334,24 +336,17 @@ export namespace int {
       : never
     : TC extends 1
     ? never // subtraction should always be aligned to not result in a borrow
-    : TrimLeading0<TResult>;
+    : TResult;
 
   declare const testSubtractDigits: test.Describe<
-    test.Expect<DigitwiseSubtract<[], []>, [0]>,
+    test.Expect<DigitwiseSubtract<[], []>, []>,
     test.Expect<DigitwiseSubtract<[], [0]>, [0]>,
     test.Expect<DigitwiseSubtract<[0], []>, [0]>,
     test.Expect<DigitwiseSubtract<[1], []>, [1]>,
     test.Expect<DigitwiseSubtract<[], [1]>, never>,
     test.Expect<DigitwiseSubtract<[1], [1]>, [0]>,
-    test.Expect<DigitwiseSubtract<[1, 0, 1], [1, 0]>, [9, 1]>,
-    test.Expect<DigitwiseSubtract<[1, 0, 0], [9, 9]>, [1]>,
-    test.Expect<
-      DigitwiseSubtract<
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      >,
-      [0]
-    >
+    test.Expect<DigitwiseSubtract<[1, 0, 1], [1, 0]>, [0, 9, 1]>,
+    test.Expect<DigitwiseSubtract<[1, 0, 0], [9, 9]>, [0, 0, 1]>
   >;
 
   export type Subtract<TA extends number | string, TB extends number | string> = [
@@ -374,7 +369,9 @@ export namespace int {
     test.Expect<Subtract<1000, 200>, 800>,
     test.Expect<Subtract<123, 456>, -333>,
     test.Expect<Subtract<123, -456>, 579>,
-    test.Expect<Subtract<123, -123>, 246>
+    test.Expect<Subtract<123, -123>, 246>,
+    test.Expect<Subtract<101, 10>, 91>,
+    test.Expect<Subtract<100, 99>, 1>
   >;
 
   type MinMax<
@@ -490,7 +487,7 @@ export namespace int {
         [...TPad, 0],
         DigitwiseAdd<TResult, DigitwiseMultiplyOne<IA0, [...TB, ...TPad]>>
       >
-    : TrimLeading0<TResult>;
+    : TResult;
 
   export type Multiply<TA extends number, TB extends number> = [
     ToInteger<TA>,
@@ -553,7 +550,7 @@ export namespace int {
     sign: infer ISign extends Sign;
     digits: infer IDigits extends Digit[];
   }
-    ? FromInteger<Integer<ISign, TrimLeading0<DigitwiseHalf<IDigits>>>>
+    ? FromInteger<Integer<ISign, DigitwiseHalf<IDigits>>>
     : never;
 
   declare const testHalf: test.Describe<
