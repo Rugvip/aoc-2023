@@ -38,8 +38,6 @@ export namespace array {
     test.Expect<MakeCount<3, 5>, [5, 6, 7]>
   >;
 
-  type IsNegative<T extends number> = `${T}` extends `-${string}` ? true : false;
-
   export type DropN<
     TArr extends any[],
     TN extends number,
@@ -54,7 +52,7 @@ export namespace array {
     TArr extends any[],
     TN extends number,
     TResult extends any[] = [],
-  > = IsNegative<TN> extends true
+  > = int.IsNegative<TN> extends true
     ? []
     : TResult['length'] extends TN
     ? TResult

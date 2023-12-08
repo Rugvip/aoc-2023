@@ -49,6 +49,8 @@ export namespace int {
 
   type FlipSign<T extends Sign> = T extends '+' ? '-' : '+';
 
+  export type IsNegative<T extends number> = `${T}` extends `-${string}` ? true : false;
+
   export type Integer<TSign extends Sign = Sign, TDigits extends Digit[] = Digit[]> = {
     sign: TSign;
     digits: TDigits;
