@@ -1,6 +1,6 @@
 import { Input } from '../input/03';
 import { int } from './lib/math';
-import { PopUnion } from './lib/utils';
+import { union } from './lib/union';
 
 // type Input = `467..114..
 // ...*......
@@ -150,11 +150,11 @@ type FindGearNumbers<
     : never
   : never;
 
-type GearNumberProduct<N extends number> = PopUnion<N> extends {
+type GearNumberProduct<N extends number> = union.Pop<N> extends {
   next: infer A extends number;
   rest: infer R extends number;
 }
-  ? PopUnion<R> extends {
+  ? union.Pop<R> extends {
       next: infer B extends number;
       rest: never;
     }

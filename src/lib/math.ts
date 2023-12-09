@@ -1,5 +1,5 @@
 import { test } from './test';
-import { PopUnion } from './utils';
+import { union } from './union';
 
 export namespace bin {
   export type Bit = 0 | 1;
@@ -397,7 +397,7 @@ export namespace int {
     N extends number,
     TOp extends 'lt' | 'gt',
     TCurrent extends number | undefined = undefined,
-    TPop = PopUnion<N>,
+    TPop = union.Pop<N>,
   > = TPop extends {
     rest: infer IRest extends number;
     next: infer INext extends number;

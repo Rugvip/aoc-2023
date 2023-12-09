@@ -1,7 +1,7 @@
 import { Input } from '../input/04';
 import { int } from './lib/math';
 import { parser } from './lib/parser';
-import { PopUnion } from './lib/utils';
+import { union } from './lib/union';
 
 // type Input = `Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
 // Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
@@ -21,7 +21,7 @@ type ParsedInput = parser.Parse<
 
 type Row = { cards: string[]; winning: string[] };
 
-type ScoreUnion<U, TResult extends any[] = []> = PopUnion<U> extends { rest: infer IRest }
+type ScoreUnion<U, TResult extends any[] = []> = union.Pop<U> extends { rest: infer IRest }
   ? ScoreUnion<IRest, TResult extends [] ? [any] : [...TResult, ...TResult]>
   : TResult['length'];
 
@@ -34,7 +34,7 @@ type ScoreRows<TRows extends Row[], TResult extends number = 0> = TRows extends 
 
 export declare const solution1: ScoreRows<ParsedInput>;
 
-type SizeUnion<U, TResult extends any[] = []> = PopUnion<U> extends { rest: infer IRest }
+type SizeUnion<U, TResult extends any[] = []> = union.Pop<U> extends { rest: infer IRest }
   ? SizeUnion<IRest, TResult extends [] ? [any] : [...TResult, any]>
   : TResult;
 

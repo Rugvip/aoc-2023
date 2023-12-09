@@ -1,6 +1,7 @@
 import { Input } from '../input/07';
 import { int } from './lib/math';
-import { UnionSize, ArrayIndices, Expand } from './lib/utils';
+import { ArrayIndices, Expand } from './lib/utils';
+import { union } from './lib/union';
 import { test } from './lib/test';
 
 // type Input = `32T3K 765
@@ -33,7 +34,7 @@ type ParseInput<S extends string> = S extends `${infer IEntry}\n${infer IRest}`
   : [];
 
 type MaxCardCount<THand extends Hand> = int.Max<
-  { [I in ArrayIndices<THand> as THand[I]]: UnionSize<I> }[THand[number]]
+  { [I in ArrayIndices<THand> as THand[I]]: union.Size<I> }[THand[number]]
 >;
 
 type Strength = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -44,7 +45,7 @@ type HandStrength<THand extends Hand> = {
   3: MaxCardCount<THand> extends 3 ? 4 /* three of a kind */ : 3 /* two pair */;
   4: 2; // one pair
   5: 1; // high card
-}[UnionSize<THand[number]> & (1 | 2 | 3 | 4 | 5)];
+}[union.Size<THand[number]> & (1 | 2 | 3 | 4 | 5)];
 
 type CompareCards<TA extends Card[], TB extends Card[], TCardValueMap extends CardValueMap> = [
   TA,
