@@ -232,6 +232,23 @@ export namespace int {
     test.Expect<Add<123, 123>, 246>
   >;
 
+  export type Sum<TN extends number[]> = TN extends [
+    infer IHead extends number,
+    ...infer IRest extends number[],
+  ]
+    ? Add<IHead, Sum<IRest>>
+    : 0;
+
+  declare const testSum: test.Describe<
+    test.Expect<Sum<[]>, 0>,
+    test.Expect<Sum<[0]>, 0>,
+    test.Expect<Sum<[0, 0]>, 0>,
+    test.Expect<Sum<[1]>, 1>,
+    test.Expect<Sum<[99]>, 99>,
+    test.Expect<Sum<[1, 1, 1, 1, 1, 1]>, 6>,
+    test.Expect<Sum<[-1, 1]>, 0>
+  >;
+
   type CompareResult = 'lt' | 'eq' | 'gt';
   type FlipCompareResult<T extends CompareResult> = T extends 'lt'
     ? 'gt'
