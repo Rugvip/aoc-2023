@@ -1,5 +1,5 @@
 import { Input } from '../input/08';
-import { Expand } from './lib/utils';
+import { utils } from './lib/utils';
 import { array } from './lib/array';
 import { counter } from './lib/counter';
 
@@ -18,7 +18,7 @@ type ParseMap<
   ? IHead extends `${infer IKey} = (${infer ILeft}, ${infer IRight})`
     ? ParseMap<IRest, TResult & { [K in IKey]: { L: ILeft; R: IRight } }, [...TMapSizeCounter, any]>
     : never
-  : { entries: Expand<TResult>; size: TMapSizeCounter['length'] };
+  : { entries: utils.Expand<TResult>; size: TMapSizeCounter['length'] };
 
 type ParseInput<TInput extends string> = TInput extends `${infer ITurns}\n\n${infer IMap}`
   ? ParseMap<IMap> extends {

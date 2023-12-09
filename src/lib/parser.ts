@@ -1,4 +1,4 @@
-import { Expand } from './utils';
+import { utils } from './utils';
 import { test } from './test';
 import { objects } from './objects';
 import { Trim } from './strings';
@@ -152,7 +152,7 @@ export namespace parser {
     TValues extends string[],
     TRefinement extends ParsedTemplateNode[],
   > = TValues extends [infer INext extends string, ...infer IRest extends string[]]
-    ? [Expand<ApplyTemplate<INext, TRefinement>>, ...ApplyRefinement<IRest, TRefinement>]
+    ? [utils.Expand<ApplyTemplate<INext, TRefinement>>, ...ApplyRefinement<IRest, TRefinement>]
     : [];
 
   type ApplyRefinementRepeater<
@@ -191,7 +191,7 @@ export namespace parser {
     TTemplate extends string,
     TRefinements extends { [_ in string]: string } = {},
   > = ParseTemplate<TTemplate> extends infer ITemplate extends ParsedTemplateNode[]
-    ? Expand<ApplyRefinements<ApplyTemplate<S, ITemplate>, TRefinements>>
+    ? utils.Expand<ApplyRefinements<ApplyTemplate<S, ITemplate>, TRefinements>>
     : 'parsed template is not a ParsedTemplate';
 
   declare const testParser: test.Describe<

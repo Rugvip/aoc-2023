@@ -1,6 +1,5 @@
 import { Input } from '../input/07';
 import { int } from './lib/math';
-import { Expand } from './lib/utils';
 import { array } from './lib/array';
 import { union } from './lib/union';
 import { test } from './lib/test';

@@ -1,5 +1,5 @@
 import { test } from './test';
-import { Expand } from './utils';
+import { utils } from './utils';
 
 export namespace objects {
   type Any = { [K in string]: any };
@@ -17,7 +17,7 @@ export namespace objects {
             : [T[K], TValue]
           : T[K];
       }
-    : Expand<
+    : utils.Expand<
         T & {
           [K in TName]: [TValue];
         }
@@ -35,7 +35,7 @@ export namespace objects {
     ? {
         [K in keyof T]: K extends TName ? TValue : T[K];
       }
-    : Expand<
+    : utils.Expand<
         T & {
           [K in TName]: TValue;
         }

@@ -1,4 +1,4 @@
-import { ExpandRecursively } from './utils';
+import { utils } from './utils';
 
 export namespace test {
   export type Expect<TActual, TExpected> = [
@@ -71,7 +71,7 @@ export namespace test {
     T48 extends TestResult<true> = TestResult<true>,
     T49 extends TestResult<true> = TestResult<true>,
     T50 extends TestResult<true> = TestResult<true>,
-  > = ExpandRecursively<
+  > = utils.ExpandRecursively<
     OnlyFailingTests<
       [
         T1,
