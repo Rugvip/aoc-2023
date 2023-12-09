@@ -1,6 +1,5 @@
 import { Input } from '../input/03';
-import { int } from './lib/math';
-import { union } from './lib/union';
+import { int, union } from './lib';
 
 // type Input = `467..114..
 // ...*......

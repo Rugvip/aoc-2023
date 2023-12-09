@@ -1,6 +1,5 @@
 import { Input } from '../input/06';
-import { int } from './lib/math';
-import { strings } from './lib/strings';
+import { int, strings } from './lib';
 
 // type Input = `Time:      7  15   30
 // Distance:  9  40  200

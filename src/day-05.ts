@@ -1,5 +1,5 @@
 import { Input } from '../input/05';
-import { int } from './lib/math';
+import { int } from './lib';
 
 // type Input = `seeds: 79 14 55 13
 

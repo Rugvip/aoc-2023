@@ -1,8 +1,5 @@
 import { Input } from '../input/07';
-import { int } from './lib/math';
-import { array } from './lib/array';
-import { union } from './lib/union';
-import { test } from './lib/test';
+import { int, array, union, test } from './lib';
 
 // type Input = `32T3K 765
 // T55J5 684

@@ -1,7 +1,5 @@
 import { Input } from '../input/08';
-import { utils } from './lib/utils';
-import { array } from './lib/array';
-import { counter } from './lib/counter';
+import { utils, array, counter } from './lib';
 
 type Turn = 'L' | 'R';
 type Map = { [K in string]: { L: string; R: string } };

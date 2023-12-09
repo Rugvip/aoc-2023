@@ -1,5 +1,5 @@
 import { Input } from '../input/01';
-import { int } from './lib/math';
+import { int } from './lib';
 
 type DigitMap = { [K in int.Digit as `${K}`]: K };
 type StrDigitMap = {

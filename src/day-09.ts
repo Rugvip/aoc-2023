@@ -1,7 +1,5 @@
 import { Input } from '../input/09';
-import { int } from './lib/math';
-import { array } from './lib/array';
-import { parser } from './lib/parser';
+import { int, array, parser } from './lib';
 
 // type Input = `0 3 6 9 12 15
 // 1 3 6 10 15 21
