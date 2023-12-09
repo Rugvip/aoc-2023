@@ -1,5 +1,6 @@
 import { Expand } from './utils';
 import { test } from './test';
+import { Trim } from './strings';
 
 export namespace parser {
   type ParseTemplate<
@@ -15,24 +16,31 @@ export namespace parser {
           ]
         : ['bad repeater']
       : IChar extends '{'
-      ? IRest extends `${infer IName}: ${infer IType extends VariableKind}}${infer INext}`
-        ? [
-            { type: 'literal'; value: TAcc },
-            { type: 'variable'; name: IName; kind: IType },
-            ...ParseTemplate<INext>,
-          ]
-        : ['bad variable']
+      ? IRest extends `${infer IContent extends string}}${infer INext}`
+        ? IContent extends `${infer IName}: ${infer IType extends VariableKind}`
+          ? [
+              { type: 'literal'; value: TAcc },
+              { type: 'variable'; name: IName; kind: IType },
+              ...ParseTemplate<INext>,
+            ]
+          : [{ type: 'literal'; value: TAcc }, { type: 'wildcard' }, ...ParseTemplate<INext>]
+        : never
       : ParseTemplate<IRest, `${TAcc}${IChar}`>
     : [{ type: 'literal'; value: TAcc }];
 
   type VariableKind = 'string' | 'number';
-  type RepeaterKind = 'char' | 'line' | 'csv' | 'ssv';
+  type RepeaterKind = 'chars' | 'lines' | 'csv' | 'ssv' | 'numbers';
 
   type ParsedTemplateLiteral = { type: 'literal'; value: string };
+  type ParsedTemplateWildcard = { type: 'wildcard' };
   type ParsedTemplateVariable = { type: 'variable'; name: string; kind: VariableKind };
   type ParsedTemplateRepeater = { type: 'repeater'; name: string; kind: RepeaterKind };
 
-  type ParsedTemplateNode = ParsedTemplateLiteral | ParsedTemplateVariable | ParsedTemplateRepeater;
+  type ParsedTemplateNode =
+    | ParsedTemplateLiteral
+    | ParsedTemplateWildcard
+    | ParsedTemplateVariable
+    | ParsedTemplateRepeater;
 
   type FirstPassResult = { [K in string]: any[] | any };
 
@@ -60,14 +68,48 @@ export namespace parser {
         [K in TName]: TValue;
       };
 
-  type RemainingTemplateToPattern<T extends ParsedTemplateNode[]> = T extends [
+  type TemplateToPattern<T extends ParsedTemplateNode[]> = T extends [
     infer INext extends ParsedTemplateNode,
     ...infer IRest extends ParsedTemplateNode[],
   ]
     ? INext extends { type: 'literal'; value: infer IValue extends string }
-      ? `${IValue}${RemainingTemplateToPattern<IRest>}`
-      : `${string}${RemainingTemplateToPattern<IRest>}`
+      ? `${IValue}${TemplateToPattern<IRest>}`
+      : `${string}${TemplateToPattern<IRest>}`
     : '';
+
+  type SplitChars<S extends string> = S extends `${infer IChar}${infer IRest}`
+    ? [IChar, ...SplitChars<IRest>]
+    : [];
+  type SplitLines<S extends string> =
+    S extends `${infer IHead extends string}\n${infer IRest extends string}`
+      ? [IHead, ...SplitLines<IRest>]
+      : S extends ''
+      ? []
+      : [S];
+  type SplitSpace<S extends string> = S extends `${infer IHead} ${infer IRest}`
+    ? IHead extends ''
+      ? SplitSpace<IRest>
+      : [IHead, ...SplitSpace<IRest>]
+    : [S];
+  type SplitComma<S extends string> = S extends `${infer IHead},${infer IRest}`
+    ? [Trim<IHead>, ...SplitComma<IRest>]
+    : [Trim<S>];
+  type ParseNumber<S extends string> = S extends `${infer INumber extends number}`
+    ? INumber
+    : never;
+  type ParseNumbers<
+    S extends string,
+    TSeparator extends string = ' ' | ',' | '\n',
+    TAcc extends string = '',
+  > = S extends `${infer IChar}${infer IRest}`
+    ? IChar extends TSeparator
+      ? TAcc extends ''
+        ? ParseNumbers<IRest, TSeparator>
+        : [ParseNumber<Trim<TAcc>>, ...ParseNumbers<IRest, TSeparator>]
+      : ParseNumbers<IRest, TSeparator, `${TAcc}${IChar}`>
+    : TAcc extends ''
+    ? []
+    : [ParseNumber<Trim<TAcc>>];
 
   type ApplyTemplate<
     S extends string,
@@ -81,40 +123,49 @@ export namespace parser {
       ? S extends `${IValue}${infer ISRest}`
         ? ApplyTemplate<ISRest, ITRest, TResult>
         : TResult
-      : INode extends {
+      : SplitContent<S, TemplateToPattern<ITRest>> extends [
+          infer ISNext extends string,
+          infer ISRest extends string,
+        ]
+      ? INode extends {
           type: 'variable';
           name: infer IName extends string;
           kind: infer IKind extends VariableKind;
         }
-      ? S extends `${infer INextContent extends string}${RemainingTemplateToPattern<ITRest>}`
-        ? S extends `${INextContent}${infer ISRest extends string}`
-          ? {
-              string: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, INextContent>>;
-              number: INextContent extends `${infer IN extends number}`
-                ? ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, IN>>
-                : never;
-            }[IKind]
-          : 3
-        : 2
-      : INode extends {
-          type: 'repeater';
-          name: infer IName extends string;
-          kind: infer IKind extends RepeaterKind;
-        }
-      ? {
-          char: S extends `${infer IChar}${infer ISRest}`
-            ? IChar extends ' ' | '\n'
-              ? ApplyTemplate<S, ITRest, TResult>
-              : ApplyTemplate<ISRest, T, AppendResult<TResult, IName, IChar>>
-            : ApplyTemplate<S, ITRest, TResult>;
-          line: S extends `${infer ILine}\n${infer ISRest}`
-            ? ApplyTemplate<ISRest, T, AppendResult<TResult, IName, ILine>>
-            : ApplyTemplate<S, ITRest, TResult>;
-          csv: 'no csv'; // TODO
-          ssv: 'no ssv'; // TODO
-        }[IKind]
+        ? {
+            string: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, ISNext>>;
+            number: ISNext extends `${infer IN extends number}`
+              ? ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, IN>>
+              : never;
+          }[IKind]
+        : INode extends { type: 'wildcard' }
+        ? ApplyTemplate<ISRest, ITRest, TResult>
+        : INode extends {
+            type: 'repeater';
+            name: infer IName extends string;
+            kind: infer IKind extends RepeaterKind;
+          }
+        ? {
+            chars: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, SplitChars<ISNext>>>;
+            lines: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, SplitLines<ISNext>>>;
+            csv: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, SplitComma<ISNext>>>;
+            ssv: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, SplitSpace<ISNext>>>;
+            numbers: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, ParseNumbers<ISNext>>>;
+          }[IKind]
+        : never
       : never
     : TResult;
+
+  type SplitContent<
+    TContent extends string,
+    TRestPattern extends string,
+  > = string extends TRestPattern
+    ? TContent
+    : TContent extends `${infer IHead extends string}${TRestPattern}`
+    ? TContent extends `${IHead}${infer ISRest extends string}`
+      ? [next: IHead, rest: ISRest]
+      : never
+    : never;
 
   type ApplyRefinement<
     TValues extends string[],
@@ -123,12 +174,32 @@ export namespace parser {
     ? [Expand<ApplyTemplate<INext, TRefinement>>, ...ApplyRefinement<IRest, TRefinement>]
     : [];
 
+  type ApplyRefinementRepeater<
+    TValues extends string[],
+    IRepeater extends RepeaterKind,
+  > = TValues extends [infer INext extends string, ...infer IRest extends string[]]
+    ? [
+        {
+          chars: SplitChars<INext>;
+          lines: SplitLines<INext>;
+          csv: SplitComma<INext>;
+          ssv: SplitSpace<INext>;
+          numbers: ParseNumbers<INext>;
+        }[IRepeater],
+        ...ApplyRefinementRepeater<IRest, IRepeater>,
+      ]
+    : [];
+
   type ApplyRefinements<
     TResult extends { [K in string]: string[] },
     TRefinements extends { [K in string]: string },
   > = {
     [K in keyof TResult]: K extends keyof TRefinements
-      ? ParseTemplate<TRefinements[K]> extends infer IRefinement extends ParsedTemplateNode[]
+      ? TRefinements[K] extends `[${RepeaterKind}]`
+        ? TRefinements[K] extends `[${infer IRepeater extends RepeaterKind}]`
+          ? ApplyRefinementRepeater<TResult[K], IRepeater>
+          : never
+        : ParseTemplate<TRefinements[K]> extends infer IRefinement extends ParsedTemplateNode[]
         ? ApplyRefinement<TResult[K], IRefinement>
         : never
       : TResult[K];
@@ -141,24 +212,38 @@ export namespace parser {
   > = ParseTemplate<TTemplate> extends infer ITemplate extends ParsedTemplateNode[]
     ? Expand<ApplyRefinements<ApplyTemplate<S, ITemplate>, TRefinements>>
     : 'parsed template is not a ParsedTemplate';
-}
 
-declare const testParser: test.Describe<
-  test.Expect<
-    parser.Parse<'a1b2c', 'a{a: number}b{b: number}c'>,
-    {
-      a: 1;
-      b: 2;
-    }
-  >,
-  test.Expect<
-    parser.Parse<
-      'a: 1\nb: 2\nc: 3\n',
-      '[lines: line]',
-      { lines: '{key: string}: {value: string}' }
+  declare const testParser: test.Describe<
+    test.Expect<
+      Parse<'a1b2c', 'a{a: number}b{b: number}c'>,
+      {
+        a: 1;
+        b: 2;
+      }
     >,
-    {
-      lines: [{ key: 'a'; value: '1' }, { key: 'b'; value: '2' }, { key: 'c'; value: '3' }];
-    }
-  >
->;
+    test.Expect<
+      Parse<'a: 1\nb: 2\nc: 3\n', '[lines: lines]', { lines: '{key: string}: {value: string}' }>,
+      {
+        lines: [{ key: 'a'; value: '1' }, { key: 'b'; value: '2' }, { key: 'c'; value: '3' }];
+      }
+    >,
+    test.Expect<
+      Parse<'data: a, b,    c, d,e\ndata: a    b c  d', 'data: [comma: csv]\ndata: [space: ssv]'>,
+      { comma: ['a', 'b', 'c', 'd', 'e']; space: ['a', 'b', 'c', 'd'] }
+    >,
+    test.Expect<
+      Parse<'data: 1, 2, 3, 4, 5', 'data: [counts: numbers]'>,
+      { counts: [1, 2, 3, 4, 5] }
+    >,
+    test.Expect<
+      Parse<
+        'Derp 1: 1, 2, 3\nDerp 2: 4 5    6\n',
+        '[lines: lines]',
+        { lines: 'Derp {number}: [counts: numbers]' }
+      >,
+      {
+        lines: [{ counts: [1, 2, 3] }, { counts: [4, 5, 6] }];
+      }
+    >
+  >;
+}
