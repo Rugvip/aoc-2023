@@ -1,5 +1,6 @@
 import { Expand } from './utils';
 import { test } from './test';
+import { objects } from './objects';
 import { Trim } from './strings';
 
 export namespace parser {
@@ -43,30 +44,6 @@ export namespace parser {
     | ParsedTemplateRepeater;
 
   type FirstPassResult = { [K in string]: any[] | any };
-
-  type AppendResult<
-    TResult extends FirstPassResult,
-    TName extends string,
-    TValue extends any,
-  > = TName extends keyof TResult
-    ? {
-        [K in keyof TResult]: K extends TName ? [...TResult[K], TValue] : TResult[K];
-      }
-    : TResult & {
-        [K in TName]: [TValue];
-      };
-
-  type SetResult<
-    TResult extends FirstPassResult,
-    TName extends string,
-    TValue extends any,
-  > = TName extends keyof TResult
-    ? {
-        [K in keyof TResult]: K extends TName ? TValue : TResult[K];
-      }
-    : TResult & {
-        [K in TName]: TValue;
-      };
 
   type TemplateToPattern<T extends ParsedTemplateNode[]> = T extends [
     infer INext extends ParsedTemplateNode,
@@ -133,9 +110,9 @@ export namespace parser {
           kind: infer IKind extends VariableKind;
         }
         ? {
-            string: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, ISNext>>;
+            string: ApplyTemplate<ISRest, ITRest, objects.Set<TResult, IName, ISNext>>;
             number: ISNext extends `${infer IN extends number}`
-              ? ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, IN>>
+              ? ApplyTemplate<ISRest, ITRest, objects.Set<TResult, IName, IN>>
               : never;
           }[IKind]
         : INode extends { type: 'wildcard' }
@@ -146,11 +123,15 @@ export namespace parser {
             kind: infer IKind extends RepeaterKind;
           }
         ? {
-            chars: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, SplitChars<ISNext>>>;
-            lines: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, SplitLines<ISNext>>>;
-            csv: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, SplitComma<ISNext>>>;
-            ssv: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, SplitSpace<ISNext>>>;
-            numbers: ApplyTemplate<ISRest, ITRest, SetResult<TResult, IName, ParseNumbers<ISNext>>>;
+            chars: ApplyTemplate<ISRest, ITRest, objects.Set<TResult, IName, SplitChars<ISNext>>>;
+            lines: ApplyTemplate<ISRest, ITRest, objects.Set<TResult, IName, SplitLines<ISNext>>>;
+            csv: ApplyTemplate<ISRest, ITRest, objects.Set<TResult, IName, SplitComma<ISNext>>>;
+            ssv: ApplyTemplate<ISRest, ITRest, objects.Set<TResult, IName, SplitSpace<ISNext>>>;
+            numbers: ApplyTemplate<
+              ISRest,
+              ITRest,
+              objects.Set<TResult, IName, ParseNumbers<ISNext>>
+            >;
           }[IKind]
         : never
       : never
