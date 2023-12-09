@@ -1,47 +1,42 @@
 import { Input } from '../input/04';
 import { int } from './lib/math';
+import { parser } from './lib/parser';
+import { PopUnion } from './lib/utils';
 
-type TrimRight<S extends string> = S extends ` ${infer IRest}` ? TrimLeft<IRest> : S;
-type TrimLeft<S extends string> = S extends ` ${infer IRest}` ? TrimLeft<IRest> : S;
-type Trim<S extends string> = TrimLeft<TrimRight<S>>;
+// type Input = `Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
+// Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
+// Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
+// Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
+// Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
+// Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
+// `;
 
-type Row = { cards: string; winning: string };
+type ParsedInput = parser.Parse<
+  Input,
+  `[cards: lines]`,
+  {
+    cards: 'Card {number}: [cards: ssv] | [winning: ssv]';
+  }
+>['cards'];
 
-type ParseCards<S extends string> = S extends `${infer ICard} ${infer IRest}`
-  ? ICard | ParseCards<Trim<IRest>>
-  : S;
-type ParseInput<
-  TInput extends string,
-  TResult extends Row[] = [],
-> = TInput extends `${string}: ${infer ICards} | ${infer IWinning}\n${infer IRest}`
-  ? ParseInput<
-      IRest,
-      [...TResult, { cards: ParseCards<Trim<ICards>>; winning: ParseCards<Trim<IWinning>> }]
-    >
-  : TResult;
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
-  ? I
-  : never;
-type PopUnion<U> = UnionToIntersection<U extends any ? () => U : never> extends () => infer R
-  ? R
-  : never;
+type Row = { cards: string[]; winning: string[] };
 
-type ScoreUnion<U, TResult extends any[] = [], TLast = PopUnion<U>> = [U] extends [never]
-  ? TResult['length']
-  : ScoreUnion<Exclude<U, TLast>, TResult extends [] ? [any] : [...TResult, ...TResult]>;
+type ScoreUnion<U, TResult extends any[] = []> = PopUnion<U> extends { rest: infer IRest }
+  ? ScoreUnion<IRest, TResult extends [] ? [any] : [...TResult, ...TResult]>
+  : TResult['length'];
 
 type ScoreRows<TRows extends Row[], TResult extends number = 0> = TRows extends [
   infer IRow extends Row,
   ...infer IRest extends Row[],
 ]
-  ? ScoreRows<IRest, int.Add<TResult, ScoreUnion<IRow['cards'] & IRow['winning']>>>
+  ? ScoreRows<IRest, int.Add<TResult, ScoreUnion<IRow['cards'][number] & IRow['winning'][number]>>>
   : TResult;
 
-export declare const solution1: ScoreRows<ParseInput<Input>>;
+export declare const solution1: ScoreRows<ParsedInput>;
 
-type SizeUnion<U, TResult extends any[] = [], TLast = PopUnion<U>> = [U] extends [never]
-  ? TResult
-  : SizeUnion<Exclude<U, TLast>, TResult extends [] ? [any] : [...TResult, any]>;
+type SizeUnion<U, TResult extends any[] = []> = PopUnion<U> extends { rest: infer IRest }
+  ? SizeUnion<IRest, TResult extends [] ? [any] : [...TResult, any]>
+  : TResult;
 
 type Intersperse<
   TNested extends number[],
@@ -61,10 +56,14 @@ type ReduceRows<
   ? TDeferred extends [infer ICopies extends number, ...infer IRestDeferred extends number[]]
     ? ReduceRows<
         IRestRows,
-        Intersperse<IRestDeferred, SizeUnion<IRow['cards'] & IRow['winning']>, ICopies>,
+        Intersperse<
+          IRestDeferred,
+          SizeUnion<IRow['cards'][number] & IRow['winning'][number]>,
+          ICopies
+        >,
         int.Add<TResult, ICopies>
       >
     : never
   : TResult;
 
-export declare const solution2: ReduceRows<ParseInput<Input>>;
+export declare const solution2: ReduceRows<ParsedInput>;
