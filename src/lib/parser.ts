@@ -1,7 +1,7 @@
 import { utils } from './utils';
 import { test } from './test';
 import { objects } from './objects';
-import { Trim } from './strings';
+import { strings } from './strings';
 
 export namespace parser {
   type ParseTemplate<
@@ -69,8 +69,8 @@ export namespace parser {
       : [IHead, ...SplitSpace<IRest>]
     : [S];
   type SplitComma<S extends string> = S extends `${infer IHead},${infer IRest}`
-    ? [Trim<IHead>, ...SplitComma<IRest>]
-    : [Trim<S>];
+    ? [strings.Trim<IHead>, ...SplitComma<IRest>]
+    : [strings.Trim<S>];
   type ParseNumber<S extends string> = S extends `${infer INumber extends number}`
     ? INumber
     : never;
@@ -82,11 +82,11 @@ export namespace parser {
     ? IChar extends TSeparator
       ? TAcc extends ''
         ? ParseNumbers<IRest, TSeparator>
-        : [ParseNumber<Trim<TAcc>>, ...ParseNumbers<IRest, TSeparator>]
+        : [ParseNumber<strings.Trim<TAcc>>, ...ParseNumbers<IRest, TSeparator>]
       : ParseNumbers<IRest, TSeparator, `${TAcc}${IChar}`>
     : TAcc extends ''
     ? []
-    : [ParseNumber<Trim<TAcc>>];
+    : [ParseNumber<strings.Trim<TAcc>>];
 
   type ApplyTemplate<
     S extends string,

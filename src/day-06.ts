@@ -1,6 +1,6 @@
 import { Input } from '../input/06';
 import { int } from './lib/math';
-import { Trim, TrimLeft } from './lib/strings';
+import { strings } from './lib/strings';
 
 // type Input = `Time:      7  15   30
 // Distance:  9  40  200
@@ -12,9 +12,9 @@ type Race<TTime extends number = number, TDistance extends number = number> = {
 };
 
 type ParseNumbers<S extends string> =
-  TrimLeft<S> extends `${infer INum extends number} ${infer IRest}`
+  strings.TrimLeft<S> extends `${infer INum extends number} ${infer IRest}`
     ? [INum, ...ParseNumbers<IRest>]
-    : Trim<S> extends `${infer INum extends number}`
+    : strings.Trim<S> extends `${infer INum extends number}`
     ? [INum]
     : [];
 
