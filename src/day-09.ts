@@ -1,5 +1,6 @@
 import { Input } from '../input/09';
 import { int } from './lib/math';
+import { array } from './lib/array';
 
 // type Input = `0 3 6 9 12 15
 // 1 3 6 10 15 21
@@ -16,65 +17,63 @@ type ParseInput<TInput extends string> = TInput extends `${infer ILine}\n${infer
   ? [ParseNumbers<ILine>, ...ParseInput<IRest>]
   : [];
 
-type ComputeNextRow<TData extends number[]> = TData extends [
+type Differences<TData extends number[]> = TData extends [
   infer IA extends number,
   infer IB extends number,
   ...infer IRest extends number[],
 ]
-  ? [int.Subtract<IB, IA>, ...ComputeNextRow<[IB, ...IRest]>]
+  ? [int.Subtract<IB, IA>, ...Differences<[IB, ...IRest]>]
   : [];
 
-type ComputeDifferences<TData extends number[]> =
-  ComputeNextRow<TData> extends infer INextRow extends number[]
-    ? INextRow extends []
+type DifferenceTable<TData extends number[]> =
+  Differences<TData> extends infer INextRow extends number[]
+    ? INextRow[number] extends 0
+      ? [TData, INextRow]
+      : INextRow extends []
       ? []
-      : [TData, ...ComputeDifferences<INextRow>]
+      : [TData, ...DifferenceTable<INextRow>]
     : never;
 
-type PickLast<TData extends any[][]> = TData extends [
+type PickDataAt<TData extends any[][], TIndex extends number> = TData extends [
   infer INextRow extends any[],
   ...infer IRestRows extends any[][],
 ]
-  ? INextRow extends [...any, infer ILast]
-    ? [ILast, ...PickLast<IRestRows>]
+  ? array.At<INextRow, TIndex> extends [infer IValue extends number]
+    ? [IValue, ...PickDataAt<IRestRows, TIndex>]
     : []
   : [];
 
-type Extrapolate<TData extends number[]> = int.Sum<PickLast<ComputeDifferences<TData>>>;
+type Direction = '<' | '>';
 
-type Solve<TData extends number[][], TExtrapolated extends number[] = []> = TData extends [
-  infer IData extends number[],
-  ...infer IRestData extends number[][],
-]
-  ? Solve<IRestData, [...TExtrapolated, Extrapolate<IData>]>
-  : int.Sum<TExtrapolated>;
-
-export declare const solution1: Solve<ParseInput<Input>>;
-
-type PickFirst<TData extends any[][]> = TData extends [
-  infer INextRow extends any[],
-  ...infer IRestRows extends any[][],
-]
-  ? INextRow extends [infer IFirst, ...any]
-    ? [IFirst, ...PickFirst<IRestRows>]
-    : []
-  : [];
-
-type ExtrapolateBackwards<TData extends number[], TResult extends number = 0> = TData extends [
-  ...infer IRest extends number[],
-  infer ILast extends number,
-]
-  ? ExtrapolateBackwards<IRest, int.Subtract<ILast, TResult>>
+type Extrapolate<
+  TDirection extends Direction,
+  TData extends number[],
+  TResult extends number = 0,
+> = TData extends [...infer IRest extends number[], infer ILast extends number]
+  ? Extrapolate<
+      TDirection,
+      IRest,
+      TDirection extends '>' ? int.Add<ILast, TResult> : int.Subtract<ILast, TResult>
+    >
   : TResult;
 
-type Solve2<TData extends number[][], TExtrapolated extends number[] = []> = TData extends [
-  infer IData extends number[],
-  ...infer IRestData extends number[][],
-]
-  ? Solve2<
+type Solve<
+  TDirection extends Direction,
+  TData extends number[][],
+  TExtrapolated extends number[] = [],
+> = TData extends [infer IData extends number[], ...infer IRestData extends number[][]]
+  ? Solve<
+      TDirection,
       IRestData,
-      [...TExtrapolated, ExtrapolateBackwards<PickFirst<ComputeDifferences<IData>>>]
+      [
+        ...TExtrapolated,
+        Extrapolate<
+          TDirection,
+          PickDataAt<DifferenceTable<IData>, TDirection extends '<' ? 0 : -1>
+        >,
+      ]
     >
   : int.Sum<TExtrapolated>;
 
-export declare const solution2: Solve2<ParseInput<Input>>;
+export declare const solution1: Solve<'>', ParseInput<Input>>;
+export declare const solution2: Solve<'<', ParseInput<Input>>;
