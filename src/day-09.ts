@@ -50,3 +50,31 @@ type Solve<TData extends number[][], TExtrapolated extends number[] = []> = TDat
   : int.Sum<TExtrapolated>;
 
 export declare const solution1: Solve<ParseInput<Input>>;
+
+type PickFirst<TData extends any[][]> = TData extends [
+  infer INextRow extends any[],
+  ...infer IRestRows extends any[][],
+]
+  ? INextRow extends [infer IFirst, ...any]
+    ? [IFirst, ...PickFirst<IRestRows>]
+    : []
+  : [];
+
+type ExtrapolateBackwards<TData extends number[], TResult extends number = 0> = TData extends [
+  ...infer IRest extends number[],
+  infer ILast extends number,
+]
+  ? ExtrapolateBackwards<IRest, int.Subtract<ILast, TResult>>
+  : TResult;
+
+type Solve2<TData extends number[][], TExtrapolated extends number[] = []> = TData extends [
+  infer IData extends number[],
+  ...infer IRestData extends number[][],
+]
+  ? Solve2<
+      IRestData,
+      [...TExtrapolated, ExtrapolateBackwards<PickFirst<ComputeDifferences<IData>>>]
+    >
+  : int.Sum<TExtrapolated>;
+
+export declare const solution2: Solve2<ParseInput<Input>>;
