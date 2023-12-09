@@ -95,4 +95,39 @@ export namespace array {
   > extends `${infer I extends number}`
     ? I
     : never;
+
+  export type At<TArr extends any[], TIndex extends number> = int.IsNegative<TIndex> extends true
+    ? int.Add<TArr['length'], TIndex> extends infer IIndex extends number
+      ? int.IsNegative<IIndex> extends true
+        ? undefined
+        : TArr[IIndex]
+      : never
+    : TArr[TIndex];
+
+  declare const testAt: test.Describe<
+    test.Expect<At<['a', 'b', 'c'], 0>, 'a'>,
+    test.Expect<At<['a', 'b', 'c'], 1>, 'b'>,
+    test.Expect<At<['a', 'b', 'c'], 2>, 'c'>,
+    test.Expect<At<['a', 'b', 'c'], 3>, undefined>,
+    test.Expect<At<['a', 'b', 'c'], -1>, 'c'>,
+    test.Expect<At<['a', 'b', 'c'], -2>, 'b'>,
+    test.Expect<At<['a', 'b', 'c'], -3>, 'a'>,
+    test.Expect<At<['a', 'b', 'c'], -4>, undefined>
+  >;
+
+  export type EachAt<TTable extends any[][], TIndex extends number> = TTable extends [
+    infer INextRow extends any[],
+    ...infer IRestRows extends any[][],
+  ]
+    ? [array.At<INextRow, TIndex>, ...EachAt<IRestRows, TIndex>]
+    : [];
+
+  declare const testEachAt: test.Describe<
+    test.Expect<EachAt<[['a', 'b'], ['c']], -3>, [undefined, undefined]>,
+    test.Expect<EachAt<[['a', 'b'], ['c']], -2>, ['a', undefined]>,
+    test.Expect<EachAt<[['a', 'b'], ['c']], -1>, ['b', 'c']>,
+    test.Expect<EachAt<[['a', 'b'], ['c']], 0>, ['a', 'c']>,
+    test.Expect<EachAt<[['a', 'b'], ['c']], 1>, ['b', undefined]>,
+    test.Expect<EachAt<[['a', 'b'], ['c']], 2>, [undefined, undefined]>
+  >;
 }

@@ -34,15 +34,6 @@ type DifferenceTable<TData extends number[]> =
       : [TData, ...DifferenceTable<INextRow>]
     : never;
 
-type PickDataAt<TData extends any[][], TIndex extends number> = TData extends [
-  infer INextRow extends any[],
-  ...infer IRestRows extends any[][],
-]
-  ? array.At<INextRow, TIndex> extends [infer IValue extends number]
-    ? [IValue, ...PickDataAt<IRestRows, TIndex>]
-    : []
-  : [];
-
 type Direction = '<' | '>';
 
 type Extrapolate<
@@ -69,7 +60,7 @@ type Solve<
         ...TExtrapolated,
         Extrapolate<
           TDirection,
-          PickDataAt<DifferenceTable<IData>, TDirection extends '<' ? 0 : -1>
+          array.EachAt<DifferenceTable<IData>, TDirection extends '<' ? 0 : -1>
         >,
       ]
     >
