@@ -1,6 +1,7 @@
 import { Input } from '../input/07';
 import { int } from './lib/math';
-import { ArrayIndices, Expand } from './lib/utils';
+import { Expand } from './lib/utils';
+import { array } from './lib/array';
 import { union } from './lib/union';
 import { test } from './lib/test';
 
@@ -15,7 +16,7 @@ type OrderedCards = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
 type Card = OrderedCards[number];
 
 type CardValueMap = { [_ in Card]: number };
-type DefaultCardValueMap = { [I in ArrayIndices<OrderedCards> as OrderedCards[I]]: I };
+type DefaultCardValueMap = { [I in array.Indices<OrderedCards> as OrderedCards[I]]: I };
 
 type Hand = [Card, Card, Card, Card, Card];
 type Entry<THand extends Hand = Hand, TBid extends number = number> = { hand: THand; bid: TBid };
@@ -34,7 +35,7 @@ type ParseInput<S extends string> = S extends `${infer IEntry}\n${infer IRest}`
   : [];
 
 type MaxCardCount<THand extends Hand> = int.Max<
-  { [I in ArrayIndices<THand> as THand[I]]: union.Size<I> }[THand[number]]
+  { [I in array.Indices<THand> as THand[I]]: union.Size<I> }[THand[number]]
 >;
 
 type Strength = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -167,7 +168,7 @@ export declare const solution1: ScoreEntryGroups<
 >;
 
 type JokerCardValueMap = {
-  [I in ArrayIndices<OrderedCards> as OrderedCards[I]]: OrderedCards[I] extends 'J' ? -1 : I;
+  [I in array.Indices<OrderedCards> as OrderedCards[I]]: OrderedCards[I] extends 'J' ? -1 : I;
 };
 
 type ExpandJokers<THand extends Card[]> = THand extends [
