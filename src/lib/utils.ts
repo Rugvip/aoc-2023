@@ -24,7 +24,7 @@ export type PopUnion<U> = UnionToIntersection<U extends any ? () => U : never> e
   ? { rest: Exclude<U, R>; next: R }
   : undefined;
 
-export type UnionSize<U, TCounter extends any[] = [], TPop = PopUnion<U>> = TPop extends {
+export type UnionSize<U, TCounter extends any[] = []> = PopUnion<U> extends {
   next: any;
   rest: infer IRest;
 }
