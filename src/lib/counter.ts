@@ -10,6 +10,8 @@ import { int } from './math';
 export namespace counter {
   // Some other approaches tried that don't perform as well:
   // - Lookup table of size 1000 - way worse
+  // - Store parts in a tuple instead of union - order of magnitude worse in most ways
+  // - Storing parts in an objects - way worse even than a tuple
   // - Double lookup tables for first 4 digits - a bit faster but more instantiations
   // - Just counting with a regular number - can't count to 100000
   // - Using counter arrays rather than lookup tables - slower and more instantiations
@@ -23,13 +25,12 @@ export namespace counter {
   type IncTable = MakeIncTable;
   type DecTable = MakeDecTable;
 
-  export type Counter<TOnes extends number = number, THundreds extends number = number> = [
-    one: TOnes,
-    hundred: THundreds,
-  ];
+  export type Counter<TOnes extends number = number, THundreds extends string = string> =
+    | TOnes
+    | THundreds;
 
   export type Make<N extends number = 0> = N extends 0
-    ? Counter<0, 0>
+    ? Counter<0, '0'>
     : int.IsNegative<N> extends true
     ? never
     : int.ToInteger<N>['digits'] extends infer D extends int.Digit[]
@@ -40,18 +41,18 @@ export namespace counter {
       ]
       ? Counter<
           int.FromInteger<int.Integer<'+', [I1, I0]>>,
-          int.FromInteger<int.Integer<'+', IHundreds>>
+          `${int.FromInteger<int.Integer<'+', IHundreds>>}`
         >
-      : Counter<int.FromInteger<int.Integer<'+', D>>, 0>
+      : Counter<int.FromInteger<int.Integer<'+', D>>, '0'>
     : never;
 
-  export type Inc<TCounter extends Counter> = TCounter[0] extends 99
-    ? [0, int.Inc<TCounter[1]>]
-    : [IncTable[TCounter[0]], TCounter[1]];
+  export type Inc<TCounter extends Counter> = TCounter & number extends 99
+    ? 0 | `${int.Inc<TCounter & string>}`
+    : IncTable[TCounter & number] | `${TCounter & string}`;
 
-  export type Dec<TCounter extends Counter> = TCounter[0] extends 0
-    ? [99, int.Dec<TCounter[1]>]
-    : [DecTable[TCounter[0]], TCounter[1]];
+  export type Dec<TCounter extends Counter> = TCounter & number extends 0
+    ? 99 | `${int.Dec<TCounter & string>}`
+    : DecTable[TCounter & number] | `${TCounter & string}`;
 
   type Pad0<T extends number> = `${T}` extends `${number}${number}` ? `${T}` : `0${T}`;
   type Trim0<T extends string> = T extends `0${infer TRest}`
@@ -60,11 +61,11 @@ export namespace counter {
     ? '0'
     : T;
 
-  export type IsZero<TCounter extends Counter> = TCounter extends Counter<0, 0> ? true : false;
+  export type IsZero<TCounter extends Counter> = TCounter extends Counter<0, '0'> ? true : false;
 
-  export type Value<TCounter extends Counter> = TCounter[1] extends 0
-    ? TCounter[0]
-    : Trim0<`${TCounter[1]}${Pad0<TCounter[0]>}`> extends `${infer N extends number}`
+  export type Value<TCounter extends Counter> = TCounter & string extends '0'
+    ? TCounter & number
+    : Trim0<`${TCounter & string}${Pad0<TCounter & number>}`> extends `${infer N extends number}`
     ? int.IsNegative<N> extends true
       ? never
       : N
