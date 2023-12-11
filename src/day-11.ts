@@ -1,5 +1,5 @@
 import { Input } from '../input/11';
-import { int, array, utils } from './lib';
+import { int, array, utils, counter } from './lib';
 
 // type Input1 = `...#......
 // .......#..
@@ -84,7 +84,7 @@ type CountBetweenImpl<
   TArr extends number[],
   TMin extends number,
   TMax extends number,
-  TCounter extends any[] = [],
+  TCounter extends counter.Counter = counter.Make,
   TDir extends 'lt' | 'gt' = 'lt',
 > = TArr extends [infer INext extends number, ...infer IRest extends number[]]
   ? TDir extends 'lt'
@@ -92,11 +92,11 @@ type CountBetweenImpl<
       ? CountBetweenImpl<IRest, TMin, TMax, TCounter, 'lt'>
       : int.Compare<INext, TMax> extends 'gt'
       ? 0
-      : CountBetweenImpl<IRest, TMin, TMax, [...TCounter, any], 'gt'>
+      : CountBetweenImpl<IRest, TMin, TMax, counter.Inc<TCounter>, 'gt'>
     : int.Compare<INext, TMax> extends 'gt'
-    ? TCounter['length']
-    : CountBetweenImpl<IRest, TMin, TMax, [...TCounter, any], 'gt'>
-  : TCounter['length'];
+    ? counter.Value<TCounter>
+    : CountBetweenImpl<IRest, TMin, TMax, counter.Inc<TCounter>, 'gt'>
+  : counter.Value<TCounter>;
 
 type CountBetween<TArr extends number[], TA extends number, TB extends number> = int.Compare<
   TA,
@@ -125,22 +125,22 @@ type GalaxyDistances<
   TGalaxies extends Galaxy[],
   TExpansions extends Expansions,
   TExpansionFactor extends number,
-  TACounter extends any[],
-  TBCounter extends any[] = [...TACounter, any],
+  TACounter extends counter.Counter,
+  TBCounter extends counter.Counter = counter.Inc<TACounter>,
   TSum extends number = 0,
-> = TBCounter['length'] extends TGalaxies['length']
+> = counter.Value<TBCounter> extends TGalaxies['length']
   ? TSum
   : GalaxyDistances<
       TGalaxies,
       TExpansions,
       TExpansionFactor,
       TACounter,
-      [...TBCounter, any],
+      counter.Inc<TBCounter>,
       int.Add<
         TSum,
         GalaxyDistance<
-          TGalaxies[TACounter['length']],
-          TGalaxies[TBCounter['length']],
+          TGalaxies[counter.Value<TACounter>],
+          TGalaxies[counter.Value<TBCounter>],
           TExpansions,
           TExpansionFactor
         >
@@ -151,15 +151,15 @@ type SumGalaxyDistances<
   TGalaxies extends Galaxy[],
   TExpansions extends Expansions,
   TExpansionFactor extends number,
-  TCounter extends any[] = [],
+  TCounter extends counter.Counter = counter.Make,
   TSum extends number = 0,
-> = TCounter['length'] extends TGalaxies['length']
+> = counter.Value<TCounter> extends TGalaxies['length']
   ? TSum
   : SumGalaxyDistances<
       TGalaxies,
       TExpansions,
       TExpansionFactor,
-      [...TCounter, any],
+      counter.Inc<TCounter>,
       int.Add<TSum, GalaxyDistances<TGalaxies, TExpansions, TExpansionFactor, TCounter>>
     >;
 
