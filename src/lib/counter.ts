@@ -42,7 +42,7 @@ export namespace counter {
 
   export type Inc<TCounter extends Counter> = TCounter[0]['length'] extends 99
     ? TCounter[1]['length'] extends 99
-      ? [[], [], int.Add<TCounter[2], 1>]
+      ? [[], [], int.Inc<TCounter[2]>]
       : [[], [...TCounter[1], any], TCounter[2]]
     : [[...TCounter[0], any], TCounter[1], TCounter[2]];
 
@@ -52,7 +52,7 @@ export namespace counter {
     ? [IRest, TCounter[1], TCounter[2]]
     : TCounter[1] extends [any, ...infer IRest]
     ? [Array99, IRest, TCounter[2]]
-    : [Array99, Array99, int.Subtract<TCounter[2], 1>];
+    : [Array99, Array99, int.Dec<TCounter[2]>];
 
   type Pad0<T extends number> = `${T}` extends `${number}${number}` ? `${T}` : `0${T}`;
   type Trim0<T extends string> = T extends `0${infer TRest}`

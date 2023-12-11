@@ -393,6 +393,28 @@ export namespace int {
     test.Expect<Subtract<100, 99>, 1>
   >;
 
+  export type Inc<TA extends number> = ToInteger<TA> extends infer IA extends Integer
+    ? FromInteger<AddIntegers<IA, Integer<'+', [1]>>>
+    : never;
+
+  declare const testInc: test.Describe<
+    test.Expect<Inc<0>, 1>,
+    test.Expect<Inc<-1>, 0>,
+    test.Expect<Inc<1>, 2>,
+    test.Expect<Inc<999999>, 1000000>
+  >;
+
+  export type Dec<TA extends number> = ToInteger<TA> extends infer IA extends Integer
+    ? FromInteger<AddIntegers<IA, Integer<'-', [1]>>>
+    : never;
+
+  declare const testDec: test.Describe<
+    test.Expect<Dec<0>, -1>,
+    test.Expect<Dec<-1>, -2>,
+    test.Expect<Dec<1>, 0>,
+    test.Expect<Dec<1000000>, 999999>
+  >;
+
   type MinMax<
     N extends number,
     TOp extends 'lt' | 'gt',
