@@ -51,6 +51,16 @@ export namespace int {
 
   export type IsNegative<T extends number> = `${T}` extends `-${string}` ? true : false;
 
+  export type Abs<T extends number> = `${T}` extends `-${infer N extends number}` ? N : T;
+
+  declare const testAbs: test.Describe<
+    test.Expect<Abs<0>, 0>,
+    test.Expect<Abs<-1>, 1>,
+    test.Expect<Abs<1>, 1>,
+    test.Expect<Abs<-99>, 99>,
+    test.Expect<Abs<99>, 99>
+  >;
+
   export type Integer<TSign extends Sign = Sign, TDigits extends Digit[] = Digit[]> = {
     sign: TSign;
     digits: TDigits;
