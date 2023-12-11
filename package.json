@@ -2,7 +2,7 @@
   "name": "advent-2023",
   "scripts": {
     "tsc": "tsc",
-    "print": "node --stack-size=16384 --max-old-space-size=16384 print-exports.js"
+    "print": "node --stack-size=16384 --max-old-space-size=32768 print-exports.js"
   },
   "dependencies": {
     "typescript": "patch:typescript@npm%3A5.3.2#~/.yarn/patches/typescript-npm-5.3.2-a11892b3bc.patch"

@@ -1,4 +1,4 @@
-#!/usr/bin/env node --stack-size=16384 --max-old-space-size=16384
+#!/usr/bin/env node --stack-size=16384 --max-old-space-size=32768
 
 const fs = require('fs');
 const typescript = require('typescript');
