@@ -130,4 +130,18 @@ export namespace array {
     test.Expect<EachAt<[['a', 'b'], ['c']], 1>, ['b', undefined]>,
     test.Expect<EachAt<[['a', 'b'], ['c']], 2>, [undefined, undefined]>
   >;
+
+  export type Replace<TArr extends any[], TFrom, TTo> = {
+    [I in keyof TArr]: TArr[I] extends TFrom ? TTo : TArr[I];
+  };
+
+  declare const testReplace: test.Describe<
+    test.Expect<Replace<[], 'a', 'b'>, []>,
+    test.Expect<Replace<['a'], 'a', 'b'>, ['b']>,
+    test.Expect<Replace<['a'], 'a', 'b' | 'c'>, ['b' | 'c']>,
+    test.Expect<Replace<['a'], 'a' | 'b', 'c'>, ['c']>,
+    test.Expect<Replace<['b', 'a', 'b'], 'a', 'b'>, ['b', 'b', 'b']>,
+    test.Expect<Replace<['b', 'a', 'b'], 'a', 'b' | 'c'>, ['b', 'b' | 'c', 'b']>,
+    test.Expect<Replace<['b', 'a', 'b'], 'a' | 'b', 'c'>, ['c', 'c', 'c']>
+  >;
 }
