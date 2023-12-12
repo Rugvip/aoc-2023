@@ -13,4 +13,11 @@ export namespace strings {
     TrimRight<S, TTrim>,
     TTrim
   >;
+
+  export type ToChars<
+    S extends string,
+    TArr extends string[] = [],
+  > = S extends `${infer IChar}${infer IRest}` ? ToChars<IRest, [...TArr, IChar]> : TArr;
+
+  export type ToNumber<S extends string> = S extends `${infer N extends number}` ? N : never;
 }

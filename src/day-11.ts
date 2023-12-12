@@ -1,5 +1,5 @@
 import { Input } from '../input/11';
-import { int, array, utils, counter } from './lib';
+import { int, array, utils, counter, grid } from './lib';
 
 // type Input1 = `...#......
 // .......#..
@@ -13,47 +13,18 @@ import { int, array, utils, counter } from './lib';
 // #...#.....
 // `;
 
-type SplitChars<
-  S extends string,
-  TArr extends string[] = [],
-> = S extends `${infer IChar}${infer IRest}` ? SplitChars<IRest, [...TArr, IChar]> : TArr;
-type ParseGrid<
-  S extends string,
-  TRows extends any[] = [],
-> = S extends `${infer ILine}\n${infer IRest}`
-  ? ParseGrid<IRest, [...TRows, SplitChars<ILine>]>
-  : TRows;
-
-type Galaxy = [x: number, y: number];
+type Galaxy = grid.Coords;
 type Expansions = { rows: number[]; cols: number[] };
 
-type LocateGalaxiesRow<
-  TRow extends string[],
-  TY extends number,
-  TGalaxies extends Galaxy[] = [],
-  TXCounter extends any[] = [],
-> = TRow extends [infer IChar extends string, ...infer IRest extends string[]]
-  ? IChar extends '.'
-    ? LocateGalaxiesRow<IRest, TY, TGalaxies, [...TXCounter, any]>
-    : LocateGalaxiesRow<
-        IRest,
-        TY,
-        [...TGalaxies, [x: TXCounter['length'], y: TY]],
-        [...TXCounter, any]
-      >
-  : TGalaxies;
-
 type LocateGalaxies<
-  TGalaxy extends string[][],
-  TYCounter extends any[] = [],
-  TGalaxies extends [x: number, y: number][] = [],
-> = TGalaxy extends [infer IRow extends string[], ...infer IRest extends string[][]]
-  ? LocateGalaxies<
-      IRest,
-      [...TYCounter, any],
-      [...TGalaxies, ...LocateGalaxiesRow<IRow, TYCounter['length']>]
-    >
-  : TGalaxies;
+  TUniverse extends grid.Grid<string>,
+  TIterator extends grid.Iterator = grid.IteratorZero,
+  TGalaxies extends Galaxy[] = [],
+> = [TIterator] extends [-1]
+  ? TGalaxies
+  : grid.AtCoords<TUniverse, TIterator> extends '#'
+  ? LocateGalaxies<TUniverse, grid.IterNext<TUniverse, TIterator>, [...TGalaxies, TIterator]>
+  : LocateGalaxies<TUniverse, grid.IterNext<TUniverse, TIterator>, TGalaxies>;
 
 type FindExpansionRows<
   TUniverse extends string[][],
@@ -111,12 +82,15 @@ type GalaxyDistance<
   TExpansions extends Expansions,
   TExpansionFactor extends number,
 > = int.Add<
-  int.Add<int.Abs<int.Subtract<TA[0], TB[0]>>, int.Abs<int.Subtract<TA[1], TB[1]>>>,
+  int.Add<
+    int.Abs<int.Subtract<grid.CoordX<TA>, grid.CoordX<TB>>>,
+    int.Abs<int.Subtract<grid.CoordY<TA>, grid.CoordY<TB>>>
+  >,
   int.Multiply<
     TExpansionFactor,
     int.Add<
-      CountBetween<TExpansions['cols'], TA[0], TB[0]>,
-      CountBetween<TExpansions['rows'], TA[1], TB[1]>
+      CountBetween<TExpansions['cols'], grid.CoordX<TA>, grid.CoordX<TB>>,
+      CountBetween<TExpansions['rows'], grid.CoordY<TA>, grid.CoordY<TB>>
     >
   >
 >;
@@ -169,7 +143,7 @@ type Solve<TUniverse extends string[][], TExpansionFactor extends number> = SumG
   int.Dec<TExpansionFactor>
 >;
 
-type Universe = ParseGrid<Input>;
+type Universe = grid.Parse<Input>;
 
 export declare const solution1: Solve<Universe, 2>;
 export declare const solution2: Solve<Universe, 1000000>;

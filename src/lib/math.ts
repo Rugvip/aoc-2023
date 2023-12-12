@@ -403,7 +403,7 @@ export namespace int {
     test.Expect<Subtract<100, 99>, 1>
   >;
 
-  export type Inc<TA extends number> = ToInteger<TA> extends infer IA extends Integer
+  export type Inc<TA extends number | string> = ToInteger<TA> extends infer IA extends Integer
     ? FromInteger<AddIntegers<IA, Integer<'+', [1]>>>
     : never;
 
@@ -414,7 +414,7 @@ export namespace int {
     test.Expect<Inc<999999>, 1000000>
   >;
 
-  export type Dec<TA extends number> = ToInteger<TA> extends infer IA extends Integer
+  export type Dec<TA extends number | string> = ToInteger<TA> extends infer IA extends Integer
     ? FromInteger<AddIntegers<IA, Integer<'-', [1]>>>
     : never;
 
