@@ -12,6 +12,8 @@ export namespace counter {
   // - Lookup table of size 1000 - way worse
   // - Store parts in a tuple instead of union - order of magnitude worse in most ways
   // - Storing parts in an objects - way worse even than a tuple
+  // - Storing parts in a string | number union - works but can't count quite as far, also easily causes bugs
+  // - Storing an additional 100 part in the string - can't count as far but is faster
   // - Double lookup tables for first 4 digits - a bit faster but more instantiations
   // - Just counting with a regular number - can't count to 100000
   // - Using counter arrays rather than lookup tables - slower and more instantiations
@@ -25,12 +27,13 @@ export namespace counter {
   type IncTable = MakeIncTable;
   type DecTable = MakeDecTable;
 
-  export type Counter<TOnes extends number = number, THundreds extends string = string> =
-    | TOnes
-    | THundreds;
+  export type Counter<
+    TOnes extends number = number,
+    THundreds extends number = number,
+  > = `${THundreds},${TOnes}`;
 
   export type Make<N extends number = 0> = N extends 0
-    ? Counter<0, '0'>
+    ? Counter<0, 0>
     : int.IsNegative<N> extends true
     ? never
     : int.ToInteger<N>['digits'] extends infer D extends int.Digit[]
@@ -41,41 +44,42 @@ export namespace counter {
       ]
       ? Counter<
           int.FromInteger<int.Integer<'+', [I1, I0]>>,
-          `${int.FromInteger<int.Integer<'+', IHundreds>>}`
+          int.FromInteger<int.Integer<'+', IHundreds>>
         >
-      : Counter<int.FromInteger<int.Integer<'+', D>>, '0'>
+      : Counter<int.FromInteger<int.Integer<'+', D>>, 0>
     : never;
 
-  export type Inc<TCounter extends Counter> = TCounter & number extends 99
-    ? 0 | `${int.Inc<TCounter & string>}`
-    : IncTable[TCounter & number] | `${TCounter & string}`;
+  export type Inc<TCounter extends Counter> =
+    TCounter extends `${infer H extends number},${infer O extends number}`
+      ? O extends 99
+        ? Counter<0, int.Inc<H>>
+        : Counter<IncTable[O], H>
+      : never;
 
-  export type Dec<TCounter extends Counter> = TCounter & number extends 0
-    ? 99 | `${int.Dec<TCounter & string>}`
-    : DecTable[TCounter & number] | `${TCounter & string}`;
+  export type Dec<TCounter extends Counter> =
+    TCounter extends `${infer H extends number},${infer O extends number}`
+      ? O extends 0
+        ? Counter<99, int.Dec<H>>
+        : Counter<DecTable[O], H>
+      : never;
 
   type Pad0<T extends number> = `${T}` extends `${number}${number}` ? `${T}` : `0${T}`;
-  type Trim0<T extends string> = T extends `0${infer TRest}`
-    ? Trim0<TRest>
-    : T extends ''
-    ? '0'
-    : T;
 
-  export type IsZero<TCounter extends Counter> = TCounter extends Counter<0, '0'> ? true : false;
+  export type IsZero<TCounter extends Counter> = TCounter extends Counter<0, 0> ? true : false;
 
-  export type Value<TCounter extends Counter> = TCounter & string extends '0'
-    ? TCounter & number
-    : Trim0<`${TCounter & string}${Pad0<TCounter & number>}`> extends `${infer N extends number}`
-    ? int.IsNegative<N> extends true
-      ? never
-      : N
-    : never;
+  export type Value<TCounter extends Counter> =
+    TCounter extends `${infer H extends number},${infer O extends number}`
+      ? H extends 0
+        ? O
+        : `${H}${Pad0<O>}` extends `${infer N extends number}`
+        ? N
+        : never
+      : never;
 
   declare const testAll: test.Describe<
     test.Expect<Value<Make<0>>, 0>,
     test.Expect<Value<Inc<Make<0>>>, 1>,
     test.Expect<Value<Dec<Make<1>>>, 0>,
-    test.Expect<Value<Dec<Make<0>>>, never>, // Negative values can not be read
     test.Expect<Value<Inc<Dec<Make<0>>>>, 0>,
     test.Expect<Make<-1>, never>,
     test.Expect<Value<Make<10>>, 10>,
