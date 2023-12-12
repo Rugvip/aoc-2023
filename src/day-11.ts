@@ -1,5 +1,5 @@
 import { Input } from '../input/11';
-import { int, array, utils, counter, grid } from './lib';
+import { int, array, utils, counter, grid, vec2 } from './lib';
 
 // type Input1 = `...#......
 // .......#..
@@ -13,16 +13,16 @@ import { int, array, utils, counter, grid } from './lib';
 // #...#.....
 // `;
 
-type Galaxy = grid.Coords;
+type Galaxy = vec2.Vec2;
 type Expansions = { rows: number[]; cols: number[] };
 
 type LocateGalaxies<
   TUniverse extends grid.Grid<string>,
   TIterator extends grid.Iterator = grid.IteratorZero,
   TGalaxies extends Galaxy[] = [],
-> = [TIterator] extends [-1]
+> = TIterator extends grid.IteratorDone
   ? TGalaxies
-  : grid.AtCoords<TUniverse, TIterator> extends '#'
+  : grid.AtVec2<TUniverse, TIterator> extends '#'
   ? LocateGalaxies<TUniverse, grid.IterNext<TUniverse, TIterator>, [...TGalaxies, TIterator]>
   : LocateGalaxies<TUniverse, grid.IterNext<TUniverse, TIterator>, TGalaxies>;
 
@@ -80,43 +80,33 @@ type GalaxyDistance<
   TA extends Galaxy,
   TB extends Galaxy,
   TExpansions extends Expansions,
-  TExpansionFactor extends number,
-> = int.Add<
+> = vec2.Vec2<
+  vec2.ManhattanDistance<TA, TB>,
   int.Add<
-    int.Abs<int.Subtract<grid.CoordX<TA>, grid.CoordX<TB>>>,
-    int.Abs<int.Subtract<grid.CoordY<TA>, grid.CoordY<TB>>>
-  >,
-  int.Multiply<
-    TExpansionFactor,
-    int.Add<
-      CountBetween<TExpansions['cols'], grid.CoordX<TA>, grid.CoordX<TB>>,
-      CountBetween<TExpansions['rows'], grid.CoordY<TA>, grid.CoordY<TB>>
-    >
+    CountBetween<TExpansions['cols'], vec2.X<TA>, vec2.X<TB>>,
+    CountBetween<TExpansions['rows'], vec2.Y<TA>, vec2.Y<TB>>
   >
 >;
 
 type GalaxyDistances<
   TGalaxies extends Galaxy[],
   TExpansions extends Expansions,
-  TExpansionFactor extends number,
   TACounter extends counter.Counter,
   TBCounter extends counter.Counter = counter.Inc<TACounter>,
-  TSum extends number = 0,
+  TSums extends vec2.Vec2 = vec2.Zero,
 > = counter.Value<TBCounter> extends TGalaxies['length']
-  ? TSum
+  ? TSums
   : GalaxyDistances<
       TGalaxies,
       TExpansions,
-      TExpansionFactor,
       TACounter,
       counter.Inc<TBCounter>,
-      int.Add<
-        TSum,
+      vec2.Add<
+        TSums,
         GalaxyDistance<
           TGalaxies[counter.Value<TACounter>],
           TGalaxies[counter.Value<TBCounter>],
-          TExpansions,
-          TExpansionFactor
+          TExpansions
         >
       >
     >;
@@ -124,24 +114,23 @@ type GalaxyDistances<
 type SumGalaxyDistances<
   TGalaxies extends Galaxy[],
   TExpansions extends Expansions,
-  TExpansionFactor extends number,
   TCounter extends counter.Counter = counter.Make,
-  TSum extends number = 0,
+  TSums extends vec2.Vec2 = vec2.Zero,
 > = counter.Value<TCounter> extends TGalaxies['length']
-  ? TSum
+  ? TSums
   : SumGalaxyDistances<
       TGalaxies,
       TExpansions,
-      TExpansionFactor,
       counter.Inc<TCounter>,
-      int.Add<TSum, GalaxyDistances<TGalaxies, TExpansions, TExpansionFactor, TCounter>>
+      vec2.Add<TSums, GalaxyDistances<TGalaxies, TExpansions, TCounter>>
     >;
 
 type Solve<TUniverse extends string[][], TExpansionFactor extends number> = SumGalaxyDistances<
   LocateGalaxies<TUniverse>,
-  FindExpansions<TUniverse>,
-  int.Dec<TExpansionFactor>
->;
+  FindExpansions<TUniverse>
+> extends vec2.Vec2<infer IDistance extends number, infer IExpansions extends number>
+  ? int.Add<IDistance, int.Multiply<IExpansions, int.Dec<TExpansionFactor>>>
+  : never;
 
 type Universe = grid.Parse<Input>;
 
