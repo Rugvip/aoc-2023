@@ -8,3 +8,4 @@ export type { strings } from './strings';
 export type { test } from './test';
 export type { union } from './union';
 export type { utils } from './utils';
+export type { vec2 } from './vec2';
