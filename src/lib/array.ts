@@ -44,7 +44,7 @@ export namespace array {
     TDropCounter extends any[] = [],
   > = TDropCounter['length'] extends TN
     ? TArr
-    : TArr extends [any, ...infer IRest]
+    : TArr extends [any, ...infer IRest extends any[]]
     ? DropN<IRest, TN, [...TDropCounter, any]>
     : [];
 
@@ -56,7 +56,7 @@ export namespace array {
     ? []
     : TResult['length'] extends TN
     ? TResult
-    : TArr extends [infer IHead, ...infer IRest]
+    : TArr extends [infer IHead, ...infer IRest extends any[]]
     ? TakeN<IRest, TN, [...TResult, IHead]>
     : TResult;
 
