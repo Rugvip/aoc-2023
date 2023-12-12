@@ -144,4 +144,21 @@ export namespace array {
     test.Expect<Replace<['b', 'a', 'b'], 'a', 'b' | 'c'>, ['b', 'b' | 'c', 'b']>,
     test.Expect<Replace<['b', 'a', 'b'], 'a' | 'b', 'c'>, ['c', 'c', 'c']>
   >;
+
+  export type All<TArr extends any[], TItem> = {
+    [I in keyof TArr]: TArr[I] extends TItem ? true : false;
+  }[number] extends true
+    ? true
+    : false;
+
+  declare const testAll: test.Describe<
+    test.Expect<All<[], 'a'>, true>,
+    test.Expect<All<['a'], 'a'>, true>,
+    test.Expect<All<['a'], 'a' | 'b'>, true>,
+    test.Expect<All<['a'], 'b'>, false>,
+    test.Expect<All<['a', 'b'], 'a'>, false>,
+    test.Expect<All<['a', 'b'], 'b'>, false>,
+    test.Expect<All<['a', 'b'], 'a' | 'b'>, true>,
+    test.Expect<All<['a', 'b'], 'a' | 'b' | 'c'>, true>
+  >;
 }
