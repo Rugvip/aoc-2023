@@ -56,7 +56,7 @@ type SolveImpl<
   TMap extends Map,
   TLocation extends keyof TMap,
   TStops extends keyof TMap,
-  TCounter extends counter.Counter = counter.Make<0>,
+  TCounter extends counter.Counter = counter.Zero,
 > = [TLocation] extends [TStops]
   ? counter.Value<TCounter>
   : TTurns extends [infer INextTurn extends Turn, ...infer IRestTurns extends Turn[]]

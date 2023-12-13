@@ -65,11 +65,11 @@ type Mirror<TDir extends MirrorDir = MirrorDir, TIndex extends number = number> 
 type NextFindMirror<
   TGrid extends grid.Grid<string>,
   TSkip extends Mirror = never,
-  TCounter extends counter.Counter = counter.Make,
+  TCounter extends counter.Counter = counter.Zero,
   TDir extends MirrorDir = 'cols',
 > = TDir extends 'cols'
   ? counter.Value<TCounter> extends grid.Width<TGrid>
-    ? FindMirror<TGrid, TSkip, counter.Make, 'rows'>
+    ? FindMirror<TGrid, TSkip, counter.Zero, 'rows'>
     : FindMirror<TGrid, TSkip, counter.Inc<TCounter>, TDir>
   : counter.Value<TCounter> extends grid.Height<TGrid>
   ? never
@@ -78,7 +78,7 @@ type NextFindMirror<
 type FindMirror<
   TGrid extends grid.Grid<string>,
   TSkip extends Mirror = never,
-  TCounter extends counter.Counter = counter.Make,
+  TCounter extends counter.Counter = counter.Zero,
   TDir extends MirrorDir = 'cols',
 > = [counter.Value<TCounter> | TDir] extends [TSkip]
   ? NextFindMirror<TGrid, TSkip, TCounter, TDir>
@@ -112,15 +112,15 @@ export declare const solution1: Solve1<InputGrids>;
 type FindSmudgeMirror<
   TGrid extends grid.Grid<string>,
   TFirstMirror extends Mirror,
-  TIt extends grid.Iterator = grid.IteratorZero,
-> = TIt extends grid.IteratorDone
+  TIter extends grid.Iter = grid.IterZero,
+> = TIter extends grid.IterDone
   ? never
   : FindMirror<
-      grid.IterMap<TGrid, TIt, { '.': '#'; '#': '.' }>,
+      grid.Vec2Map<TGrid, TIter, { '.': '#'; '#': '.' }>,
       TFirstMirror
     > extends infer IMirror extends Mirror
   ? [IMirror] extends [never]
-    ? FindSmudgeMirror<TGrid, TFirstMirror, grid.IterNext<TGrid, TIt>>
+    ? FindSmudgeMirror<TGrid, TFirstMirror, grid.IterNext<TGrid, TIter>>
     : IMirror
   : never;
 

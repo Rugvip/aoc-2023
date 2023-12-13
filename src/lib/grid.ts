@@ -28,33 +28,26 @@ export namespace grid {
     array.Make<TWidth, TItem>
   >;
 
-  export type Iterator = vec2.Vec2;
+  export type Iter = vec2.Vec2;
 
-  export type IteratorZero = vec2.Vec2<0, 0>;
-  export type IteratorDone = vec2.Vec2<-1, -1>;
+  export type IterZero = vec2.Zero;
+  export type IterDone = vec2.Vec2<-1, -1>;
 
-  export type IterNext<
-    TGrid extends Grid<any>,
-    TIterator extends Iterator,
-  > = TIterator extends IteratorDone
-    ? IteratorDone
-    : NumIncTable[vec2.X<TIterator>] extends infer INextX extends number
+  export type IterNext<TGrid extends Grid<any>, TIter extends Iter> = TIter extends IterDone
+    ? IterDone
+    : NumIncTable[vec2.X<TIter>] extends infer INextX extends number
     ? INextX extends TGrid[0]['length']
-      ? NumIncTable[vec2.Y<TIterator>] extends infer INextY extends number
+      ? NumIncTable[vec2.Y<TIter>] extends infer INextY extends number
         ? INextY extends TGrid['length']
-          ? IteratorDone
+          ? IterDone
           : vec2.Vec2<0, INextY>
         : never
-      : vec2.Vec2<INextX, vec2.Y<TIterator>>
+      : vec2.Vec2<INextX, vec2.Y<TIter>>
     : never;
 
-  export type IterSet<
-    TGrid extends Grid<any>,
-    TIterator extends Iterator,
-    TVal,
-  > = TIterator extends IteratorDone
+  export type Vec2Set<TGrid extends Grid<any>, TIter extends Iter, TVal> = TIter extends IterDone
     ? TGrid
-    : TIterator extends vec2.Vec2<infer IX, infer IY>
+    : TIter extends vec2.Vec2<infer IX, infer IY>
     ? {
         [KY in keyof TGrid]: KY extends `${IY}`
           ? TGrid[KY] extends infer IRow
@@ -66,13 +59,13 @@ export namespace grid {
       }
     : never;
 
-  export type IterMap<
+  export type Vec2Map<
     TGrid extends Grid<any>,
-    TIterator extends Iterator,
+    TIter extends Iter,
     TMap extends { [_ in any]: any },
-  > = TIterator extends IteratorDone
+  > = TIter extends IterDone
     ? TGrid
-    : TIterator extends vec2.Vec2<infer IX, infer IY>
+    : TIter extends vec2.Vec2<infer IX, infer IY>
     ? {
         [KY in keyof TGrid]: KY extends `${IY}`
           ? TGrid[KY] extends infer IRow
@@ -102,9 +95,9 @@ export namespace grid {
   export type Count<
     TGrid extends Grid<any>,
     TItem,
-    TIt extends Iterator = IteratorZero,
-    TCounter extends counter.Counter = counter.Make,
-  > = TIt extends IteratorDone
+    TIt extends Iter = IterZero,
+    TCounter extends counter.Counter = counter.Zero,
+  > = TIt extends IterDone
     ? counter.Value<TCounter>
     : Count<
         TGrid,

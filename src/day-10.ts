@@ -122,7 +122,7 @@ type MakeStepGrid<
   TGrid extends GridType,
   TStep extends Step = FindStart<TGrid>,
   TResultGrid extends grid.Grid<boolean> = grid.Make<false, grid.Width<TGrid>, grid.Height<TGrid>>,
-> = grid.IterSet<TResultGrid, TStep[0], true> extends infer IResultGrid extends grid.Grid<boolean>
+> = grid.Vec2Set<TResultGrid, TStep[0], true> extends infer IResultGrid extends grid.Grid<boolean>
   ? StepGrid<TGrid, TStep> extends infer INextStep extends Step
     ? [INextStep] extends [never]
       ? IResultGrid

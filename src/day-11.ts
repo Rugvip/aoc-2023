@@ -18,13 +18,13 @@ type Expansions = { rows: number[]; cols: number[] };
 
 type LocateGalaxies<
   TUniverse extends grid.Grid<string>,
-  TIterator extends grid.Iterator = grid.IteratorZero,
+  TIter extends grid.Iter = grid.IterZero,
   TGalaxies extends Galaxy[] = [],
-> = TIterator extends grid.IteratorDone
+> = TIter extends grid.IterDone
   ? TGalaxies
-  : grid.AtVec2<TUniverse, TIterator> extends '#'
-  ? LocateGalaxies<TUniverse, grid.IterNext<TUniverse, TIterator>, [...TGalaxies, TIterator]>
-  : LocateGalaxies<TUniverse, grid.IterNext<TUniverse, TIterator>, TGalaxies>;
+  : grid.AtVec2<TUniverse, TIter> extends '#'
+  ? LocateGalaxies<TUniverse, grid.IterNext<TUniverse, TIter>, [...TGalaxies, TIter]>
+  : LocateGalaxies<TUniverse, grid.IterNext<TUniverse, TIter>, TGalaxies>;
 
 type FindExpansionRows<
   TUniverse extends string[][],
@@ -55,7 +55,7 @@ type CountBetweenImpl<
   TArr extends number[],
   TMin extends number,
   TMax extends number,
-  TCounter extends counter.Counter = counter.Make,
+  TCounter extends counter.Counter = counter.Zero,
   TDir extends 'lt' | 'gt' = 'lt',
 > = TArr extends [infer INext extends number, ...infer IRest extends number[]]
   ? TDir extends 'lt'
@@ -114,7 +114,7 @@ type GalaxyDistances<
 type SumGalaxyDistances<
   TGalaxies extends Galaxy[],
   TExpansions extends Expansions,
-  TCounter extends counter.Counter = counter.Make,
+  TCounter extends counter.Counter = counter.Zero,
   TSums extends vec2.Vec2 = vec2.Zero,
 > = counter.Value<TCounter> extends TGalaxies['length']
   ? TSums

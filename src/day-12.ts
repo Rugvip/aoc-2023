@@ -71,10 +71,10 @@ type CountMatches<TRow extends ParsedRow> = union.Size<
 
 type Solve1<
   TRows extends { left: string[]; right: number[] }[],
-  TIt extends counter.Counter = counter.Make,
+  TIter extends counter.Counter = counter.Zero,
   TSum extends number = 0,
-> = counter.Value<TIt> extends TRows['length']
+> = counter.Value<TIter> extends TRows['length']
   ? TSum
-  : Solve1<TRows, counter.Inc<TIt>, int.Add<TSum, CountMatches<TRows[counter.Value<TIt>]>>>;
+  : Solve1<TRows, counter.Inc<TIter>, int.Add<TSum, CountMatches<TRows[counter.Value<TIter>]>>>;
 
 export declare const solution1: Solve1<Parsed>;
