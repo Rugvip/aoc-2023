@@ -60,21 +60,29 @@ type CheckRowMirrorAt<
 type MirrorDir = 'cols' | 'rows';
 type Mirror<TDir extends MirrorDir = MirrorDir, TIndex extends number = number> = TDir | TIndex;
 
-type FindMirror<
+type NextFindMirror<
   TGrid extends grid.Grid<string>,
   TCounter extends counter.Counter = counter.Make,
   TDir extends MirrorDir = 'cols',
 > = TDir extends 'cols'
   ? counter.Value<TCounter> extends grid.Width<TGrid>
     ? FindMirror<TGrid, counter.Make, 'rows'>
-    : CheckColMirrorAt<TGrid, counter.Value<TCounter>> extends true
-    ? TDir | counter.Value<TCounter>
     : FindMirror<TGrid, counter.Inc<TCounter>, TDir>
   : counter.Value<TCounter> extends grid.Height<TGrid>
   ? never
+  : FindMirror<TGrid, counter.Inc<TCounter>, TDir>;
+
+type FindMirror<
+  TGrid extends grid.Grid<string>,
+  TCounter extends counter.Counter = counter.Make,
+  TDir extends MirrorDir = 'cols',
+> = TDir extends 'cols'
+  ? CheckColMirrorAt<TGrid, counter.Value<TCounter>> extends true
+    ? TDir | counter.Value<TCounter>
+    : NextFindMirror<TGrid, TCounter, TDir>
   : CheckRowMirrorAt<TGrid, counter.Value<TCounter>> extends true
   ? TDir | counter.Value<TCounter>
-  : FindMirror<TGrid, counter.Inc<TCounter>, TDir>;
+  : NextFindMirror<TGrid, TCounter, TDir>;
 
 type MirrorScore<TMirror extends Mirror> = [TMirror & string] extends ['cols']
   ? int.Inc<TMirror & number>
