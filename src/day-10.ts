@@ -1,5 +1,5 @@
 import { Input } from '../input/10';
-import { array, int, union, counter, utils } from './lib';
+import { array, int, union, counter, utils, grid, vec2 } from './lib';
 
 // type Input1 = `-L|F7
 // 7S-7|
@@ -15,62 +15,37 @@ import { array, int, union, counter, utils } from './lib';
 // LJ.LJ
 // `;
 
-type Grid = Segment[][];
 type Dir = 'N' | 'E' | 'S' | 'W';
-type Pos<X extends number = number, Y extends number = number> = [x: X, y: Y];
 
-type SegmentType<
-  N extends Dir = Dir,
-  E extends Dir = Dir,
-  S extends Dir = Dir,
-  W extends Dir = Dir,
-> = { N: N; E: E; S: S; W: W };
-
-type SegmentTypes = {
-  '.': SegmentType<never, never, never, never>;
-  '|': SegmentType<'N', never, 'S', never>;
-  '-': SegmentType<never, 'E', never, 'W'>;
-  L: SegmentType<never, never, 'E', 'N'>;
-  F: SegmentType<'E', never, never, 'S'>;
-  '7': SegmentType<'W', 'S', never, never>;
-  J: SegmentType<never, 'N', 'W', never>;
-  S: 'start';
+type MoveTable = {
+  '.': { N: never; E: never; S: never; W: never };
+  '|': { N: 'N'; E: never; S: 'S'; W: never };
+  '-': { N: never; E: 'E'; S: never; W: 'W' };
+  L: { N: never; E: never; S: 'E'; W: 'N' };
+  F: { N: 'E'; E: never; S: never; W: 'S' };
+  '7': { N: 'W'; E: 'S'; S: never; W: never };
+  J: { N: never; E: 'N'; S: 'W'; W: never };
+  S: { N: never; E: never; S: never; W: never };
 };
 
-type Segment = SegmentTypes[keyof SegmentTypes];
+type GridCell = keyof MoveTable;
 
-type ParseRow<S extends string> =
-  S extends `${infer IChar extends keyof SegmentTypes}${infer IRest}`
-    ? [SegmentTypes[IChar], ...ParseRow<IRest>]
-    : [];
+type GridType = grid.Grid<GridCell>;
 
-type ParseGrid<S extends string, Rows extends any[] = []> = S extends `${infer Line}\n${infer Rest}`
-  ? ParseGrid<Rest, [...Rows, [SegmentTypes['.'], ...ParseRow<Line>, SegmentTypes['.']]]>
-  : array.Make<Rows[0]['length'], SegmentTypes['.']> extends infer IPadRow extends Segment[]
-  ? [IPadRow, ...Rows, IPadRow]
+type TakeStep<TPos extends vec2.Vec2, TDir extends Dir> = TPos extends vec2.Vec2<infer IX, infer IY>
+  ? vec2.Vec2<
+      TDir extends 'E' ? int.Inc<IX> : TDir extends 'W' ? int.Dec<IX> : IX,
+      TDir extends 'S' ? int.Inc<IY> : TDir extends 'N' ? int.Dec<IY> : IY
+    >
   : never;
 
-type GridPos<TGrid extends Grid, TPos extends Pos> = TGrid[TPos[1]][TPos[0]];
-
-type DirDelta = {
-  N: Pos<0, -1>;
-  E: Pos<1, 0>;
-  S: Pos<0, 1>;
-  W: Pos<-1, 0>;
-};
-
-type AddPos<TPos1 extends Pos, TPos2 extends Pos> = [
-  x: int.Add<TPos1[0], TPos2[0]>,
-  y: int.Add<TPos1[1], TPos2[1]>,
-];
-
-type FindStartPos<TGrid extends Grid, TRowCounter extends any[] = []> = TGrid extends [
-  infer IRow extends Segment[],
-  ...infer IRestGrid extends Grid,
+type FindStartPos<TGrid extends GridType, TRowCounter extends any[] = []> = TGrid extends [
+  infer IRow extends GridCell[],
+  ...infer IRestGrid extends GridType,
 ]
   ? {
-      [K in keyof IRow]: IRow[K] extends 'start'
-        ? [x: K extends `${infer X extends number}` ? X : never, y: TRowCounter['length']]
+      [K in keyof IRow]: IRow[K] extends 'S'
+        ? vec2.Vec2<K extends `${infer X extends number}` ? X : never, TRowCounter['length']>
         : never;
     }[number] extends infer IStart
     ? [IStart] extends [never]
@@ -79,46 +54,49 @@ type FindStartPos<TGrid extends Grid, TRowCounter extends any[] = []> = TGrid ex
     : never
   : never;
 
-type FindStartDir<TGrid extends Grid, TStartPos extends Pos> = Dir &
+type FindStartDir<TGrid extends GridType, TStartPos extends vec2.Vec2> = Dir &
   {
-    [KDir in Dir]: [
-      Exclude<GridPos<TGrid, AddPos<TStartPos, DirDelta[KDir]>>, 'start'>[KDir],
-    ] extends [never]
+    [KDir in Dir]: [MoveTable[grid.AtVec2<TGrid, TakeStep<TStartPos, KDir>>][KDir]] extends [never]
       ? never
       : KDir;
   }[Dir];
 
-type FindStart<TGrid extends Grid> = FindStartPos<TGrid> extends infer IStartPos extends Pos
-  ? {
-      pos: IStartPos;
-      dir: union.Pop<FindStartDir<TGrid, IStartPos>> extends { next: infer IDir extends Dir }
-        ? IDir
-        : never;
-    }
-  : never;
+type FindStart<TGrid extends GridType> =
+  FindStartPos<TGrid> extends infer IStartPos extends vec2.Vec2
+    ? [
+        pos: IStartPos,
+        dir: union.Pop<FindStartDir<TGrid, IStartPos>> extends { next: infer IDir extends Dir }
+          ? IDir
+          : never,
+      ]
+    : never;
 
-type Step = { pos: Pos; dir: Dir };
+type Step = [pos: vec2.Vec2, dir: Dir];
 
-type StepGrid<TGrid extends Grid, TStep extends Step> = utils.Expand<
-  AddPos<TStep['pos'], DirDelta[TStep['dir']]>
-> extends infer INextPos extends Pos
-  ? GridPos<TGrid, INextPos> extends infer INextSegment extends Segment
-    ? INextSegment extends 'start'
-      ? 'start'
-      : { pos: INextPos; dir: Exclude<INextSegment, 'start'>[TStep['dir']] }
+type StepGrid<TGrid extends GridType, TStep extends Step> = utils.Expand<
+  TakeStep<TStep[0], TStep[1]>
+> extends infer INextPos extends vec2.Vec2
+  ? MoveTable[grid.AtVec2<TGrid, INextPos>][TStep[1]] extends infer INextDir extends Dir
+    ? [INextDir] extends [never]
+      ? never
+      : [pos: INextPos, dir: INextDir]
     : never
   : never;
 
-type Solve1<
-  TGrid extends Grid,
+type MakeStepGrid<
+  TGrid extends GridType,
   TStep extends Step = FindStart<TGrid>,
-  TCounter extends counter.Counter = counter.Make,
-> = StepGrid<TGrid, TStep> extends infer INextStep extends Step | 'start'
-  ? INextStep extends Step
-    ? Solve1<TGrid, INextStep, counter.Inc<TCounter>>
-    : int.Half<counter.Value<counter.Inc<TCounter>>>
+  TResultGrid extends grid.Grid<boolean> = grid.Make<false, grid.Width<TGrid>, grid.Height<TGrid>>,
+> = grid.IterSet<TResultGrid, TStep[0], true> extends infer IResultGrid extends grid.Grid<boolean>
+  ? StepGrid<TGrid, TStep> extends infer INextStep extends Step
+    ? [INextStep] extends [never]
+      ? IResultGrid
+      : MakeStepGrid<TGrid, INextStep, IResultGrid>
+    : never
   : never;
 
-type InputGrid = ParseGrid<Input>;
+type Solve1<TGrid extends GridType> = int.Half<grid.Count<MakeStepGrid<TGrid>, true>>;
+
+type InputGrid = grid.Parse<Input>;
 
 export declare const solution1: Solve1<InputGrid>;
