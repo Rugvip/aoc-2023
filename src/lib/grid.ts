@@ -1,4 +1,6 @@
 import { strings } from './strings';
+import { array } from './array';
+import { counter } from './counter';
 import { vec2 } from './vec2';
 
 export namespace grid {
@@ -20,6 +22,11 @@ export namespace grid {
     : S extends ''
     ? TRows
     : [...TRows, strings.ToChars<S>];
+
+  export type Make<TItem, TWidth extends number, THeight extends number = TWidth> = array.Make<
+    THeight,
+    array.Make<TWidth, TItem>
+  >;
 
   export type Iterator = vec2.Vec2;
 
@@ -91,4 +98,18 @@ export namespace grid {
   export type ColumnAt<TGrid extends Grid<any>, TX extends number> = {
     [K in keyof TGrid]: TGrid[K][TX];
   };
+
+  export type Count<
+    TGrid extends Grid<any>,
+    TItem,
+    TIt extends Iterator = IteratorZero,
+    TCounter extends counter.Counter = counter.Make,
+  > = TIt extends IteratorDone
+    ? counter.Value<TCounter>
+    : Count<
+        TGrid,
+        TItem,
+        IterNext<TGrid, TIt>,
+        [AtVec2<TGrid, TIt>] extends [TItem] ? counter.Inc<TCounter> : TCounter
+      >;
 }
