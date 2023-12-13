@@ -41,6 +41,42 @@ export namespace grid {
       : vec2.Vec2<INextX, vec2.Y<TIterator>>
     : never;
 
+  export type IterSet<
+    TGrid extends Grid<any>,
+    TIterator extends Iterator,
+    TVal,
+  > = TIterator extends IteratorDone
+    ? TGrid
+    : TIterator extends vec2.Vec2<infer IX, infer IY>
+    ? {
+        [KY in keyof TGrid]: KY extends `${IY}`
+          ? TGrid[KY] extends infer IRow
+            ? {
+                [KX in keyof IRow]: KX extends `${IX}` ? TVal : IRow[KX];
+              }
+            : never
+          : TGrid[KY];
+      }
+    : never;
+
+  export type IterMap<
+    TGrid extends Grid<any>,
+    TIterator extends Iterator,
+    TMap extends { [_ in any]: any },
+  > = TIterator extends IteratorDone
+    ? TGrid
+    : TIterator extends vec2.Vec2<infer IX, infer IY>
+    ? {
+        [KY in keyof TGrid]: KY extends `${IY}`
+          ? TGrid[KY] extends infer IRow
+            ? {
+                [KX in keyof IRow]: KX extends `${IX}` ? TMap[IRow[KX] & keyof TMap] : IRow[KX];
+              }
+            : never
+          : TGrid[KY];
+      }
+    : never;
+
   export type AtVec2<
     TGrid extends Grid<any>,
     TVec extends vec2.Vec2,
