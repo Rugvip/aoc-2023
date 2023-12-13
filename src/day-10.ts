@@ -1,5 +1,5 @@
 import { Input } from '../input/10';
-import { array, int, union, counter, utils, grid, vec2 } from './lib';
+import { int, union, counter, utils, grid, vec2 } from './lib';
 
 // type Input1 = `-L|F7
 // 7S-7|
@@ -13,6 +13,41 @@ import { array, int, union, counter, utils, grid, vec2 } from './lib';
 // SJLL7
 // |F--J
 // LJ.LJ
+// `;
+
+// type Input3 = `...........
+// .S-------7.
+// .|F-----7|.
+// .||.....||.
+// .||.....||.
+// .|L-7.F-J|.
+// .|..|.|..|.
+// .L--J.L--J.
+// ...........
+// `;
+
+// type Input4 = `.F----7F7F7F7F-7....
+// .|F--7||||||||FJ....
+// .||.FJ||||||||L7....
+// FJL7L7LJLJ||LJ.L-7..
+// L--J.L7...LJS7F-7L7.
+// ....F-J..F7FJ|L7L7L7
+// ....L7.F7||L7|.L7L7|
+// .....|FJLJ|FJ|F7|.LJ
+// ....FJL-7.||.||||...
+// ....L---J.LJ.LJLJ...
+// `;
+
+// type Input5 = `FF7FSF7F7F7F7F7F---7
+// L|LJ||||||||||||F--J
+// FL-7LJLJ||||||LJL-77
+// F--JF--7||LJLJ7F7FJ-
+// L---JF-JLJ.||-FJLJJ7
+// |F|F-JF---7F7-L7L|7|
+// |FFJF7L7F-JF7|JL---7
+// 7-L-JL7||F7|L7F-7F7|
+// L.L7LFJ|||||FJL7||LJ
+// L7JLJL-JLJLJL--JLJ.L
 // `;
 
 type Dir = 'N' | 'E' | 'S' | 'W';
@@ -100,3 +135,66 @@ type Solve1<TGrid extends GridType> = int.Half<grid.Count<MakeStepGrid<TGrid>, t
 type InputGrid = grid.Parse<Input>;
 
 export declare const solution1: Solve1<InputGrid>;
+
+type Not<T extends boolean> = T extends true ? false : true;
+
+type NextTurnSwitchMap = {
+  L: '7';
+  F: 'J';
+};
+
+type CountCellsInsideStepsOnRow<
+  TRow extends GridCell[],
+  TStepRow extends boolean[],
+  TXCounter extends counter.Counter = counter.Zero,
+  TInsideCounter extends counter.Counter = counter.Zero,
+  TIsInside extends boolean = false,
+  TNextTurnSwitch extends string = never,
+> = counter.Value<TXCounter> extends TRow['length']
+  ? counter.Value<TInsideCounter>
+  : TStepRow[counter.Value<TXCounter>] extends false
+  ? CountCellsInsideStepsOnRow<
+      TRow,
+      TStepRow,
+      counter.Inc<TXCounter>,
+      TIsInside extends true ? counter.Inc<TInsideCounter> : TInsideCounter,
+      TIsInside
+    >
+  : TRow[counter.Value<TXCounter>] extends infer ICell extends GridCell
+  ? CountCellsInsideStepsOnRow<
+      TRow,
+      TStepRow,
+      counter.Inc<TXCounter>,
+      TInsideCounter,
+      [ICell] extends [TNextTurnSwitch]
+        ? Not<TIsInside>
+        : ICell extends '|'
+        ? Not<TIsInside>
+        : TIsInside,
+      ICell extends '-' ? TNextTurnSwitch : NextTurnSwitchMap[ICell & keyof NextTurnSwitchMap]
+    >
+  : never;
+
+type CountCellsInsideSteps<
+  TGrid extends GridType,
+  TStepGrid extends grid.Grid<boolean>,
+  TRowCounter extends counter.Counter = counter.Zero,
+  TInside extends number = 0,
+> = counter.Value<TRowCounter> extends grid.Height<TGrid>
+  ? TInside
+  : CountCellsInsideSteps<
+      TGrid,
+      TStepGrid,
+      counter.Inc<TRowCounter>,
+      int.Add<
+        TInside,
+        CountCellsInsideStepsOnRow<
+          grid.RowAt<TGrid, counter.Value<TRowCounter>>,
+          grid.RowAt<TStepGrid, counter.Value<TRowCounter>>
+        >
+      >
+    >;
+
+type Solve2<TGrid extends GridType> = CountCellsInsideSteps<TGrid, MakeStepGrid<TGrid>>;
+
+export declare const solution2: Solve2<InputGrid>;
