@@ -28,7 +28,7 @@ type ParseGrids<
     : never
   : TResult;
 
-type CheckVerticalMirrorAt<
+type CheckColMirrorAt<
   TGrid extends grid.Grid<string>,
   X extends number,
   TACounter extends counter.Counter = counter.Make<X>,
@@ -41,10 +41,10 @@ type CheckVerticalMirrorAt<
     ? true
     : counter.Value<counter.Inc<TBCounter>> extends grid.Width<TGrid>
     ? true
-    : CheckVerticalMirrorAt<TGrid, X, counter.Dec<TACounter>, counter.Inc<TBCounter>>
+    : CheckColMirrorAt<TGrid, X, counter.Dec<TACounter>, counter.Inc<TBCounter>>
   : false;
 
-type CheckHorizontalMirrorAt<
+type CheckRowMirrorAt<
   TGrid extends grid.Grid<string>,
   Y extends number,
   TACounter extends counter.Counter = counter.Make<Y>,
@@ -54,31 +54,40 @@ type CheckHorizontalMirrorAt<
     ? true
     : counter.Value<counter.Inc<TBCounter>> extends grid.Height<TGrid>
     ? true
-    : CheckHorizontalMirrorAt<TGrid, Y, counter.Dec<TACounter>, counter.Inc<TBCounter>>
+    : CheckRowMirrorAt<TGrid, Y, counter.Dec<TACounter>, counter.Inc<TBCounter>>
   : false;
 
-type ScoreGrid<
+type MirrorDir = 'cols' | 'rows';
+type Mirror<TDir extends MirrorDir = MirrorDir, TIndex extends number = number> = TDir | TIndex;
+
+type FindMirror<
   TGrid extends grid.Grid<string>,
   TCounter extends counter.Counter = counter.Make,
-  TDir extends 'x' | 'y' = 'x',
-> = TDir extends 'x'
+  TDir extends MirrorDir = 'cols',
+> = TDir extends 'cols'
   ? counter.Value<TCounter> extends grid.Width<TGrid>
-    ? ScoreGrid<TGrid, counter.Make, 'y'>
-    : CheckVerticalMirrorAt<TGrid, counter.Value<TCounter>> extends true
-    ? counter.Value<counter.Inc<TCounter>>
-    : ScoreGrid<TGrid, counter.Inc<TCounter>, TDir>
+    ? FindMirror<TGrid, counter.Make, 'rows'>
+    : CheckColMirrorAt<TGrid, counter.Value<TCounter>> extends true
+    ? TDir | counter.Value<TCounter>
+    : FindMirror<TGrid, counter.Inc<TCounter>, TDir>
   : counter.Value<TCounter> extends grid.Height<TGrid>
-  ? -1
-  : CheckHorizontalMirrorAt<TGrid, counter.Value<TCounter>> extends true
-  ? int.Multiply<counter.Value<counter.Inc<TCounter>>, 100>
-  : ScoreGrid<TGrid, counter.Inc<TCounter>, TDir>;
+  ? never
+  : CheckRowMirrorAt<TGrid, counter.Value<TCounter>> extends true
+  ? TDir | counter.Value<TCounter>
+  : FindMirror<TGrid, counter.Inc<TCounter>, TDir>;
+
+type MirrorScore<TMirror extends Mirror> = [TMirror & string] extends ['cols']
+  ? int.Inc<TMirror & number>
+  : [TMirror & string] extends ['rows']
+  ? int.Multiply<int.Inc<TMirror & number>, 100>
+  : 0;
 
 type Solve<TGrids extends grid.Grid<string>[], TScore extends number = 0> = TGrids extends [
   infer IGrid,
   ...infer IRest extends grid.Grid<string>[],
 ]
   ? IGrid extends grid.Grid<string>
-    ? Solve<IRest, int.Add<TScore, ScoreGrid<IGrid>>>
+    ? Solve<IRest, int.Add<TScore, MirrorScore<FindMirror<IGrid>>>>
     : never
   : TScore;
 
