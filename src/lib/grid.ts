@@ -17,7 +17,9 @@ export namespace grid {
     TRows extends string[][] = [],
   > = S extends `${infer ILine}\n${infer IRest}`
     ? Parse<IRest, [...TRows, strings.ToChars<ILine>]>
-    : TRows;
+    : S extends ''
+    ? TRows
+    : [...TRows, strings.ToChars<S>];
 
   export type Iterator = vec2.Vec2;
 
@@ -45,4 +47,12 @@ export namespace grid {
   > = TGrid[vec2.Y<TVec>][vec2.X<TVec>];
 
   export type At<TGrid extends Grid<any>, TX extends number, TY extends number> = TGrid[TY][TX];
+
+  export type Width<TGrid extends Grid<any>> = TGrid[0]['length'];
+  export type Height<TGrid extends Grid<any>> = TGrid['length'];
+
+  export type RowAt<TGrid extends Grid<any>, TY extends number> = TGrid[TY];
+  export type ColumnAt<TGrid extends Grid<any>, TX extends number> = {
+    [K in keyof TGrid]: TGrid[K][TX];
+  };
 }
