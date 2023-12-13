@@ -17,7 +17,7 @@ type ParseNumbers<TInput extends string> =
     ? [INumber]
     : [];
 
-declare const input: ParseNumbers<'1 57 12 4'>; // [1, 57, 6123, 4]
+declare const input: ParseNumbers<'1 57 12 4'>; // [1, 57, 12, 4]
 ```
 
 While the type system doesn't directly support arithmetic operations, they can
