@@ -161,4 +161,29 @@ export namespace array {
     test.Expect<All<['a', 'b'], 'a' | 'b'>, true>,
     test.Expect<All<['a', 'b'], 'a' | 'b' | 'c'>, true>
   >;
+
+  export type Join<
+    TArr extends any[][],
+    TJoin extends any[] = [],
+    TResult extends any[] = never,
+  > = TArr extends [infer IA extends any[], infer IB extends any[], ...infer IRest extends any[][]]
+    ? Join<[IB, ...IRest], TJoin, [TResult] extends [never] ? IA : [...TResult, ...TJoin, ...IA]>
+    : TArr extends [infer IA extends any[]]
+    ? [TResult] extends [never]
+      ? IA
+      : [...TResult, ...TJoin, ...IA]
+    : [];
+
+  declare const testJoin: test.Describe<
+    test.Expect<Join<[]>, []>,
+    test.Expect<Join<[], []>, []>,
+    test.Expect<Join<[[]], []>, []>,
+    test.Expect<Join<[[], []], []>, []>,
+    test.Expect<Join<[[], []], [1]>, [1]>,
+    test.Expect<Join<[[1]], []>, [1]>,
+    test.Expect<Join<[[1], [3]], [2]>, [1, 2, 3]>,
+    test.Expect<Join<[[1, 2], [3, 4], [5, 6]], []>, [1, 2, 3, 4, 5, 6]>,
+    test.Expect<Join<[[1, 2], [3, 4], [5, 6]], [0]>, [1, 2, 0, 3, 4, 0, 5, 6]>,
+    test.Expect<Join<[[], []], [1, 2, 3]>, [1, 2, 3]>
+  >;
 }
