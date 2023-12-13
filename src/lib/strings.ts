@@ -60,4 +60,12 @@ export namespace strings {
     test.Expect<Join<array.Make<20, '1'>, ''>, '11111111111111111111'>,
     test.Expect<Join<array.Make<20, '1'>, '0'>, '101010101010101010101010101010101010101'>
   >;
+
+  export type Split<
+    S extends string,
+    TSplitter extends string,
+    TResult extends string[] = [],
+  > = S extends `${infer IHead}${TSplitter}${infer IRest}`
+    ? Split<IRest, TSplitter, [...TResult, IHead]>
+    : [...TResult, S];
 }
