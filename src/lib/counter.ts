@@ -66,6 +66,7 @@ export namespace counter {
   type Pad0<T extends number> = `${T}` extends `${number}${number}` ? `${T}` : `0${T}`;
 
   export type Zero = Counter<0, 0>;
+  export type Done = Dec<Zero>;
 
   export type IsZero<TCounter extends Counter> = TCounter extends Counter<0, 0> ? true : false;
 
