@@ -1,57 +1,93 @@
 import { Input } from '../input/14';
-import { grid, counter, int } from './lib';
+import { grid, counter, int, strings } from './lib';
 
-// type Input1 = `O....#....
-// O.OO#....#
-// .....##...
-// OO.#O....O
-// .O.....O#.
-// O.#..O.#.#
-// ..O..#O..O
-// .......O..
-// #....###..
-// #OO..#....
-// `;
+type Input1 = `O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....
+`;
 
-type TakeLoose<
-  TRow extends string[],
-  TRolling extends string[] = [],
-  TEmpty extends string[] = [],
-> = TRow extends [infer IHead extends string, ...infer IRest extends string[]]
-  ? IHead extends '#'
-    ? [loose: [...TRolling, ...TEmpty], rest: TRow]
-    : IHead extends '.'
-    ? TakeLoose<IRest, TRolling, [...TEmpty, IHead]>
-    : TakeLoose<IRest, [...TRolling, IHead], TEmpty>
-  : [loose: [...TRolling, ...TEmpty], rest: []];
+type Parsed = grid.Parse<Input>;
 
-type TakeFixed<TRow extends string[], TFixed extends string[] = []> = TRow extends [
-  infer IHead extends string,
-  ...infer IRest extends string[],
-]
-  ? IHead extends '#'
-    ? TakeFixed<IRest, [...TFixed, IHead]>
-    : [fixed: TFixed, rest: TRow]
-  : [fixed: TFixed, rest: []];
+type GridSize = Parsed['length'];
 
-type CompactRow<TRow extends string[], TResult extends string[] = []> = TRow extends []
+type MakeLookupTable<
+  TChar extends string,
+  TAcc extends string[] = [],
+  TResult extends string[][] = [],
+> = TResult['length'] extends GridSize
   ? TResult
-  : TakeLoose<TRow> extends [
-      loose: infer ILoose extends string[],
-      rest: infer IAfterLoose extends string[],
-    ]
-  ? TakeFixed<IAfterLoose> extends [
-      fixed: infer IFixed extends string[],
-      rest: infer IRest extends string[],
-    ]
-    ? CompactRow<IRest, [...TResult, ...ILoose, ...IFixed]>
-    : never
+  : MakeLookupTable<TChar, [...TAcc, TChar], [...TResult, TAcc]>;
+
+type EmptyTable = MakeLookupTable<'.'>;
+type LooseTable = MakeLookupTable<'O'>;
+
+type RollingRow<
+  TRollingCount extends number,
+  TEmptyCount extends number = int.Inc<int.Subtract<GridSize, TRollingCount>>,
+  TEmptyCounter extends counter.Counter = counter.Zero,
+  TResult extends string[][] = [],
+> = counter.Value<TEmptyCounter> extends TEmptyCount
+  ? TResult
+  : RollingRow<
+      TRollingCount,
+      TEmptyCount,
+      counter.Inc<TEmptyCounter>,
+      [...TResult, [...EmptyTable[counter.Value<TEmptyCounter>], ...LooseTable[TRollingCount]]]
+    >;
+
+type RollingTable<
+  TRollingCounter extends counter.Counter = counter.Zero,
+  TResult extends string[][][] = [],
+> = counter.Value<TRollingCounter> extends GridSize
+  ? TResult
+  : RollingTable<
+      counter.Inc<TRollingCounter>,
+      [...TResult, RollingRow<counter.Value<TRollingCounter>>]
+    >;
+
+type CompactRowEnd<
+  TRow extends string[],
+  TIter extends counter.Counter = counter.Dec<counter.Make<TRow['length']>>,
+  TLooseCounter extends counter.Counter = counter.Zero,
+  TEmptyCounter extends counter.Counter = counter.Zero,
+  TResult extends string[] = [],
+> = TIter extends counter.Done
+  ? [...RollingTable[counter.Value<TLooseCounter>][counter.Value<TEmptyCounter>], ...TResult]
+  : TRow[counter.Value<TIter>] extends infer IChar extends string
+  ? IChar extends '#'
+    ? CompactRowEnd<
+        TRow,
+        counter.Dec<TIter>,
+        counter.Zero,
+        counter.Zero,
+        [
+          IChar,
+          ...RollingTable[counter.Value<TLooseCounter>][counter.Value<TEmptyCounter>],
+          ...TResult,
+        ]
+      >
+    : IChar extends 'O'
+    ? CompactRowEnd<TRow, counter.Dec<TIter>, counter.Inc<TLooseCounter>, TEmptyCounter, TResult>
+    : CompactRowEnd<TRow, counter.Dec<TIter>, TLooseCounter, counter.Inc<TEmptyCounter>, TResult>
   : never;
 
-type CompactGrid<TGrid extends grid.Grid<string>> =
-  grid.Transpose<TGrid> extends infer ITransposed extends grid.Grid<string>
-    ? grid.Transpose<{ [KRow in keyof ITransposed]: CompactRow<ITransposed[KRow]> }>
+type CompactAndRotateRight<TGrid extends grid.Grid<string>> =
+  TGrid[0] extends infer IRow extends string[]
+    ? {
+        [X in keyof IRow]: CompactRowEnd<grid.ReverseColumnAt<TGrid, X>>;
+      }
     : never;
+
+type CycleOnce<TGrid extends grid.Grid<string>> = CompactAndRotateRight<
+  CompactAndRotateRight<CompactAndRotateRight<CompactAndRotateRight<TGrid>>>
+>;
 
 type ScoreRow<
   TRow extends string[],
@@ -65,13 +101,13 @@ type ScoreRow<
       TRow[counter.Value<TIter>] extends 'O' ? counter.Inc<TScore> : TScore
     >;
 
-type ScoreGrid<
+type ScoreGridNorth<
   TGrid extends grid.Grid<string>,
   TRowCounter extends counter.Counter = counter.Zero,
   TResult extends number = 0,
 > = counter.Value<TRowCounter> extends grid.Height<TGrid>
   ? TResult
-  : ScoreGrid<
+  : ScoreGridNorth<
       TGrid,
       counter.Inc<TRowCounter>,
       int.Add<
@@ -83,6 +119,42 @@ type ScoreGrid<
       >
     >;
 
-type Parsed = grid.Parse<Input>;
+type Cycle<
+  TCount extends number,
+  TGrid extends grid.Grid<string>,
+  TCounter extends counter.Counter = counter.Make<TCount>,
+> = TCounter extends counter.Zero ? TGrid : Cycle<TCount, CycleOnce<TGrid>, counter.Dec<TCounter>>;
 
-export declare const solution1: ScoreGrid<CompactGrid<Parsed>>;
+type RepetitionsImpl<
+  TGrid extends grid.Grid<string>,
+  TFirstHalf extends number[],
+  TSecondHalf extends number[],
+> = TFirstHalf extends TSecondHalf
+  ? TFirstHalf
+  : TSecondHalf extends [infer IMoved extends number, ...infer IRest extends number[]]
+  ? RepetitionsImpl<
+      CycleOnce<CycleOnce<TGrid>>,
+      [...TFirstHalf, IMoved],
+      [...IRest, ScoreGridNorth<CycleOnce<TGrid>>, ScoreGridNorth<CycleOnce<CycleOnce<TGrid>>>]
+    >
+  : never;
+
+type Repetitions<TGrid extends grid.Grid<string>> = RepetitionsImpl<
+  CycleOnce<TGrid>,
+  [ScoreGridNorth<TGrid>],
+  [ScoreGridNorth<CycleOnce<TGrid>>]
+>;
+
+export declare const solution1: ScoreGridNorth<grid.RotateLeft<CompactAndRotateRight<Parsed>>>;
+
+type Solve2<TGrid extends grid.Grid<string>, TCycleSearchStart extends number> = Repetitions<
+  Cycle<TCycleSearchStart, Parsed>
+> extends infer IRepetitions extends number[]
+  ? `[${strings.Join<
+      IRepetitions,
+      ', '
+    >}][(1000000000 - ${TCycleSearchStart}) % ${IRepetitions['length']}]`
+  : never;
+
+// TODO: manual calculation for now
+export declare const solution2: Solve2<Parsed, 200>;
