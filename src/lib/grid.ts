@@ -1,5 +1,6 @@
 import { strings } from './strings';
 import { array } from './array';
+import { int } from './math';
 import { counter } from './counter';
 import { test } from './test';
 import { vec2 } from './vec2';
@@ -89,9 +90,17 @@ export namespace grid {
   export type Height<TGrid extends Grid<any>> = TGrid['length'];
 
   export type RowAt<TGrid extends Grid<any>, TY extends number> = TGrid[TY];
+  export type ReverseRowAt<TGrid extends Grid<any>, TY extends number> = array.Reverse<TGrid[TY]>;
   export type ColumnAt<TGrid extends Grid<any>, TX extends number> = {
     [K in keyof TGrid]: TGrid[K][TX];
   };
+  export type ReverseColumnAt<TGrid extends Grid<any>, TX extends number> = int.Dec<
+    TGrid['length']
+  > extends infer IHeightDec extends number
+    ? {
+        [Y in keyof TGrid]: TGrid[int.Subtract<IHeightDec, Y>][TX];
+      }
+    : never;
 
   export type Count<
     TGrid extends Grid<any>,
