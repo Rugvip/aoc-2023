@@ -186,4 +186,20 @@ export namespace array {
     test.Expect<Join<[[1, 2], [3, 4], [5, 6]], [0]>, [1, 2, 0, 3, 4, 0, 5, 6]>,
     test.Expect<Join<[[], []], [1, 2, 3]>, [1, 2, 3]>
   >;
+
+  export type Reverse<TArr extends any[]> = int.Dec<
+    TArr['length']
+  > extends infer ILengthDec extends number
+    ? {
+        [I in keyof TArr]: TArr[int.Subtract<ILengthDec, I>];
+      }
+    : never;
+
+  declare const testReverse: test.Describe<
+    test.Expect<Reverse<[]>, []>,
+    test.Expect<Reverse<[1]>, [1]>,
+    test.Expect<Reverse<[1, 2]>, [2, 1]>,
+    test.Expect<Reverse<[1, 2, 3]>, [3, 2, 1]>,
+    test.Expect<Reverse<['a', 'b', 'c']>, ['c', 'b', 'a']>
+  >;
 }
