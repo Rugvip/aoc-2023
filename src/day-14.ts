@@ -1,17 +1,17 @@
 import { Input } from '../input/14';
 import { grid, counter, int, strings } from './lib';
 
-type Input1 = `O....#....
-O.OO#....#
-.....##...
-OO.#O....O
-.O.....O#.
-O.#..O.#.#
-..O..#O..O
-.......O..
-#....###..
-#OO..#....
-`;
+// type Input1 = `O....#....
+// O.OO#....#
+// .....##...
+// OO.#O....O
+// .O.....O#.
+// O.#..O.#.#
+// ..O..#O..O
+// .......O..
+// #....###..
+// #OO..#....
+// `;
 
 type Parsed = grid.Parse<Input>;
 
@@ -28,30 +28,6 @@ type MakeLookupTable<
 type EmptyTable = MakeLookupTable<'.'>;
 type LooseTable = MakeLookupTable<'O'>;
 
-type RollingRow<
-  TRollingCount extends number,
-  TEmptyCount extends number = int.Inc<int.Subtract<GridSize, TRollingCount>>,
-  TEmptyCounter extends counter.Counter = counter.Zero,
-  TResult extends string[][] = [],
-> = counter.Value<TEmptyCounter> extends TEmptyCount
-  ? TResult
-  : RollingRow<
-      TRollingCount,
-      TEmptyCount,
-      counter.Inc<TEmptyCounter>,
-      [...TResult, [...EmptyTable[counter.Value<TEmptyCounter>], ...LooseTable[TRollingCount]]]
-    >;
-
-type RollingTable<
-  TRollingCounter extends counter.Counter = counter.Zero,
-  TResult extends string[][][] = [],
-> = counter.Value<TRollingCounter> extends GridSize
-  ? TResult
-  : RollingTable<
-      counter.Inc<TRollingCounter>,
-      [...TResult, RollingRow<counter.Value<TRollingCounter>>]
-    >;
-
 type CompactRowEnd<
   TRow extends string[],
   TIter extends counter.Counter = counter.Dec<counter.Make<TRow['length']>>,
@@ -59,7 +35,11 @@ type CompactRowEnd<
   TEmptyCounter extends counter.Counter = counter.Zero,
   TResult extends string[] = [],
 > = TIter extends counter.Done
-  ? [...RollingTable[counter.Value<TLooseCounter>][counter.Value<TEmptyCounter>], ...TResult]
+  ? [
+      ...EmptyTable[counter.Value<TEmptyCounter>],
+      ...LooseTable[counter.Value<TLooseCounter>],
+      ...TResult,
+    ]
   : TRow[counter.Value<TIter>] extends infer IChar extends string
   ? IChar extends '#'
     ? CompactRowEnd<
@@ -69,7 +49,8 @@ type CompactRowEnd<
         counter.Zero,
         [
           IChar,
-          ...RollingTable[counter.Value<TLooseCounter>][counter.Value<TEmptyCounter>],
+          ...EmptyTable[counter.Value<TEmptyCounter>],
+          ...LooseTable[counter.Value<TLooseCounter>],
           ...TResult,
         ]
       >
