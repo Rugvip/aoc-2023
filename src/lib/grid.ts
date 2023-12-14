@@ -134,4 +134,50 @@ export namespace grid {
     test.Expect<Transpose<[[1, 2], [3, 4]]>, [[1, 3], [2, 4]]>,
     test.Expect<Transpose<[[1, 2, 3], [4, 5, 6]]>, [[1, 4], [2, 5], [3, 6]]>
   >;
+
+  export type Print<TGrid extends Grid<any>> = strings.Join<
+    {
+      [K in keyof TGrid]: strings.Join<TGrid[K]>;
+    },
+    '\n'
+  >;
+
+  export type RotateLeft<TGrid extends Grid<any>> = TGrid[0] extends infer IRow extends any[]
+    ? int.Dec<grid.Width<TGrid>> extends infer IWidthDec extends number
+      ? {
+          [Y in keyof IRow]: {
+            [X in keyof TGrid]: TGrid[X][int.Subtract<IWidthDec, Y>];
+          };
+        }
+      : never
+    : [];
+
+  declare const testRotateLeft: test.Describe<
+    test.Expect<RotateLeft<[]>, []>,
+    test.Expect<RotateLeft<[[1, 2]]>, [[2], [1]]>,
+    test.Expect<RotateLeft<[[1, 2], [3, 4]]>, [[2, 4], [1, 3]]>,
+    test.Expect<RotateLeft<[[1, 2, 3], [4, 5, 6]]>, [[3, 6], [2, 5], [1, 4]]>
+  >;
+
+  export type RotateRight<TGrid extends Grid<any>> = TGrid[0] extends infer IRow extends any[]
+    ? int.Dec<grid.Height<TGrid>> extends infer IHeightDec extends number
+      ? {
+          [Y in keyof IRow]: {
+            [X in keyof TGrid]: TGrid[int.Subtract<
+              IHeightDec,
+              X
+            >] extends infer IThisRow extends any[]
+              ? IThisRow[Y & keyof IThisRow]
+              : never;
+          };
+        }
+      : never
+    : [];
+
+  declare const testRotateRight: test.Describe<
+    test.Expect<RotateRight<[]>, []>,
+    test.Expect<RotateRight<[[1, 2]]>, [[1], [2]]>,
+    test.Expect<RotateRight<[[1, 2], [3, 4]]>, [[3, 1], [4, 2]]>,
+    test.Expect<RotateRight<[[1, 2, 3], [4, 5, 6]]>, [[4, 1], [5, 2], [6, 3]]>
+  >;
 }
