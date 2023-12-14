@@ -1,6 +1,7 @@
 import { strings } from './strings';
 import { array } from './array';
 import { counter } from './counter';
+import { test } from './test';
 import { vec2 } from './vec2';
 
 export namespace grid {
@@ -105,4 +106,23 @@ export namespace grid {
         IterNext<TGrid, TIt>,
         [AtVec2<TGrid, TIt>] extends [TItem] ? counter.Inc<TCounter> : TCounter
       >;
+
+  export type Transpose<
+    TGrid extends Grid<any>,
+    TCounter extends counter.Counter = counter.Zero,
+    TResult extends Grid<any> = [],
+  > = counter.Value<TCounter> extends Width<TGrid>
+    ? TResult
+    : Transpose<
+        TGrid,
+        counter.Inc<TCounter>,
+        [...TResult, ColumnAt<TGrid, counter.Value<TCounter>>]
+      >;
+
+  declare const testTranspose: test.Describe<
+    test.Expect<Transpose<[]>, []>,
+    test.Expect<Transpose<[[1, 2]]>, [[1], [2]]>,
+    test.Expect<Transpose<[[1, 2], [3, 4]]>, [[1, 3], [2, 4]]>,
+    test.Expect<Transpose<[[1, 2, 3], [4, 5, 6]]>, [[1, 4], [2, 5], [3, 6]]>
+  >;
 }
