@@ -1,5 +1,5 @@
 import { Input } from '../input/08';
-import { utils, array, counter } from './lib';
+import { utils, int, counter, union } from './lib';
 
 type Turn = 'L' | 'R';
 type Map = { [K in string]: { L: string; R: string } };
@@ -31,14 +31,14 @@ type ParseInput<TInput extends string> = TInput extends `${infer ITurns}\n\n${in
     : never
   : never;
 
-// type Input = `LLR
+// type Input1 = `LLR
 
 // AAA = (BBB, BBB)
 // BBB = (AAA, ZZZ)
 // ZZZ = (ZZZ, ZZZ)
 // `;
 
-// type Input = `LR
+// type Input2 = `LR
 
 // 11A = (11B, XXX)
 // 11B = (XXX, 11Z)
@@ -77,5 +77,17 @@ type Solve<
 
 export declare const solution1: Solve<ParseInput<Input>, 'AAA', 'ZZZ'>;
 
-// TODO: Finding GCD and LCM of these results is currently a manual step
-export declare const solution2: Solve<ParseInput<Input>, `${string}A`, `${string}Z`>;
+type DivideProduct<
+  NS extends number[],
+  D extends number,
+  TProduct extends number = 1,
+> = NS extends [infer IHead extends number, ...infer IRest extends number[]]
+  ? DivideProduct<IRest, D, int.Multiply<TProduct, int.Divide<IHead, D>[0]>>
+  : int.Multiply<TProduct, D>;
+
+type Solve2<TInput extends { turns: Turn[]; map: Map; size: number }> = DivideProduct<
+  union.ToArray<Solve<TInput, `${string}A`, `${string}Z`>>,
+  TInput['turns']['length']
+>;
+
+export declare const solution2: Solve2<ParseInput<Input>>;
