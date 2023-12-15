@@ -9,72 +9,93 @@ import { parser, int, union, counter, strings, array } from './lib';
 // ?###???????? 3,2,1
 // `;
 
-type ParsedRow = { left: string[]; right: number[] };
+type ParsedRow = { left: string; right: number[] };
 
 type Parsed = parser.Parse<
   Input,
   '[rows: lines]',
-  { rows: '[left: chars] [right: numbers]' }
+  { rows: '{left: string} [right: numbers]' }
 >['rows'];
 
-type MakeNPatternTable<
+type Unfold<TRows extends ParsedRow[], TResult extends ParsedRow[] = []> = {
+  [I in keyof TRows]: TRows[I] extends {
+    left: infer ILeft extends string;
+    right: infer IRight extends number[];
+  }
+    ? {
+        left: `${ILeft}?${ILeft}?${ILeft}?${ILeft}?${ILeft}`;
+        right: [...IRight, ...IRight, ...IRight, ...IRight, ...IRight];
+      }
+    : never;
+};
+
+type SplitStrAt<
   S extends string,
-  TPattern extends string = '',
-  TTable extends string[] = [],
-> = TTable['length'] extends 20
-  ? TTable
-  : MakeNPatternTable<S, `${TPattern}${S}`, [...TTable, TPattern]>;
-
-type NPatternTable = MakeNPatternTable<'#'>;
-
-type SomeDotPattern = '.' | '..' | '...' | '....' | '.....';
-
-type MakeLeftPattern<S extends string[]> = strings.Join<array.Replace<S, '?', '.' | '#'>>;
-
-type MakeRightPattern<
-  TLeftPattern extends string[],
-  TSizes extends number[],
-  TPattern extends string = ``,
-> = TLeftPattern extends [infer ILeft extends string, ...infer IRestLeft extends string[]]
-  ? ILeft extends '.'
-    ? MakeRightPattern<IRestLeft, TSizes, `${TPattern}.`>
-    : 'skip' | 'take' extends infer ISkip
-    ? ISkip extends 'skip'
-      ? ILeft extends '?'
-        ? MakeRightPattern<IRestLeft, TSizes, `${TPattern}.`>
-        : never
-      : TSizes extends [infer ISize extends number, ...infer IRestSizes extends number[]]
-      ? array.All<array.TakeN<TLeftPattern, ISize>, '?' | '#'> extends true
-        ? array.DropN<TLeftPattern, ISize> extends infer ILeftRestAfter extends string[]
-          ? ILeftRestAfter extends []
-            ? IRestSizes extends []
-              ? `${TPattern}${NPatternTable[ISize]}`
-              : never
-            : ILeftRestAfter[0] extends '#'
-            ? never
-            : MakeRightPattern<
-                array.DropN<ILeftRestAfter, 1>,
-                IRestSizes,
-                `${TPattern}${NPatternTable[ISize]}.`
-              >
-          : never
-        : never
-      : never
-    : never
-  : TSizes extends []
-  ? TPattern
+  TIndex extends number,
+  TCounter extends counter.Counter = counter.Make<TIndex>,
+  TLeading extends string = '',
+> = TCounter extends counter.Zero
+  ? [leading: TLeading, trailing: S]
+  : S extends `${infer IHead}${infer ITail}`
+  ? SplitStrAt<ITail, TIndex, counter.Dec<TCounter>, `${TLeading}${IHead}`>
   : never;
 
-type CountMatches<TRow extends ParsedRow> = union.Size<
-  MakeLeftPattern<TRow['left']> & MakeRightPattern<TRow['left'], TRow['right']>
->;
+type StrLen<
+  S extends string,
+  TCounter extends counter.Counter = counter.Zero,
+> = S extends `${string}${infer IRest}`
+  ? StrLen<IRest, counter.Inc<TCounter>>
+  : counter.Value<TCounter>;
 
-type Solve1<
-  TRows extends { left: string[]; right: number[] }[],
-  TIter extends counter.Counter = counter.Zero,
+type CountOptions<TPatterns extends string, TSizes extends number[]> = TSizes extends []
+  ? TPatterns extends `${string}#${string}`
+    ? 0
+    : 1
+  : int.Add<
+      TPatterns extends `${infer INext extends string}${infer IRest extends string}`
+        ? INext extends '#'
+          ? 0
+          : CountOptions<IRest, TSizes>
+        : 0,
+      TSizes extends [infer INextSize extends number, ...infer IRestSizes extends number[]]
+        ? SplitStrAt<TPatterns, INextSize> extends [
+            infer ITaken extends string,
+            infer IAfter extends string,
+          ]
+          ? StrLen<ITaken> extends INextSize
+            ? ITaken extends `${string}.${string}`
+              ? 0
+              : IAfter extends `${infer INext extends string}${infer IRest extends string}`
+              ? INext extends '#'
+                ? 0
+                : CountOptions<IRest, IRestSizes>
+              : IRestSizes extends []
+              ? 1
+              : 0
+            : never
+          : 0
+        : never
+    >;
+
+type Solve<
+  TRows extends { left: string; right: number[] }[],
+  TIter extends counter.Counter = counter.Dec<counter.Make<TRows['length']>>,
   TSum extends number = 0,
-> = counter.Value<TIter> extends TRows['length']
+> = TIter extends counter.Done
   ? TSum
-  : Solve1<TRows, counter.Inc<TIter>, int.Add<TSum, CountMatches<TRows[counter.Value<TIter>]>>>;
+  : Solve<
+      TRows,
+      counter.Dec<TIter>,
+      int.Add<
+        TSum,
+        TRows[counter.Value<TIter>] extends {
+          left: infer ILeft extends string;
+          right: infer IRight extends number[];
+        }
+          ? CountOptions<ILeft, IRight>
+          : never
+      >
+    >;
 
-export declare const solution1: Solve1<Parsed>;
+export declare const solution1: Solve<Parsed>;
+export declare const solution2: Solve<Unfold<Parsed>>;
