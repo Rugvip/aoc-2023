@@ -24,4 +24,18 @@ export namespace union {
     test.Expect<Size<'a' | 'b' | 'c'>, 3>,
     test.Expect<Size<string | number>, 2>
   >;
+
+  export type ToArray<U, T = U, TResult extends T[] = []> = Pop<U> extends {
+    next: infer INext extends T;
+    rest: infer IRest extends T;
+  }
+    ? ToArray<IRest, T, [INext, ...TResult]>
+    : TResult;
+
+  declare const testToArray: test.Describe<
+    test.Expect<ToArray<never>, []>,
+    test.Expect<ToArray<'a'>, ['a']>,
+    test.Expect<ToArray<'a' | 'b' | 'c'>, ['a', 'b', 'c']>,
+    test.Expect<ToArray<string | number>, [string, number]>
+  >;
 }
