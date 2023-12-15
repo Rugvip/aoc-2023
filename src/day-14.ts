@@ -131,11 +131,7 @@ export declare const solution1: ScoreGridNorth<grid.RotateLeft<CompactAndRotateR
 type Solve2<TGrid extends grid.Grid<string>, TCycleSearchStart extends number> = Repetitions<
   Cycle<TCycleSearchStart, Parsed>
 > extends infer IRepetitions extends number[]
-  ? `[${strings.Join<IRepetitions, ', '>}][${int.Subtract<
-      1000000000,
-      TCycleSearchStart
-    >} % ${IRepetitions['length']}]`
+  ? IRepetitions[int.Divide<int.Subtract<1000000000, TCycleSearchStart>, IRepetitions['length']>[1]]
   : never;
 
-// TODO: manual calculation for now
 export declare const solution2: Solve2<Parsed, 200>;
