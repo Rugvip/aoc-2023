@@ -1,4 +1,4 @@
-import { int } from './math';
+import { int } from './int';
 import { test } from './test';
 
 export namespace vec2 {

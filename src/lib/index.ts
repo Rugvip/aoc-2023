@@ -1,7 +1,7 @@
 export type { array } from './array';
 export type { counter } from './counter';
 export type { grid } from './grid';
-export type { int } from './math';
+export type { int } from './int';
 export type { objects } from './objects';
 export type { parser } from './parser';
 export type { strings } from './strings';

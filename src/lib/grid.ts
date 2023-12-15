@@ -1,6 +1,6 @@
 import { strings } from './strings';
 import { array } from './array';
-import { int } from './math';
+import { int } from './int';
 import { counter } from './counter';
 import { test } from './test';
 import { vec2 } from './vec2';

@@ -1,5 +1,5 @@
 import { test } from './test';
-import { int } from './math';
+import { int } from './int';
 
 /**
  * A counter for counting large numbers, since a regular tuple approach only performs
