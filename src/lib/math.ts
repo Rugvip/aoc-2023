@@ -1,47 +1,6 @@
 import { test } from './test';
 import { union } from './union';
 
-export namespace bin {
-  export type Bit = 0 | 1;
-  export type Sign = '+' | '-';
-
-  export type Integer = { sign: Sign; digits: Bit[] };
-
-  type BitAddMap = [[[[0, 0], [0, 1]], [[0, 1], [1, 0]]], [[[0, 1], [1, 0]], [[1, 0], [1, 1]]]];
-
-  export type BitwiseAdd<
-    TA extends Bit[],
-    TB extends Bit[],
-    TC extends Bit = 0,
-    TResult extends Bit[] = [],
-  > = TA extends [...infer IARest extends Bit[], infer IA0 extends Bit]
-    ? TB extends [...infer IBRest extends Bit[], infer IB0 extends Bit]
-      ? BitAddMap[IA0][IB0][TC] extends [infer IC extends Bit, infer IR extends Bit]
-        ? BitwiseAdd<IARest, IBRest, IC, [IR, ...TResult]>
-        : never
-      : BitAddMap[IA0][0][TC] extends [infer IC extends Bit, infer IR extends Bit]
-      ? BitwiseAdd<IARest, [], IC, [IR, ...TResult]>
-      : never
-    : TB extends [...infer IBRest extends Bit[], infer IB0 extends Bit]
-    ? BitAddMap[0][IB0][TC] extends [infer IC extends Bit, infer IR extends Bit]
-      ? BitwiseAdd<[], IBRest, IC, [IR, ...TResult]>
-      : never
-    : TC extends 1
-    ? [TC, ...TResult]
-    : TResult;
-
-  declare const testBitwiseAdd: test.Describe<
-    test.Expect<BitwiseAdd<[], []>, []>,
-    test.Expect<BitwiseAdd<[], [0]>, [0]>,
-    test.Expect<BitwiseAdd<[0], []>, [0]>,
-    test.Expect<BitwiseAdd<[1], []>, [1]>,
-    test.Expect<BitwiseAdd<[], [1]>, [1]>,
-    test.Expect<BitwiseAdd<[1], [1]>, [1, 0]>,
-    test.Expect<BitwiseAdd<[1, 0], [1, 0, 1]>, [1, 1, 1]>,
-    test.Expect<BitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 0, 0, 1]>
-  >;
-}
-
 export namespace int {
   type Bit = 0 | 1;
   export type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
