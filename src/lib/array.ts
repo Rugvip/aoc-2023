@@ -1,4 +1,5 @@
 import { int } from './math';
+import { counter } from './counter';
 import { test } from './test';
 
 export namespace array {
@@ -201,5 +202,25 @@ export namespace array {
     test.Expect<Reverse<[1, 2]>, [2, 1]>,
     test.Expect<Reverse<[1, 2, 3]>, [3, 2, 1]>,
     test.Expect<Reverse<['a', 'b', 'c']>, ['c', 'b', 'a']>
+  >;
+
+  type SplitAt<
+    TArr extends any[],
+    TIndex extends number,
+    TCounter extends counter.Counter = counter.Make<TIndex>,
+    TLeading extends any[] = [],
+  > = TCounter extends counter.Zero
+    ? [leading: TLeading, trailing: TArr]
+    : TArr extends [infer IHead, ...infer ITail extends any[]]
+    ? SplitAt<ITail, TIndex, counter.Dec<TCounter>, [...TLeading, IHead]>
+    : never;
+
+  declare const testSplitAt: test.Describe<
+    test.Expect<SplitAt<[], 0>, [[], []]>,
+    test.Expect<SplitAt<[1], 0>, [[], [1]]>,
+    test.Expect<SplitAt<[1], 1>, [[1], []]>,
+    test.Expect<SplitAt<[1, 2], 0>, [[], [1, 2]]>,
+    test.Expect<SplitAt<[1, 2], 1>, [[1], [2]]>,
+    test.Expect<SplitAt<[1, 2], 2>, [[1, 2], []]>
   >;
 }
