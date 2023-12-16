@@ -8,11 +8,15 @@ import { vec2 } from './vec2';
 export namespace grid {
   type MaxGridSize = 150;
 
-  type MakeIncTable<TTable extends number[] = []> = TTable['length'] extends MaxGridSize
+  type NumIncTable<TTable extends number[] = []> = TTable['length'] extends MaxGridSize
     ? TTable
-    : MakeIncTable<[...TTable, [...TTable, any]['length']]>;
+    : NumIncTable<[...TTable, [...TTable, any]['length']]>;
 
-  type NumIncTable = MakeIncTable;
+  type NumDecTable<TTable extends number[] = [-1]> = TTable['length'] extends MaxGridSize
+    ? TTable
+    : NumDecTable<
+        [...TTable, TTable extends [any, ...infer IRest extends number[]] ? IRest['length'] : never]
+      >;
 
   export type Grid<T> = T[][];
 
@@ -77,6 +81,41 @@ export namespace grid {
             : never
           : TGrid[KY];
       }
+    : never;
+
+  export type Vec2Step<
+    TGrid extends Grid<any>,
+    TVec extends vec2.Vec2,
+    TStep extends '^' | 'v' | '<' | '>',
+  > = vec2.X<TVec> extends infer IX extends number
+    ? vec2.Y<TVec> extends infer IY extends number
+      ? {
+          '<': NumDecTable[IX] extends infer INextX extends number
+            ? INextX extends -1
+              ? never
+              : vec2.Vec2<INextX, IY>
+            : never;
+          '>': IX extends -1
+            ? vec2.Vec2<0, IY>
+            : NumIncTable[IX] extends infer INextX extends number
+            ? INextX extends Width<TGrid>
+              ? never
+              : vec2.Vec2<INextX, IY>
+            : never;
+          '^': NumDecTable[IY] extends infer INextY extends number
+            ? INextY extends -1
+              ? never
+              : vec2.Vec2<IX, INextY>
+            : never;
+          v: IY extends -1
+            ? vec2.Vec2<IX, 0>
+            : NumIncTable[IY] extends infer INextY extends number
+            ? INextY extends Height<TGrid>
+              ? never
+              : vec2.Vec2<IX, INextY>
+            : never;
+        }[TStep]
+      : never
     : never;
 
   export type AtVec2<
