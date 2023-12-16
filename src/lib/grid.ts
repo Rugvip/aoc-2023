@@ -174,12 +174,12 @@ export namespace grid {
     test.Expect<Transpose<[[1, 2, 3], [4, 5, 6]]>, [[1, 4], [2, 5], [3, 6]]>
   >;
 
-  export type Print<TGrid extends Grid<any>> = strings.Join<
+  export type Print<TGrid extends Grid<any>> = `[[\n${strings.Join<
     {
-      [K in keyof TGrid]: strings.Join<TGrid[K]>;
+      [K in keyof TGrid]: `  ${strings.Join<TGrid[K]>}`;
     },
     '\n'
-  >;
+  >}\n]]`;
 
   export type RotateLeft<TGrid extends Grid<any>> = TGrid[0] extends infer IRow extends any[]
     ? int.Dec<grid.Width<TGrid>> extends infer IWidthDec extends number
