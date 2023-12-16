@@ -1,5 +1,5 @@
 import { Input } from '../input/16';
-import { counter, grid, vec2 } from './lib';
+import { counter, grid, int, vec2 } from './lib';
 
 // type Input1 = `.|...\\....
 // |.-.\\.....
@@ -49,21 +49,35 @@ type NextStepsFrom<
 
 type StepGrid<
   TLensGrid extends grid.Grid<'.' | Cell>,
-  TEnergyGrid extends grid.Grid<'.' | Dir> = grid.Make<
-    '.',
+  TStepQueue extends Step[],
+  TEnergyGrid extends grid.Grid<Dir> = grid.Make<
+    never,
     grid.Width<TLensGrid>,
     grid.Height<TLensGrid>
   >,
-  TSteps extends Step[] = [Step<vec2.Vec2<-1, 0>, '>'>],
-> = TSteps extends [infer IStep extends Step, ...infer IRestSteps extends Step[]]
-  ? IStep extends Step<infer IPos extends vec2.Vec2, infer IDir extends Dir>
-    ? IDir extends grid.AtVec2<TEnergyGrid, IPos>
-      ? StepGrid<TLensGrid, TEnergyGrid, IRestSteps>
-      : NextStepsFrom<TLensGrid, IPos, IDir> extends infer INextSteps extends Step[]
-      ? StepGrid<TLensGrid, grid.Vec2Set<TEnergyGrid, IPos, IDir>, [...INextSteps, ...IRestSteps]>
-      : 7
-    : 6
-  : TEnergyGrid;
+  TCurrentStep extends Step = never,
+> = [TCurrentStep] extends [never]
+  ? TStepQueue extends [infer IStep extends Step, ...infer IRestSteps extends Step[]]
+    ? StepGrid<TLensGrid, IRestSteps, TEnergyGrid, IStep>
+    : TEnergyGrid
+  : TCurrentStep extends Step<infer IPos extends vec2.Vec2, infer IDir extends Dir>
+  ? grid.AtVec2<TEnergyGrid, IPos> extends infer ICurrentEnergy extends Dir
+    ? IDir extends ICurrentEnergy
+      ? StepGrid<TLensGrid, TStepQueue, TEnergyGrid>
+      : grid.Vec2Set<
+          TEnergyGrid,
+          IPos,
+          ICurrentEnergy | IDir
+        > extends infer INextEnergyGrid extends grid.Grid<Dir>
+      ? NextStepsFrom<TLensGrid, IPos, IDir> extends [
+          infer INextStep extends Step,
+          ...infer INextSteps extends Step[],
+        ]
+        ? StepGrid<TLensGrid, [...TStepQueue, ...INextSteps], INextEnergyGrid, INextStep>
+        : StepGrid<TLensGrid, TStepQueue, INextEnergyGrid>
+      : never
+    : never
+  : never;
 
 type ScoreGrid<
   TEnergyGrid extends grid.Grid<string>,
@@ -74,7 +88,23 @@ type ScoreGrid<
   : ScoreGrid<
       TEnergyGrid,
       grid.IterNext<TEnergyGrid, TIter>,
-      '.' extends grid.AtVec2<TEnergyGrid, TIter> ? TCounter : counter.Inc<TCounter>
+      [grid.AtVec2<TEnergyGrid, TIter>] extends [never] ? TCounter : counter.Inc<TCounter>
     >;
 
-export declare const solution1: ScoreGrid<StepGrid<grid.Parse<Input>>>;
+type MaxScore<TLensGrid extends grid.Grid<'.' | Cell>, TStartSteps extends Step[]> = {
+  [I in keyof TStartSteps]: ScoreGrid<StepGrid<TLensGrid, [TStartSteps[I]]>>;
+};
+
+type PointsAroundAtOffset<TGrid extends grid.Grid<string>, TOffset extends number> = [
+  Step<vec2.Vec2<TOffset, -1>, 'v'>,
+  Step<vec2.Vec2<TOffset, grid.Height<TGrid>>, '^'>,
+  Step<vec2.Vec2<-1, TOffset>, '>'>,
+  Step<vec2.Vec2<grid.Width<TGrid>, TOffset>, '<'>,
+];
+
+type Parsed = grid.Parse<Input>;
+
+export declare const solution1: ScoreGrid<StepGrid<Parsed, [Step<vec2.Vec2<-1, 0>, '>'>]>>;
+
+// TODO: Finding the max here is currently a manual (and tedious) step.
+export declare const solution2: int.Max<MaxScore<Parsed, PointsAroundAtOffset<Parsed, 69>>[number]>;
