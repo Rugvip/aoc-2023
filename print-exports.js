@@ -30,13 +30,17 @@ function main(/** @type {string} */ path) {
 
   for (const exp of checker.getExportsOfModule(sourceFileSymbol)) {
     const expType = checker.getTypeOfSymbolAtLocation(exp, exp.declarations[0]);
-    console.log(
-      `${exp.name} = ${checker.typeToString(
-        expType,
-        undefined,
-        typescript.TypeFormatFlags.NoTruncation,
-      )}`,
-    );
+    if (expType.isStringLiteral()) {
+      console.log(`${exp.name} = ${expType.value}`);
+    } else {
+      console.log(
+        `${exp.name} = ${checker.typeToString(
+          expType,
+          undefined,
+          typescript.TypeFormatFlags.NoTruncation,
+        )}`,
+      );
+    }
   }
 }
 
