@@ -1,5 +1,6 @@
 import { int } from './int';
 import { test } from './test';
+import { union } from './union';
 
 export namespace vec2 {
   export type Vec2<X extends number = number, Y extends number = number> = `${X},${Y}`;
@@ -43,5 +44,17 @@ export namespace vec2 {
     test.Expect<ManhattanDistance<Zero, Vec2<1, 1>>, 2>,
     test.Expect<ManhattanDistance<Vec2<1, 2>, Vec2<4, 3>>, 4>,
     test.Expect<ManhattanDistance<Vec2<-1, -1>, Vec2<2, 3>>, 7>
+  >;
+
+  export type UnionRange<TA extends Vec2, TB extends Vec2> = Vec2<
+    union.Range<X<TA>, X<TB>>,
+    union.Range<Y<TA>, Y<TB>>
+  >;
+
+  declare const testUnionRange: test.Describe<
+    test.Expect<UnionRange<Zero, Zero>, Zero>,
+    test.Expect<UnionRange<Zero, Vec2<1, 1>>, Vec2<0 | 1, 0 | 1>>,
+    test.Expect<UnionRange<Zero, Vec2<0, 2>>, Vec2<0, 0 | 1 | 2>>,
+    test.Expect<UnionRange<Zero, Vec2<2, 0>>, Vec2<0 | 1 | 2, 0>>
   >;
 }
