@@ -223,4 +223,36 @@ export namespace array {
     test.Expect<SplitAt<[1, 2], 1>, [[1], [2]]>,
     test.Expect<SplitAt<[1, 2], 2>, [[1, 2], []]>
   >;
+
+  export type Sum<
+    TArr extends (string | number)[],
+    TIt extends counter.Counter = counter.Dec<counter.Make<TArr['length']>>,
+    TSum extends number = 0,
+  > = TIt extends counter.Done
+    ? TSum
+    : Sum<TArr, counter.Dec<TIt>, int.Add<TSum, TArr[counter.Value<TIt>]>>;
+
+  declare const testSum: test.Describe<
+    test.Expect<Sum<[]>, 0>,
+    test.Expect<Sum<[1]>, 1>,
+    test.Expect<Sum<[1, 2]>, 3>,
+    test.Expect<Sum<[1, '2', 3]>, 6>,
+    test.Expect<Sum<['1', '-1', '2']>, 2>
+  >;
+
+  export type Product<
+    TArr extends (string | number)[],
+    TIt extends counter.Counter = counter.Dec<counter.Make<TArr['length']>>,
+    TProduct extends number = 1,
+  > = TIt extends counter.Done
+    ? TProduct
+    : Product<TArr, counter.Dec<TIt>, int.Multiply<TProduct, TArr[counter.Value<TIt>]>>;
+
+  declare const testProduct: test.Describe<
+    test.Expect<Product<[]>, 1>,
+    test.Expect<Product<[1]>, 1>,
+    test.Expect<Product<[1, 2]>, 2>,
+    test.Expect<Product<['2', 3]>, 6>,
+    test.Expect<Product<['1', '-1', '2']>, -2>
+  >;
 }
