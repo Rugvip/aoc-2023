@@ -6,7 +6,13 @@ export namespace int {
   export type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   export type Sign = '+' | '-';
 
-  type FlipSign<T extends Sign> = T extends '+' ? '-' : '+';
+  export type FlipSign<T extends number> = T extends 0
+    ? 0
+    : `${T}` extends `-${infer N extends number}`
+    ? N
+    : `-${T}` extends `${infer N extends number}`
+    ? N
+    : never;
 
   export type IsNegative<T extends number> = `${T}` extends `-${string}` ? true : false;
 
@@ -176,11 +182,13 @@ export namespace int {
     };
   }[TA['sign']][TB['sign']];
 
-  export type Add<TA extends number | string, TB extends number | string> = [
-    ToInteger<TA>,
-    ToInteger<TB>,
-  ] extends [infer IA extends Integer, infer IB extends Integer]
-    ? FromInteger<AddIntegers<IA, IB>>
+  export type Add<
+    TA extends number | string,
+    TB extends number | string,
+  > = ToInteger<TA> extends infer IA extends Integer
+    ? ToInteger<TB> extends infer IB extends Integer
+      ? FromInteger<AddIntegers<IA, IB>>
+      : never
     : never;
 
   declare const testAdd: test.Describe<
@@ -337,11 +345,13 @@ export namespace int {
     test.Expect<DigitwiseSubtract<[1, 0, 0], [9, 9]>, [0, 0, 1]>
   >;
 
-  export type Subtract<TA extends number | string, TB extends number | string> = [
-    ToInteger<TA>,
-    ToInteger<TB>,
-  ] extends [infer IA extends Integer, infer IB extends Integer]
-    ? FromInteger<AddIntegers<IA, Integer<FlipSign<IB['sign']>, IB['digits']>>>
+  export type Subtract<
+    TA extends number | string,
+    TB extends number | string,
+  > = ToInteger<TA> extends infer IA extends Integer
+    ? ToInteger<TB> extends infer IB extends Integer
+      ? FromInteger<AddIntegers<IA, Integer<IB['sign'] extends '+' ? '-' : '+', IB['digits']>>>
+      : never
     : never;
 
   declare const testSubtract: test.Describe<
@@ -499,16 +509,18 @@ export namespace int {
       >
     : TResult;
 
-  export type Multiply<TA extends number, TB extends number> = [
-    ToInteger<TA>,
-    ToInteger<TB>,
-  ] extends [infer IA extends Integer, infer IB extends Integer]
-    ? FromInteger<
-        Integer<
-          IA['sign'] extends IB['sign'] ? '+' : '-',
-          DigitwiseMultiply<IA['digits'], IB['digits']>
+  export type Multiply<
+    TA extends number | string,
+    TB extends number | string,
+  > = ToInteger<TA> extends infer IA extends Integer
+    ? ToInteger<TB> extends infer IB extends Integer
+      ? FromInteger<
+          Integer<
+            IA['sign'] extends IB['sign'] ? '+' : '-',
+            DigitwiseMultiply<IA['digits'], IB['digits']>
+          >
         >
-      >
+      : never
     : never;
 
   declare const testMultiply: test.Describe<
