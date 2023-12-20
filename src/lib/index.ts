@@ -4,6 +4,7 @@ export type { grid } from './grid';
 export type { int } from './int';
 export type { objects } from './objects';
 export type { parser } from './parser';
+export type { queue } from './queue';
 export type { strings } from './strings';
 export type { test } from './test';
 export type { union } from './union';
