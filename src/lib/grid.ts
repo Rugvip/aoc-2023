@@ -38,6 +38,10 @@ export namespace grid {
 
   export type IterZero = vec2.Zero;
   export type IterDone = vec2.Vec2<-1, -1>;
+  export type IterEnd<TGrid extends Grid<any>> = vec2.Vec2<
+    NumDecTable[Width<TGrid>],
+    NumDecTable[Height<TGrid>]
+  >;
 
   export type IterNext<TGrid extends Grid<any>, TIter extends Iter> = TIter extends IterDone
     ? IterDone
@@ -47,6 +51,18 @@ export namespace grid {
         ? INextY extends TGrid['length']
           ? IterDone
           : vec2.Vec2<0, INextY>
+        : never
+      : vec2.Vec2<INextX, vec2.Y<TIter>>
+    : never;
+
+  export type IterPrev<TGrid extends Grid<any>, TIter extends Iter> = TIter extends IterDone
+    ? IterDone
+    : NumDecTable[vec2.X<TIter>] extends infer INextX extends number
+    ? INextX extends -1
+      ? NumDecTable[vec2.Y<TIter>] extends infer INextY extends number
+        ? INextY extends -1
+          ? IterDone
+          : vec2.Vec2<NumDecTable[TGrid[0]['length']], INextY>
         : never
       : vec2.Vec2<INextX, vec2.Y<TIter>>
     : never;
