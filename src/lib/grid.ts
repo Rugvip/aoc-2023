@@ -130,7 +130,17 @@ export namespace grid {
     TVec extends vec2.Vec2,
   > = TGrid[vec2.Y<TVec>][vec2.X<TVec>];
 
-  export type At<TGrid extends Grid<any>, TX extends number, TY extends number> = TGrid[TY][TX];
+  export type At<
+    TGrid extends Grid<any>,
+    TX extends number | string,
+    TY extends number | string,
+  > = `${TX}` extends `${infer IX extends number}`
+    ? `${TY}` extends `${infer IY extends number}`
+      ? undefined extends TGrid[IY]
+        ? undefined
+        : TGrid[IY][IX]
+      : never
+    : never;
 
   export type Width<TGrid extends Grid<any>> = TGrid[0]['length'];
   export type Height<TGrid extends Grid<any>> = TGrid['length'];
