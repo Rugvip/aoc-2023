@@ -1,5 +1,5 @@
 import { Input } from '../input/19';
-import { utils, int } from './lib';
+import { int, utils } from './lib';
 
 // type Input1 = `px{a<2006:qkq,m>2090:A,rfg}
 // pv{a>1716:R,A}
@@ -133,3 +133,129 @@ type Solve1<
 type Parsed = Parse<Input>;
 
 export declare const solution1: Solve1<Parsed[0], Parsed[1]>;
+
+type ConditionTreeNode = [cat: Cat, op: Op, value: number, yes: ConditionTree, no: ConditionTree];
+type ConditionTree = ConditionTreeNode | Result;
+
+type MakeConditionTreeConditions<
+  TWorkflows extends Workflows,
+  TConditions extends Condition[],
+  TDefault extends string,
+> = TConditions extends [
+  Condition<
+    infer ICat extends Cat,
+    infer IOp extends Op,
+    infer IValue extends number,
+    infer ITarget extends string
+  >,
+  ...infer IRest extends Condition[],
+]
+  ? [
+      cat: ICat,
+      op: IOp,
+      value: IValue,
+      yes: MakeConditionTree<TWorkflows, ITarget>,
+      no: MakeConditionTreeConditions<TWorkflows, IRest, TDefault>,
+    ]
+  : MakeConditionTree<TWorkflows, TDefault>;
+
+type MakeConditionTree<
+  TWorkflows extends Workflows,
+  TName extends string = 'in',
+> = TName extends Result
+  ? TName
+  : TWorkflows[TName] extends [
+      conditions: infer IConditions extends Condition[],
+      defaultTarget: infer IDefaultTarget extends string,
+    ]
+  ? MakeConditionTreeConditions<TWorkflows, IConditions, IDefaultTarget>
+  : never;
+
+type CompactConditionTree<TConditionTree extends ConditionTree> = TConditionTree extends Result
+  ? TConditionTree
+  : TConditionTree extends [
+      infer ICat extends Cat,
+      infer IOp extends Op,
+      infer IValue extends number,
+      infer IYes extends ConditionTree,
+      infer INo extends ConditionTree,
+    ]
+  ? (
+      IOp extends '>'
+        ? [
+            cat: ICat,
+            op: '<',
+            value: int.Inc<IValue>,
+            yes: CompactConditionTree<INo>,
+            no: CompactConditionTree<IYes>,
+          ]
+        : [
+            cat: ICat,
+            op: IOp,
+            value: IValue,
+            yes: CompactConditionTree<IYes>,
+            no: CompactConditionTree<INo>,
+          ]
+    ) extends infer IResult extends ConditionTree
+    ? IResult[3] extends IResult[4]
+      ? IResult[3]
+      : IResult
+    : never
+  : never;
+
+type Range = [min: number, max: number];
+type CatRanges = { [cat in Cat]: Range };
+
+type RangeSpan<TRange extends Range> = int.Subtract<TRange[1], TRange[0]>;
+type CatRangeProduct<TCatRanges extends CatRanges> = int.Multiply<
+  int.Multiply<RangeSpan<TCatRanges['x']>, RangeSpan<TCatRanges['m']>>,
+  int.Multiply<RangeSpan<TCatRanges['a']>, RangeSpan<TCatRanges['s']>>
+>;
+
+type Min<A extends number, B extends number> = int.Compare<A, B> extends 'lt' ? A : B;
+type Max<A extends number, B extends number> = int.Compare<A, B> extends 'gt' ? A : B;
+
+type FindApprovedConditionRanges<
+  TConditionTree extends ConditionTree,
+  TCurrentRange extends CatRanges = { [cat in Cat]: [min: 1, max: 4001] },
+> = TConditionTree extends Result
+  ? TConditionTree extends 'A'
+    ? [TCurrentRange]
+    : []
+  : TConditionTree extends [
+      infer ICat extends Cat,
+      '<',
+      infer IValue extends number,
+      infer IYes extends ConditionTree,
+      infer INo extends ConditionTree,
+    ]
+  ? [
+      ...FindApprovedConditionRanges<
+        IYes,
+        {
+          [K in keyof TCurrentRange]: K extends ICat
+            ? [min: TCurrentRange[K][0], max: Min<IValue, TCurrentRange[K][1]>]
+            : TCurrentRange[K];
+        }
+      >,
+      ...FindApprovedConditionRanges<
+        INo,
+        {
+          [K in keyof TCurrentRange]: K extends ICat
+            ? [min: Max<IValue, TCurrentRange[K][0]>, max: TCurrentRange[K][1]]
+            : TCurrentRange[K];
+        }
+      >,
+    ]
+  : never;
+
+type SumRanges<TRanges extends CatRanges[], TSum extends number = 0> = TRanges extends [
+  infer IRange extends CatRanges,
+  ...infer IRest extends CatRanges[],
+]
+  ? SumRanges<IRest, int.Add<TSum, CatRangeProduct<IRange>>>
+  : TSum;
+
+export declare const solution2: SumRanges<
+  FindApprovedConditionRanges<CompactConditionTree<MakeConditionTree<Parsed[0]>>>
+>;
