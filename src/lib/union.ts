@@ -1,4 +1,5 @@
 import { test } from './test';
+import { int } from './int';
 
 export namespace union {
   export type ToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
@@ -37,5 +38,19 @@ export namespace union {
     test.Expect<ToArray<'a'>, ['a']>,
     test.Expect<ToArray<'a' | 'b' | 'c'>, ['a', 'b', 'c']>,
     test.Expect<ToArray<string | number>, [string, number]>
+  >;
+
+  type RangeImpl<TA extends number, TLen extends number> = TLen extends 0
+    ? never
+    : TA | RangeImpl<int.Inc<TA>, int.Dec<TLen>>;
+  export type Range<TA extends number, TB extends number> = int.Compare<TA, TB> extends 'gt'
+    ? Range<TB, TA>
+    : RangeImpl<TA, int.Inc<int.Subtract<TB, TA>>>;
+
+  declare const testRange: test.Describe<
+    test.Expect<Range<0, 0>, 0>,
+    test.Expect<Range<0, 2>, 0 | 1 | 2>,
+    test.Expect<Range<2, 4>, 2 | 3 | 4>,
+    test.Expect<Range<4, 2>, 2 | 3 | 4>
   >;
 }
