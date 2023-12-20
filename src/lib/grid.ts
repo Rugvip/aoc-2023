@@ -55,31 +55,22 @@ export namespace grid {
       : vec2.Vec2<INextX, vec2.Y<TIter>>
     : never;
 
-  export type IterPrev<TGrid extends Grid<any>, TIter extends Iter> = TIter extends IterDone
-    ? IterDone
-    : NumDecTable[vec2.X<TIter>] extends infer INextX extends number
-    ? INextX extends -1
-      ? NumDecTable[vec2.Y<TIter>] extends infer INextY extends number
-        ? INextY extends -1
-          ? IterDone
-          : vec2.Vec2<NumDecTable[TGrid[0]['length']], INextY>
+  export type Vec2Set<TGrid extends Grid<any>, TIter extends Iter, TVal> = {
+    [KY in keyof TGrid]: KY extends `${vec2.Y<TIter>}`
+      ? TGrid[KY] extends infer IRow
+        ? {
+            [KX in keyof IRow]: KX extends `${vec2.X<TIter>}` ? TVal : IRow[KX];
+          }
         : never
-      : vec2.Vec2<INextX, vec2.Y<TIter>>
-    : never;
+      : TGrid[KY];
+  };
 
-  export type Vec2Set<TGrid extends Grid<any>, TIter extends Iter, TVal> = TIter extends IterDone
-    ? TGrid
-    : TIter extends vec2.Vec2<infer IX, infer IY>
-    ? {
-        [KY in keyof TGrid]: KY extends `${IY}`
-          ? TGrid[KY] extends infer IRow
-            ? {
-                [KX in keyof IRow]: KX extends `${IX}` ? TVal : IRow[KX];
-              }
-            : never
-          : TGrid[KY];
-      }
-    : never;
+  export type Vec2Fill<
+    TGrid extends Grid<any>,
+    TA extends vec2.Vec2,
+    TB extends vec2.Vec2,
+    TVal,
+  > = Vec2Set<TGrid, vec2.UnionRange<TA, TB>, TVal>;
 
   export type Vec2Map<
     TGrid extends Grid<any>,
