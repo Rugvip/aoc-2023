@@ -1,5 +1,6 @@
 import { test } from './test';
 import { int } from './int';
+import { tables } from './tables';
 
 /**
  * A counter for counting large numbers, since a regular tuple approach only performs
@@ -9,7 +10,7 @@ import { int } from './int';
  */
 export namespace counter {
   // Some other approaches tried that don't perform as well:
-  // - Lookup table of size 1000 - way worse
+  // - Lookup table of size 100 is faster with a naive lookup table implementation, but worse with a more optimized one
   // - Store parts in a tuple instead of union - order of magnitude worse in most ways
   // - Storing parts in an objects - way worse even than a tuple
   // - Storing parts in a string | number union - works but can't count quite as far, also easily causes bugs
@@ -18,19 +19,10 @@ export namespace counter {
   // - Just counting with a regular number - can't count to 100000
   // - Using counter arrays rather than lookup tables - slower and more instantiations
 
-  type MakeIncTable<TTable extends number[] = []> = TTable['length'] extends 100
-    ? TTable
-    : MakeIncTable<[...TTable, [...TTable, any]['length']]>;
-  type MakeDecTable<TTable extends number[] = []> = TTable['length'] extends 100
-    ? [0, ...TTable]
-    : MakeDecTable<[...TTable, TTable['length']]>;
-  type IncTable = MakeIncTable;
-  type DecTable = MakeDecTable;
-
   export type Counter<
     TOnes extends number = number,
-    THundreds extends number = number,
-  > = `${THundreds},${TOnes}`;
+    TThousands extends number = number,
+  > = `${TThousands},${TOnes}`;
 
   export type Make<N extends number = 0> = N extends 0
     ? Counter<0, 0>
@@ -38,32 +30,33 @@ export namespace counter {
     ? never
     : int.ToInteger<N>['digits'] extends infer D extends int.Digit[]
     ? D extends [
-        ...infer IHundreds extends int.Digit[],
+        ...infer IThousands extends int.Digit[],
+        infer I2 extends int.Digit,
         infer I1 extends int.Digit,
         infer I0 extends int.Digit,
       ]
       ? Counter<
-          int.FromInteger<int.Integer<'+', [I1, I0]>>,
-          int.FromInteger<int.Integer<'+', IHundreds>>
+          int.FromInteger<int.Integer<'+', [I2, I1, I0]>>,
+          int.FromInteger<int.Integer<'+', IThousands>>
         >
       : Counter<int.FromInteger<int.Integer<'+', D>>, 0>
     : never;
 
   export type Inc<TCounter extends Counter> =
     TCounter extends `${infer H extends number},${infer O extends number}`
-      ? O extends 99
+      ? O extends 999
         ? Counter<0, int.Inc<H>>
-        : Counter<IncTable[O], H>
+        : Counter<tables.Inc[O], H>
       : never;
 
   export type Dec<TCounter extends Counter> =
     TCounter extends `${infer H extends number},${infer O extends number}`
       ? O extends 0
-        ? Counter<99, int.Dec<H>>
-        : Counter<DecTable[O], H>
+        ? Counter<999, int.Dec<H>>
+        : Counter<tables.Dec[O], H>
       : never;
 
-  type Pad0<T extends number> = `${T}` extends `${number}${number}` ? `${T}` : `0${T}`;
+  type Pad0<T extends number> = `${T}` extends `${number}${number}` ? `${T}` : `00${T}`;
 
   export type Zero = Counter<0, 0>;
   export type Done = Dec<Zero>;
