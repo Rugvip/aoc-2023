@@ -16,6 +16,8 @@ export namespace vec2 {
 
   export type Zero = Vec2<0, 0>;
 
+  export type Dir = '^' | 'v' | '<' | '>';
+
   export type Add<A extends Vec2, B extends Vec2> = A extends Vec2<infer AX, infer AY>
     ? B extends Vec2<infer BX, infer BY>
       ? Vec2<int.Add<AX, BX>, int.Add<AY, BY>>

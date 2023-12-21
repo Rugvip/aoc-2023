@@ -82,7 +82,7 @@ export namespace grid {
   export type Vec2Step<
     TGrid extends Grid<any>,
     TVec extends vec2.Vec2,
-    TStep extends '^' | 'v' | '<' | '>',
+    TDir extends vec2.Dir,
   > = vec2.X<TVec> extends infer IX extends number
     ? vec2.Y<TVec> extends infer IY extends number
       ? {
@@ -110,7 +110,7 @@ export namespace grid {
               ? never
               : vec2.Vec2<IX, INextY>
             : never;
-        }[TStep]
+        }[TDir]
       : never
     : never;
 
