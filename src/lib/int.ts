@@ -26,10 +26,10 @@ export namespace int {
     test.Expect<Abs<99>, 99>
   >;
 
-  export type Integer<TSign extends Sign = Sign, TDigits extends Digit[] = Digit[]> = {
-    sign: TSign;
-    digits: TDigits;
-  };
+  export type Integer<TSign extends Sign = Sign, TDigits extends Digit[] = Digit[]> = [
+    sign: TSign,
+    digits: TDigits,
+  ];
 
   type DigitAddResult = [carry: Bit, result: Digit];
 
@@ -115,14 +115,8 @@ export namespace int {
     : T;
 
   export type ToInteger<T extends number | string> = `${T}` extends `-${infer I}`
-    ? {
-        sign: '-';
-        digits: StrToDigits<I>;
-      }
-    : {
-        sign: '+';
-        digits: TrimLeading0<StrToDigits<`${T}`>>;
-      };
+    ? Integer<'-', StrToDigits<I>>
+    : Integer<'+', TrimLeading0<StrToDigits<`${T}`>>>;
 
   declare const testToInteger: test.Describe<
     test.Expect<ToInteger<'0'>, Integer<'+', [0]>>,
@@ -146,10 +140,10 @@ export namespace int {
     ? `${IChar}${DigitsToStr<IRest>}`
     : '';
 
-  export type FromInteger<T extends Integer> = T['digits'] extends [0]
+  export type FromInteger<T extends Integer> = T[1] extends [0]
     ? 0
-    : `${T['sign'] extends '-' ? '-' : ''}${DigitsToStr<
-        TrimLeading0<T['digits']>
+    : `${T[0] extends '-' ? '-' : ''}${DigitsToStr<
+        TrimLeading0<T[1]>
       >}` extends `${infer N extends number}`
     ? N
     : never;
@@ -165,22 +159,22 @@ export namespace int {
 
   export type AddIntegers<TA extends Integer, TB extends Integer> = {
     '+': {
-      '+': Integer<'+', DigitwiseAdd<TA['digits'], TB['digits']>>;
+      '+': Integer<'+', DigitwiseAdd<TA[1], TB[1]>>;
       '-': {
-        lt: Integer<'-', DigitwiseSubtract<TB['digits'], TA['digits']>>;
+        lt: Integer<'-', DigitwiseSubtract<TB[1], TA[1]>>;
         eq: Integer<'+', [0]>;
-        gt: Integer<'+', DigitwiseSubtract<TA['digits'], TB['digits']>>;
-      }[CompareDigits<TA['digits'], TB['digits']>];
+        gt: Integer<'+', DigitwiseSubtract<TA[1], TB[1]>>;
+      }[CompareDigits<TA[1], TB[1]>];
     };
     '-': {
       '+': {
-        lt: Integer<'+', DigitwiseSubtract<TB['digits'], TA['digits']>>;
+        lt: Integer<'+', DigitwiseSubtract<TB[1], TA[1]>>;
         eq: Integer<'+', [0]>;
-        gt: Integer<'-', DigitwiseSubtract<TA['digits'], TB['digits']>>;
-      }[CompareDigits<TA['digits'], TB['digits']>];
-      '-': Integer<'-', DigitwiseAdd<TA['digits'], TB['digits']>>;
+        gt: Integer<'-', DigitwiseSubtract<TA[1], TB[1]>>;
+      }[CompareDigits<TA[1], TB[1]>];
+      '-': Integer<'-', DigitwiseAdd<TA[1], TB[1]>>;
     };
-  }[TA['sign']][TB['sign']];
+  }[TA[0]][TB[0]];
 
   export type Add<
     TA extends number | string,
@@ -248,13 +242,13 @@ export namespace int {
     ? CompareSameLengthDigits<TA, TB>
     : Compare<TA['length'], TB['length']>;
 
-  type CompareIntegers<TA extends Integer, TB extends Integer> = TA['sign'] extends TB['sign']
-    ? CompareDigits<TA['digits'], TB['digits']> extends infer IResult extends CompareResult
-      ? TA['sign'] extends '-'
+  type CompareIntegers<TA extends Integer, TB extends Integer> = TA[0] extends TB[0]
+    ? CompareDigits<TA[1], TB[1]> extends infer IResult extends CompareResult
+      ? TA[0] extends '-'
         ? FlipCompareResult<IResult>
         : IResult
       : never
-    : TA['sign'] extends '-'
+    : TA[0] extends '-'
     ? 'lt'
     : 'gt';
 
@@ -350,7 +344,7 @@ export namespace int {
     TB extends number | string,
   > = ToInteger<TA> extends infer IA extends Integer
     ? ToInteger<TB> extends infer IB extends Integer
-      ? FromInteger<AddIntegers<IA, Integer<IB['sign'] extends '+' ? '-' : '+', IB['digits']>>>
+      ? FromInteger<AddIntegers<IA, Integer<IB[0] extends '+' ? '-' : '+', IB[1]>>>
       : never
     : never;
 
@@ -514,12 +508,7 @@ export namespace int {
     TB extends number | string,
   > = ToInteger<TA> extends infer IA extends Integer
     ? ToInteger<TB> extends infer IB extends Integer
-      ? FromInteger<
-          Integer<
-            IA['sign'] extends IB['sign'] ? '+' : '-',
-            DigitwiseMultiply<IA['digits'], IB['digits']>
-          >
-        >
+      ? FromInteger<Integer<IA[0] extends IB[0] ? '+' : '-', DigitwiseMultiply<IA[1], IB[1]>>>
       : never
     : never;
 
@@ -568,10 +557,10 @@ export namespace int {
       : never
     : [];
 
-  export type Half<T extends number> = ToInteger<T> extends {
-    sign: infer ISign extends Sign;
-    digits: infer IDigits extends Digit[];
-  }
+  export type Half<T extends number> = ToInteger<T> extends Integer<
+    infer ISign extends Sign,
+    infer IDigits extends Digit[]
+  >
     ? FromInteger<Integer<ISign, DigitwiseHalf<IDigits>>>
     : never;
 
@@ -651,15 +640,13 @@ export namespace int {
         infer IDividend extends Integer,
         infer IDivisor extends Integer,
       ]
-    ? DigitwiseDivide<IDividend['digits'], IDivisor['digits']> extends [
+    ? DigitwiseDivide<IDividend[1], IDivisor[1]> extends [
         result: infer IResult extends Digit[],
         remainder: infer IRemainder extends Digit[],
       ]
       ? [
-          result: FromInteger<
-            Integer<IDividend['sign'] extends IDivisor['sign'] ? '+' : '-', IResult>
-          >,
-          remainder: FromInteger<Integer<IDividend['sign'], IRemainder>>,
+          result: FromInteger<Integer<IDividend[0] extends IDivisor[0] ? '+' : '-', IResult>>,
+          remainder: FromInteger<Integer<IDividend[0], IRemainder>>,
         ]
       : never
     : never;
