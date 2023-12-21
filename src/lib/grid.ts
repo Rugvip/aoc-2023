@@ -1,5 +1,6 @@
 import { strings } from './strings';
 import { array } from './array';
+import { bool } from './bool';
 import { int } from './int';
 import { counter } from './counter';
 import { tables } from './tables';
@@ -224,5 +225,86 @@ export namespace grid {
     test.Expect<RotateRight<[[1, 2]]>, [[1], [2]]>,
     test.Expect<RotateRight<[[1, 2], [3, 4]]>, [[3, 1], [4, 2]]>,
     test.Expect<RotateRight<[[1, 2, 3], [4, 5, 6]]>, [[4, 1], [5, 2], [6, 3]]>
+  >;
+
+  export type Union<
+    A extends Grid<any>,
+    B extends Grid<any>,
+  > = A[0] extends infer IRow extends any[]
+    ? {
+        [Y in keyof A]: {
+          [X in keyof IRow]: At<A, X, Y> | At<B, X, Y>;
+        };
+      }
+    : never;
+
+  declare const testUnion: test.Describe<
+    test.Expect<
+      Union<[[0, 0, 0 | 1], [1, 1, 0 | 1]], [[0, 1, 0], [0, 1, 1 | 2]]>,
+      [[0, 0 | 1, 0 | 1], [0 | 1, 1, 0 | 1 | 2]]
+    >
+  >;
+
+  export type Intersection<
+    A extends Grid<any>,
+    B extends Grid<any>,
+  > = A[0] extends infer IRow extends any[]
+    ? {
+        [Y in keyof A]: {
+          [X in keyof IRow]: At<A, X, Y> & At<B, X, Y>;
+        };
+      }
+    : never;
+
+  declare const testIntersection: test.Describe<
+    test.Expect<
+      Intersection<[[0, 0, 0 | 1], [1, 1, 0 | 1]], [[0, 1, 0], [0, 1, 1 | 2]]>,
+      [[0, never, 0], [never, 1, 1]]
+    >
+  >;
+
+  export type And<A extends Grid<boolean>, B extends Grid<boolean>> = {
+    [Y in keyof A]: A[Y] extends infer IARow extends boolean[]
+      ? {
+          [X in keyof IARow]: bool.And<IARow[X], At<B, X, Y>>;
+        }
+      : never;
+  };
+
+  declare const testAnd: test.Describe<
+    test.Expect<
+      And<[[false, false], [true, true]], [[false, true], [false, true]]>,
+      [[false, false], [false, true]]
+    >
+  >;
+
+  export type Or<A extends Grid<boolean>, B extends Grid<boolean>> = {
+    [Y in keyof A]: A[Y] extends infer IARow extends boolean[]
+      ? {
+          [X in keyof IARow]: bool.Or<IARow[X], At<B, X, Y>>;
+        }
+      : never;
+  };
+
+  declare const testOr: test.Describe<
+    test.Expect<
+      Or<[[false, false], [true, true]], [[false, true], [false, true]]>,
+      [[false, true], [true, true]]
+    >
+  >;
+
+  export type Xor<A extends Grid<boolean>, B extends Grid<boolean>> = {
+    [Y in keyof A]: A[Y] extends infer IARow extends boolean[]
+      ? {
+          [X in keyof IARow]: bool.Xor<IARow[X], At<B, X, Y>>;
+        }
+      : never;
+  };
+
+  declare const testXor: test.Describe<
+    test.Expect<
+      Xor<[[false, false], [true, true]], [[false, true], [false, true]]>,
+      [[false, true], [true, false]]
+    >
   >;
 }
