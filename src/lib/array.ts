@@ -3,11 +3,45 @@ import { counter } from './counter';
 import { test } from './test';
 
 export namespace array {
+  type A0 = [any];
+  type A1 = [...A0, ...A0, ...A0, ...A0, ...A0, ...A0, ...A0, ...A0, ...A0, ...A0];
+  type A2 = [...A1, ...A1, ...A1, ...A1, ...A1, ...A1, ...A1, ...A1, ...A1, ...A1];
+  type A3 = [...A2, ...A2, ...A2, ...A2, ...A2, ...A2, ...A2, ...A2, ...A2, ...A2];
+
+  type NCopyArr<TArr extends any[], N extends number, TResult extends any[] = []> = N extends 0
+    ? TResult
+    : NCopyArr<TArr, int.Dec<N>, [...TResult, ...TArr]>;
+
+  type StrToDigitsReverse<S extends string> =
+    S extends `${infer IChar extends int.Digit}${infer IRest}`
+      ? [...StrToDigitsReverse<IRest>, IChar]
+      : [];
+
+  export type MakeAny<N extends number | string = 0> = `${N}` extends infer NS extends string // Weird OOM bug if using N directly here
+    ? StrToDigitsReverse<NS> extends infer IDigits extends int.Digit[]
+      ? [
+          ...(IDigits[0] extends undefined ? [] : NCopyArr<A0, IDigits[0]>),
+          ...(IDigits[1] extends undefined ? [] : NCopyArr<A1, IDigits[1]>),
+          ...(IDigits[2] extends undefined ? [] : NCopyArr<A2, IDigits[2]>),
+          ...(IDigits[3] extends undefined ? [] : NCopyArr<A3, IDigits[3]>),
+        ]
+      : never
+    : never;
+
+  declare const testMakeAny: test.Describe<
+    test.Expect<MakeAny<0>, []>,
+    test.Expect<MakeAny<1>, [any]>,
+    test.Expect<MakeAny<2>, [any, any]>,
+    test.Expect<MakeAny<10>, A1>,
+    test.Expect<MakeAny<100>, A2>,
+    test.Expect<MakeAny<1000>, A3>,
+    test.Expect<MakeAny<2222>, [...A3, ...A3, ...A2, ...A2, ...A1, ...A1, ...A0, ...A0]>
+  >;
+
   export type Make<
     TLength extends number = 0,
     TItem = any,
-    TCounter extends TItem[] = [],
-  > = TCounter['length'] extends TLength ? TCounter : Make<TLength, TItem, [...TCounter, TItem]>;
+  > = MakeAny<TLength> extends infer IArr extends any[] ? { [K in keyof IArr]: TItem } : never;
 
   declare const testMake: test.Describe<
     test.Expect<Make<0>, []>,
