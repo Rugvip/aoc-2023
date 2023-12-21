@@ -1,4 +1,5 @@
 export type { array } from './array';
+export type { bool } from './bool';
 export type { counter } from './counter';
 export type { grid } from './grid';
 export type { int } from './int';
