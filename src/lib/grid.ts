@@ -2,22 +2,11 @@ import { strings } from './strings';
 import { array } from './array';
 import { int } from './int';
 import { counter } from './counter';
+import { tables } from './tables';
 import { test } from './test';
 import { vec2 } from './vec2';
 
 export namespace grid {
-  type MaxGridSize = 150;
-
-  type NumIncTable<TTable extends number[] = []> = TTable['length'] extends MaxGridSize
-    ? TTable
-    : NumIncTable<[...TTable, [...TTable, any]['length']]>;
-
-  type NumDecTable<TTable extends number[] = [-1]> = TTable['length'] extends MaxGridSize
-    ? TTable
-    : NumDecTable<
-        [...TTable, TTable extends [any, ...infer IRest extends number[]] ? IRest['length'] : never]
-      >;
-
   export type Grid<T> = T[][];
 
   export type Parse<
@@ -39,15 +28,15 @@ export namespace grid {
   export type IterZero = vec2.Zero;
   export type IterDone = vec2.Vec2<-1, -1>;
   export type IterEnd<TGrid extends Grid<any>> = vec2.Vec2<
-    NumDecTable[Width<TGrid>],
-    NumDecTable[Height<TGrid>]
+    tables.Dec[Width<TGrid>],
+    tables.Dec[Height<TGrid>]
   >;
 
   export type IterNext<TGrid extends Grid<any>, TIter extends Iter> = TIter extends IterDone
     ? IterDone
-    : NumIncTable[vec2.X<TIter>] extends infer INextX extends number
+    : tables.Inc[vec2.X<TIter>] extends infer INextX extends number
     ? INextX extends TGrid[0]['length']
-      ? NumIncTable[vec2.Y<TIter>] extends infer INextY extends number
+      ? tables.Inc[vec2.Y<TIter>] extends infer INextY extends number
         ? INextY extends TGrid['length']
           ? IterDone
           : vec2.Vec2<0, INextY>
@@ -97,26 +86,26 @@ export namespace grid {
   > = vec2.X<TVec> extends infer IX extends number
     ? vec2.Y<TVec> extends infer IY extends number
       ? {
-          '<': NumDecTable[IX] extends infer INextX extends number
+          '<': tables.Dec[IX] extends infer INextX extends number
             ? INextX extends -1
               ? never
               : vec2.Vec2<INextX, IY>
             : never;
           '>': IX extends -1
             ? vec2.Vec2<0, IY>
-            : NumIncTable[IX] extends infer INextX extends number
+            : tables.Inc[IX] extends infer INextX extends number
             ? INextX extends Width<TGrid>
               ? never
               : vec2.Vec2<INextX, IY>
             : never;
-          '^': NumDecTable[IY] extends infer INextY extends number
+          '^': tables.Dec[IY] extends infer INextY extends number
             ? INextY extends -1
               ? never
               : vec2.Vec2<IX, INextY>
             : never;
           v: IY extends -1
             ? vec2.Vec2<IX, 0>
-            : NumIncTable[IY] extends infer INextY extends number
+            : tables.Inc[IY] extends infer INextY extends number
             ? INextY extends Height<TGrid>
               ? never
               : vec2.Vec2<IX, INextY>
