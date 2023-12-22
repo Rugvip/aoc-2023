@@ -53,4 +53,39 @@ export namespace union {
     test.Expect<Range<2, 4>, 2 | 3 | 4>,
     test.Expect<Range<4, 2>, 2 | 3 | 4>
   >;
+
+  type MinMax<
+    N extends number,
+    TOp extends 'lt' | 'gt',
+    TCurrent extends number | undefined = undefined,
+    TPop = union.Pop<N>,
+  > = TPop extends {
+    rest: infer IRest extends number;
+    next: infer INext extends number;
+  }
+    ? MinMax<
+        IRest,
+        TOp,
+        undefined extends TCurrent
+          ? INext
+          : int.Compare<INext, TCurrent & number> extends TOp
+          ? INext
+          : TCurrent
+      >
+    : TCurrent;
+
+  export type Min<N extends number> = MinMax<N, 'lt'>;
+  export type Max<N extends number> = MinMax<N, 'gt'>;
+
+  declare const testMin: test.Describe<
+    test.Expect<Min<5 | 2 | 3>, 2>,
+    test.Expect<Min<-5 | -12345 | 123456 | 123>, -12345>,
+    test.Expect<Min<0>, 0>
+  >;
+
+  declare const testMax: test.Describe<
+    test.Expect<Max<5 | 2 | 3>, 5>,
+    test.Expect<Max<-5 | -12345 | 123456 | 123>, 123456>,
+    test.Expect<Max<0>, 0>
+  >;
 }

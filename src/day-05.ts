@@ -1,5 +1,5 @@
 import { Input } from '../input/05';
-import { int } from './lib';
+import { int, union } from './lib';
 
 // type Input = `seeds: 79 14 55 13
 
@@ -104,7 +104,7 @@ type ApplyNumberMapGroups<TNumber extends number, TGroup extends NumberMap[][]> 
     : never
   : TNumber;
 
-type Solve1<T extends { init: number[]; groups: NumberMap[][] }> = int.Min<
+type Solve1<T extends { init: number[]; groups: NumberMap[][] }> = union.Min<
   ApplyNumberMapGroups<T['init'][number], T['groups']>
 >;
 
@@ -219,7 +219,7 @@ type RangeApplyNumberMapGroups<
   ? RangeApplyNumberMapGroups<RangeApplyNumberMaps<TRange, IFirst>, IRest>
   : TRange;
 
-type Solve2<T extends { init: Range[]; groups: NumberMap[][] }> = int.Min<
+type Solve2<T extends { init: Range[]; groups: NumberMap[][] }> = union.Min<
   RangeApplyNumberMapGroups<T['init'][number], T['groups']>['start']
 >;
 

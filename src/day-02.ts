@@ -1,5 +1,5 @@
 import { Input } from '../input/02';
-import { int } from './lib';
+import { int, union } from './lib';
 
 // type Input = `Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 // Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
@@ -105,7 +105,7 @@ type SumPossibleGames<TItems extends Game[], TResult extends any[] = []> = TItem
 export declare const solution1: SumPossibleGames<PossibleGames>;
 
 type MinimumCubes<TRounds extends Round[]> = {
-  [KColor in CubeColor]: int.Max<TRounds[number][KColor]> & number;
+  [KColor in CubeColor]: union.Max<TRounds[number][KColor]> & number;
 };
 
 type CubePower<TCubes extends Round> = int.Multiply<

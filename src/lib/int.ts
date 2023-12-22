@@ -1,5 +1,4 @@
 import { test } from './test';
-import { union } from './union';
 
 export namespace int {
   type Bit = 0 | 1;
@@ -388,39 +387,23 @@ export namespace int {
     test.Expect<Dec<1000000>, 999999>
   >;
 
-  type MinMax<
-    N extends number,
-    TOp extends 'lt' | 'gt',
-    TCurrent extends number | undefined = undefined,
-    TPop = union.Pop<N>,
-  > = TPop extends {
-    rest: infer IRest extends number;
-    next: infer INext extends number;
-  }
-    ? MinMax<
-        IRest,
-        TOp,
-        undefined extends TCurrent
-          ? INext
-          : Compare<INext, TCurrent & number> extends TOp
-          ? INext
-          : TCurrent
-      >
-    : TCurrent;
-
-  export type Min<N extends number> = MinMax<N, 'lt'>;
-  export type Max<N extends number> = MinMax<N, 'gt'>;
+  export type Min<A extends number, B extends number> = Compare<A, B> extends 'lt' ? A : B;
+  export type Max<A extends number, B extends number> = Compare<A, B> extends 'gt' ? A : B;
 
   declare const testMin: test.Describe<
-    test.Expect<Min<5 | 2 | 3>, 2>,
-    test.Expect<Min<-5 | -12345 | 123456 | 123>, -12345>,
-    test.Expect<Min<0>, 0>
+    test.Expect<Min<5, 2>, 2>,
+    test.Expect<Min<-5, -12345>, -12345>,
+    test.Expect<Min<-1, 1>, -1>,
+    test.Expect<Min<0, -1>, -1>,
+    test.Expect<Min<0, 1>, 0>
   >;
 
   declare const testMax: test.Describe<
-    test.Expect<Max<5 | 2 | 3>, 5>,
-    test.Expect<Max<-5 | -12345 | 123456 | 123>, 123456>,
-    test.Expect<Max<0>, 0>
+    test.Expect<Max<5, 2>, 5>,
+    test.Expect<Max<-5, -12345>, -5>,
+    test.Expect<Max<-1, 1>, 1>,
+    test.Expect<Max<0, -1>, 0>,
+    test.Expect<Max<0, 1>, 1>
   >;
 
   type DigitMultiplyResult = [carry: Digit, result: Digit];

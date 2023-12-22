@@ -30,7 +30,7 @@ type ParseInput<S extends string> = S extends `${infer IEntry}\n${infer IRest}`
   ? [ParseEntry<IEntry>, ...ParseInput<IRest>]
   : [];
 
-type MaxCardCount<THand extends Hand> = int.Max<
+type MaxCardCount<THand extends Hand> = union.Max<
   { [I in array.Indices<THand> as THand[I]]: union.Size<I> }[THand[number]]
 >;
 
@@ -180,7 +180,7 @@ type ExpandJokers<THand extends Card[]> = THand extends [
     : [ICard, ...ExpandJokers<IRest>]
   : [];
 
-type JokerHandStrength<THand extends Hand> = int.Max<
+type JokerHandStrength<THand extends Hand> = union.Max<
   ExpandJokers<THand> extends infer J extends Hand
     ? J extends any
       ? HandStrength<J>
