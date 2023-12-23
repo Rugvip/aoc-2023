@@ -28,7 +28,7 @@ export namespace counter {
     ? Counter<0, 0>
     : int.IsNegative<N> extends true
     ? never
-    : int.ToInteger<N>['digits'] extends infer D extends int.Digit[]
+    : int.ToInteger<N>[1] extends infer D extends int.Digit[]
     ? D extends [
         ...infer IThousands extends int.Digit[],
         infer I2 extends int.Digit,
