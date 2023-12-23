@@ -18,6 +18,13 @@ export namespace vec2 {
 
   export type Dir = '^' | 'v' | '<' | '>';
 
+  export type FlipDir<TDir extends Dir> = {
+    '^': 'v';
+    v: '^';
+    '<': '>';
+    '>': '<';
+  }[TDir];
+
   export type Add<A extends Vec2, B extends Vec2> = A extends Vec2<infer AX, infer AY>
     ? B extends Vec2<infer BX, infer BY>
       ? Vec2<int.Add<AX, BX>, int.Add<AY, BY>>
