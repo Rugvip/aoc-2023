@@ -45,6 +45,18 @@ export namespace grid {
       : vec2.Vec2<INextX, vec2.Y<TIter>>
     : never;
 
+  export type Step<
+    TDir extends vec2.Dir = vec2.Dir,
+    TVec2 extends vec2.Vec2 = vec2.Vec2,
+  > = `${TDir}${TVec2}`;
+
+  export type StepPos<TStep extends Step> = TStep extends Step<any, infer IPos extends vec2.Vec2>
+    ? IPos
+    : never;
+  export type StepDir<TStep extends Step> = TStep extends Step<infer IDir extends vec2.Dir, any>
+    ? IDir
+    : never;
+
   export type Vec2Set<TGrid extends Grid<any>, TIter extends Iter, TVal> = {
     [KY in keyof TGrid]: KY extends `${vec2.Y<TIter>}`
       ? TGrid[KY] extends infer IRow
@@ -78,6 +90,13 @@ export namespace grid {
             : never
           : TGrid[KY];
       }
+    : never;
+
+  export type TakeStep<TGrid extends Grid<any>, TStep extends Step> = TStep extends Step<
+    infer IDir extends vec2.Dir,
+    infer IPos extends vec2.Vec2
+  >
+    ? Step<IDir, Vec2Step<TGrid, IPos, IDir>>
     : never;
 
   export type Vec2Step<
