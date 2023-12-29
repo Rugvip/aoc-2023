@@ -118,4 +118,4 @@ For example, `yarn run print 4` prints the output of day 4.
 | 22  |         |
 | 23  | ⭐️ ⭐️ |
 | 24  |         |
-| 25  |         |
+| 25  | ⭐️     |
