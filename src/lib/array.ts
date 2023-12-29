@@ -180,6 +180,34 @@ export namespace array {
     test.Expect<Replace<['b', 'a', 'b'], 'a' | 'b', 'c'>, ['c', 'c', 'c']>
   >;
 
+  export type Remove<TArr extends any[], URemoved, TResult extends any[] = []> = TArr extends [
+    infer IHead,
+    ...infer ITail,
+  ]
+    ? Remove<ITail, URemoved, IHead extends URemoved ? TResult : [...TResult, IHead]>
+    : TResult;
+
+  declare const testRemove: test.Describe<
+    test.Expect<Remove<[], 'a'>, []>,
+    test.Expect<Remove<['a', 'b', 'c'], 'a'>, ['b', 'c']>,
+    test.Expect<Remove<['a', 'b', 'c'], 'a' | 'b'>, ['c']>
+  >;
+
+  export type RemoveFirst<TArr extends any[], URemoved, TResult extends any[] = []> = TArr extends [
+    infer IHead,
+    ...infer ITail,
+  ]
+    ? IHead extends URemoved
+      ? [...TResult, ...ITail]
+      : RemoveFirst<ITail, URemoved, [...TResult, IHead]>
+    : TResult;
+
+  declare const testRemoveFirst: test.Describe<
+    test.Expect<RemoveFirst<[], 'a'>, []>,
+    test.Expect<RemoveFirst<['a', 'b', 'c'], 'a'>, ['b', 'c']>,
+    test.Expect<RemoveFirst<['a', 'b', 'c'], 'a' | 'b'>, ['b', 'c']>
+  >;
+
   export type All<TArr extends any[], TItem> = {
     [I in keyof TArr]: TArr[I] extends TItem ? true : false;
   }[number] extends true
