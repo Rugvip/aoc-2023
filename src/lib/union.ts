@@ -8,6 +8,10 @@ export namespace union {
     ? I
     : never;
 
+  export type Head<U> = ToIntersection<U extends any ? () => U : never> extends () => infer R
+    ? R
+    : never;
+
   export type Pop<U> = ToIntersection<U extends any ? () => U : never> extends () => infer R
     ? { rest: Exclude<U, R>; next: R }
     : undefined;
