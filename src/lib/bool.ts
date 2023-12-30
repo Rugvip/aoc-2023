@@ -20,4 +20,16 @@ export namespace bool {
     : false;
 
   export type Not<A extends boolean> = A extends true ? false : true;
+
+  export type Coerce<T> = T extends boolean
+    ? T
+    : T extends number
+    ? T extends 0
+      ? false
+      : true
+    : T extends string
+    ? T extends ''
+      ? false
+      : true
+    : false;
 }
