@@ -47,19 +47,23 @@ export type PositiveSub<
   ? TA extends `${IARest}${infer IA0 extends Digit}`
     ? TB extends `${infer IBRest}${Digit}`
       ? TB extends `${IBRest}${infer IB0 extends Digit}`
-        ? DigitSubMap[TC][IB0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
-          ? PositiveSub<IARest, IBRest, IC, `${IR}${TResult}`>
-          : never
+        ? PositiveSub<
+            IARest,
+            IBRest,
+            DigitSubMap[TC][IB0][IA0][0],
+            `${DigitSubMap[TC][IB0][IA0][1]}${TResult}`
+          >
         : never
-      : DigitSubMap[TC][0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
-      ? PositiveSub<IARest, '', IC, `${IR}${TResult}`>
-      : never
+      : PositiveSub<
+          IARest,
+          '',
+          DigitSubMap[TC][0][IA0][0],
+          `${DigitSubMap[TC][0][IA0][1]}${TResult}`
+        >
     : never
   : TB extends `${infer IBRest}${Digit}`
   ? TB extends `${IBRest}${infer IB0 extends Digit}`
-    ? DigitSubMap[0][IB0][TC] extends [infer IC extends Bit, infer IR extends Digit]
-      ? PositiveSub<'', IBRest, IC, `${IR}${TResult}`>
-      : never
+    ? PositiveSub<'', IBRest, DigitSubMap[0][IB0][TC][0], `${DigitSubMap[0][IB0][TC][1]}${TResult}`>
     : never
   : TC extends 1
   ? never // subtraction should always be aligned to not result in a borrow

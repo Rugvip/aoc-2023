@@ -1,5 +1,5 @@
 import { test } from '../test';
-import { Bit, Digit } from './types';
+import { Digit } from './types';
 import { DigitAddMap, PositiveAdd } from './Add';
 import { TrimZeroes } from './utils';
 
@@ -57,9 +57,12 @@ type PositiveMulOne<
 > = TB extends `${infer IBRest}${Digit}`
   ? TB extends `${IBRest}${infer IB0 extends Digit}`
     ? DigitMulMap[TA][IB0] extends [infer IC extends Digit, infer IR extends Digit]
-      ? DigitAddMap[0][IR][TC] extends [infer IC2 extends Bit, infer IR2 extends Digit]
-        ? PositiveMulOne<TA, IBRest, DigitAddMap[IC2][IC][0][1], `${IR2}${TResult}`>
-        : never
+      ? PositiveMulOne<
+          TA,
+          IBRest,
+          DigitAddMap[DigitAddMap[0][IR][TC][0]][IC][0][1],
+          `${DigitAddMap[0][IR][TC][1]}${TResult}`
+        >
       : never
     : never
   : TC extends 0

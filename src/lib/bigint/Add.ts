@@ -53,19 +53,23 @@ export type PositiveAdd<
   ? TA extends `${IARest}${infer IA0 extends Digit}`
     ? TB extends `${infer IBRest}${Digit}`
       ? TB extends `${IBRest}${infer IB0 extends Digit}`
-        ? DigitAddMap[TC][IA0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
-          ? PositiveAdd<IARest, IBRest, IC, `${IR}${TResult}`>
-          : never
+        ? PositiveAdd<
+            IARest,
+            IBRest,
+            DigitAddMap[TC][IA0][IB0][0],
+            `${DigitAddMap[TC][IA0][IB0][1]}${TResult}`
+          >
         : never
-      : DigitAddMap[TC][IA0][0] extends [infer IC extends Bit, infer IR extends Digit]
-      ? PositiveAdd<IARest, '', IC, `${IR}${TResult}`>
-      : never
+      : PositiveAdd<
+          IARest,
+          '',
+          DigitAddMap[TC][IA0][0][0],
+          `${DigitAddMap[TC][IA0][0][1]}${TResult}`
+        >
     : never
   : TB extends `${infer IBRest}${Digit}`
   ? TB extends `${IBRest}${infer IB0 extends Digit}`
-    ? DigitAddMap[TC][0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
-      ? PositiveAdd<'', IBRest, IC, `${IR}${TResult}`>
-      : never
+    ? PositiveAdd<'', IBRest, DigitAddMap[TC][0][IB0][0], `${DigitAddMap[TC][0][IB0][1]}${TResult}`>
     : never
   : TC extends 1
   ? `${TC}${TResult}`
