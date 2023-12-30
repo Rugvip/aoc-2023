@@ -1,5 +1,5 @@
 import { test } from '../test';
-import { Digit, Integer, ToInteger } from './index';
+import { Digit, Integer, ToInteger } from './types';
 
 type CompareResult = 'lt' | 'eq' | 'gt';
 type FlipCompareResult<T extends CompareResult> = T extends 'lt'

@@ -1,5 +1,5 @@
 import { test } from '../test';
-import { Bit, Digit, ToInteger, Integer, FromInteger } from './index';
+import { Bit, Digit, ToInteger, Integer, FromInteger } from './types';
 import { DigitwiseAdd, DigitAddMap } from './Add';
 
 type DigitMultiplyResult = [carry: Digit, result: Digit];
