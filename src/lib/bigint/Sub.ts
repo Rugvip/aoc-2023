@@ -1,7 +1,8 @@
 import { test } from '../test';
 import { Bit, Digit } from './types';
-import { Negate, TrimZeroes } from './utils';
-import { Add, DigitAddResult, FirstDigitAddResultRow } from './Add';
+import { TrimZeroes } from './utils';
+import { Compare } from './Compare';
+import { PositiveAdd, DigitAddResult, FirstDigitAddResultRow } from './Add';
 
 type RotateDigitAddResultRowRight<T extends DigitAddResult[]> = T extends [
   ...infer IRest extends DigitAddResult[],
@@ -80,7 +81,24 @@ declare const testPositiveSub: test.Describe<
   test.Expect<PositiveSub<'100', '99'>, '1'>
 >;
 
-export type Sub<TA extends number | string, TB extends number | string> = Add<TA, Negate<TB>>;
+export type Sub<
+  TA extends number | string,
+  TB extends number | string,
+> = `${TA}` extends `-${infer NA}`
+  ? `${TB}` extends `-${infer NB}`
+    ? {
+        lt: PositiveSub<`${NB}`, NA>;
+        eq: '0';
+        gt: `-${PositiveSub<NA, `${NB}`>}`;
+      }[Compare<NA, NB>]
+    : `-${PositiveAdd<NA, `${TB}`>}`
+  : `${TB}` extends `-${infer NB}`
+  ? PositiveAdd<`${TA}`, `${NB}`>
+  : {
+      lt: `-${PositiveSub<`${TB}`, `${TA}`>}`;
+      eq: '0';
+      gt: PositiveSub<`${TA}`, `${TB}`>;
+    }[Compare<TA, TB>];
 
 declare const testSub: test.Describe<
   test.Expect<Sub<0, 0>, '0'>,
@@ -95,6 +113,8 @@ declare const testSub: test.Describe<
   test.Expect<Sub<1000, 200>, '800'>,
   test.Expect<Sub<123, 456>, '-333'>,
   test.Expect<Sub<123, -456>, '579'>,
+  test.Expect<Sub<-123, -456>, '333'>,
+  test.Expect<Sub<-456, -123>, '-333'>,
   test.Expect<Sub<123, -123>, '246'>,
   test.Expect<Sub<101, 10>, '91'>,
   test.Expect<Sub<100, 99>, '1'>
