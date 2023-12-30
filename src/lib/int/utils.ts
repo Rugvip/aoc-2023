@@ -2,7 +2,7 @@ import { test } from '../test';
 import { AddIntegers } from './Add';
 import { Integer, ToInteger, FromInteger } from './types';
 
-export type FlipSign<T extends number> = T extends 0
+export type Negate<T extends number> = T extends 0
   ? 0
   : `${T}` extends `-${infer N extends number}`
   ? N
@@ -11,6 +11,8 @@ export type FlipSign<T extends number> = T extends 0
   : never;
 
 export type IsNegative<T extends number> = `${T}` extends `-${string}` ? true : false;
+
+export type SignOf<T extends string | number> = `${T}` extends `-${string}` ? '-' : '+';
 
 export type Abs<T extends number> = `${T}` extends `-${infer N extends number}` ? N : T;
 
