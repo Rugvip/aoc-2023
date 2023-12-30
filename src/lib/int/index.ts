@@ -1,7 +1,7 @@
 import { test } from '../test';
-import type { Compare, CompareDigits } from './Compare';
+import type { CompareDigits } from './Compare';
 
-export type { Compare } from './Compare';
+export type { Compare, Min, Max } from './Compare';
 
 type Bit = 0 | 1;
 export type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -335,25 +335,6 @@ declare const testDec: test.Describe<
   test.Expect<Dec<-1>, -2>,
   test.Expect<Dec<1>, 0>,
   test.Expect<Dec<1000000>, 999999>
->;
-
-export type Min<A extends number, B extends number> = Compare<A, B> extends 'lt' ? A : B;
-export type Max<A extends number, B extends number> = Compare<A, B> extends 'gt' ? A : B;
-
-declare const testMin: test.Describe<
-  test.Expect<Min<5, 2>, 2>,
-  test.Expect<Min<-5, -12345>, -12345>,
-  test.Expect<Min<-1, 1>, -1>,
-  test.Expect<Min<0, -1>, -1>,
-  test.Expect<Min<0, 1>, 0>
->;
-
-declare const testMax: test.Describe<
-  test.Expect<Max<5, 2>, 5>,
-  test.Expect<Max<-5, -12345>, -5>,
-  test.Expect<Max<-1, 1>, 1>,
-  test.Expect<Max<0, -1>, 0>,
-  test.Expect<Max<0, 1>, 1>
 >;
 
 type DigitMultiplyResult = [carry: Digit, result: Digit];

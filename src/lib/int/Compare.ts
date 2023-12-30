@@ -55,3 +55,22 @@ declare const testCompare: test.Describe<
   test.Expect<Compare<-73, 73>, 'lt'>,
   test.Expect<Compare<999, -999>, 'gt'>
 >;
+
+export type Min<A extends number, B extends number> = Compare<A, B> extends 'lt' ? A : B;
+export type Max<A extends number, B extends number> = Compare<A, B> extends 'gt' ? A : B;
+
+declare const testMin: test.Describe<
+  test.Expect<Min<5, 2>, 2>,
+  test.Expect<Min<-5, -12345>, -12345>,
+  test.Expect<Min<-1, 1>, -1>,
+  test.Expect<Min<0, -1>, -1>,
+  test.Expect<Min<0, 1>, 0>
+>;
+
+declare const testMax: test.Describe<
+  test.Expect<Max<5, 2>, 5>,
+  test.Expect<Max<-5, -12345>, -5>,
+  test.Expect<Max<-1, 1>, 1>,
+  test.Expect<Max<0, -1>, 0>,
+  test.Expect<Max<0, 1>, 1>
+>;
