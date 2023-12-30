@@ -1,14 +1,7 @@
 import { test } from '../test';
 import { CompareDigits } from './Compare';
-import {
-  Digit,
-  DigitwiseAdd,
-  DigitwiseSubtract,
-  Integer,
-  ToInteger,
-  FromInteger,
-  TrimLeading0,
-} from './index';
+import { Digit, DigitwiseAdd, Integer, ToInteger, FromInteger, TrimLeading0 } from './index';
+import { DigitwiseSubtract } from './Subtract';
 
 type CountFitDigits<
   TDividend extends Digit[],
