@@ -3,6 +3,7 @@ export type { bool } from './bool';
 export type { counter } from './counter';
 export type { grid } from './grid';
 export type * as int from './int';
+export type * as bigint from './bigint';
 export type { objects } from './objects';
 export type { parser } from './parser';
 export type { queue } from './queue';
