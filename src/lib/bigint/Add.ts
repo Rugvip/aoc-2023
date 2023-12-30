@@ -1,6 +1,6 @@
 import { test } from '../test';
 import { Bit, Digit } from './types';
-import { PositiveSubtract } from './Subtract';
+import { PositiveSub } from './Sub';
 import { Compare } from './Compare';
 
 export type DigitAddResult = [carry: Bit, result: Digit];
@@ -90,15 +90,15 @@ export type Add<
   ? `${TB}` extends `-${infer NB}`
     ? `-${PositiveAdd<NA, NB>}`
     : {
-        lt: PositiveSubtract<`${TB}`, NA>;
+        lt: PositiveSub<`${TB}`, NA>;
         eq: '0';
-        gt: `-${PositiveSubtract<NA, `${TB}`>}`;
+        gt: `-${PositiveSub<NA, `${TB}`>}`;
       }[Compare<NA, TB>]
   : `${TB}` extends `-${infer NB}`
   ? {
-      lt: `-${PositiveSubtract<NB, `${TA}`>}`;
+      lt: `-${PositiveSub<NB, `${TA}`>}`;
       eq: '0';
-      gt: PositiveSubtract<`${TA}`, NB>;
+      gt: PositiveSub<`${TA}`, NB>;
     }[Compare<TA, NB>]
   : PositiveAdd<`${TA}`, `${TB}`>;
 
