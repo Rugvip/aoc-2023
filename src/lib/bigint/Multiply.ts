@@ -1,6 +1,7 @@
 import { test } from '../test';
-import { Bit, Digit, ToInteger, Integer, FromInteger } from './types';
-import { DigitwiseAdd, DigitAddMap } from './Add';
+import { Bit, Digit } from './types';
+import { DigitAddMap, DigitwiseStrAdd } from './Add';
+import { TrimZeroes } from './utils';
 
 type DigitMultiplyResult = [carry: Digit, result: Digit];
 
@@ -52,52 +53,58 @@ declare const testDigitMultiplyMap: test.Describe<
   test.Expect<DigitMultiplyMap[9][9], [8, 1]>
 >;
 
-type DigitwiseMultiplyOne<
+type DigitwiseStrMultiplyOne<
   TA extends Digit,
-  TB extends Digit[],
+  TB extends string,
   TC extends Digit = 0,
-  TResult extends Digit[] = [],
-> = TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-  ? DigitMultiplyMap[TA][IB0] extends [infer IC extends Digit, infer IR extends Digit]
-    ? DigitAddMap[0][IR][TC] extends [infer IC2 extends Bit, infer IR2 extends Digit]
-      ? DigitwiseMultiplyOne<TA, IBRest, DigitAddMap[IC2][IC][0][1], [IR2, ...TResult]>
+  TResult extends string = '',
+> = TB extends `${infer IBRest}${Digit}`
+  ? TB extends `${IBRest}${infer IB0 extends Digit}`
+    ? DigitMultiplyMap[TA][IB0] extends [infer IC extends Digit, infer IR extends Digit]
+      ? DigitAddMap[0][IR][TC] extends [infer IC2 extends Bit, infer IR2 extends Digit]
+        ? DigitwiseStrMultiplyOne<TA, IBRest, DigitAddMap[IC2][IC][0][1], `${IR2}${TResult}`>
+        : never
       : never
     : never
   : TC extends 0
   ? TResult
-  : [TC, ...TResult];
+  : `${TC}${TResult}`;
 
-type DigitwiseMultiply<
-  TA extends Digit[],
-  TB extends Digit[],
-  TPad extends 0[] = [],
-  TResult extends Digit[] = [0],
-> = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
-  ? DigitwiseMultiply<
-      IARest,
-      TB,
-      [...TPad, 0],
-      DigitwiseAdd<TResult, DigitwiseMultiplyOne<IA0, [...TB, ...TPad]>>
-    >
-  : TResult;
+type DigitwiseStrMultiply<
+  TA extends string,
+  TB extends string,
+  TPad extends string = '',
+  TResult extends string = '0',
+> = TA extends `${infer IARest}${Digit}`
+  ? TA extends `${IARest}${infer IA0 extends Digit}`
+    ? DigitwiseStrMultiply<
+        IARest,
+        TB,
+        `${TPad}0`,
+        DigitwiseStrAdd<TResult, DigitwiseStrMultiplyOne<IA0, `${TB}${TPad}`>>
+      >
+    : never
+  : TrimZeroes<TResult>;
 
 export type Multiply<
   TA extends number | string,
   TB extends number | string,
-> = ToInteger<TA> extends infer IA extends Integer
-  ? ToInteger<TB> extends infer IB extends Integer
-    ? FromInteger<Integer<IA[0] extends IB[0] ? '+' : '-', DigitwiseMultiply<IA[1], IB[1]>>>
-    : never
-  : never;
+> = `${TA}` extends `-${infer NA}`
+  ? `${TB}` extends `-${infer NB}`
+    ? DigitwiseStrMultiply<NA, NB>
+    : `-${DigitwiseStrMultiply<NA, `${TB}`>}`
+  : `${TB}` extends `-${infer NB}`
+  ? `-${DigitwiseStrMultiply<`${TA}`, NB>}`
+  : DigitwiseStrMultiply<`${TA}`, `${TB}`>;
 
 declare const testMultiply: test.Describe<
-  test.Expect<Multiply<0, 0>, 0>,
-  test.Expect<Multiply<1, 1>, 1>,
-  test.Expect<Multiply<10, 0>, 0>,
-  test.Expect<Multiply<0, 10>, 0>,
-  test.Expect<Multiply<99, 99>, 9801>,
-  test.Expect<Multiply<-99, 99>, -9801>,
-  test.Expect<Multiply<99, -99>, -9801>,
-  test.Expect<Multiply<-99, -99>, 9801>,
-  test.Expect<Multiply<123, 2>, 246>
+  test.Expect<Multiply<0, 0>, '0'>,
+  test.Expect<Multiply<1, 1>, '1'>,
+  test.Expect<Multiply<10, 0>, '0'>,
+  test.Expect<Multiply<0, 10>, '0'>,
+  test.Expect<Multiply<99, 99>, '9801'>,
+  test.Expect<Multiply<-99, 99>, '-9801'>,
+  test.Expect<Multiply<99, -99>, '-9801'>,
+  test.Expect<Multiply<-99, -99>, '9801'>,
+  test.Expect<Multiply<123, 2>, '246'>
 >;
