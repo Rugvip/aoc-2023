@@ -312,6 +312,64 @@ export namespace grid {
     >
   >;
 
+  export type Or4<
+    A extends Grid<boolean>,
+    B extends Grid<boolean>,
+    C extends Grid<boolean>,
+    D extends Grid<boolean>,
+  > = {
+    [Y in keyof A]: A[Y] extends infer IARow extends boolean[]
+      ? {
+          [X in keyof IARow]: bool.Or<
+            bool.Or<IARow[X], At<B, X, Y>>,
+            bool.Or<At<C, X, Y>, At<D, X, Y>>
+          >;
+        }
+      : never;
+  };
+
+  declare const testOr4: test.Describe<
+    test.Expect<
+      Or4<
+        [[false, false], [false, true]],
+        [[false, false], [true, false]],
+        [[false, true], [false, false]],
+        [[false, false], [false, false]]
+      >,
+      [[false, true], [true, true]]
+    >
+  >;
+
+  export type Or5<
+    A extends Grid<boolean>,
+    B extends Grid<boolean>,
+    C extends Grid<boolean>,
+    D extends Grid<boolean>,
+    E extends Grid<boolean>,
+  > = {
+    [Y in keyof A]: A[Y] extends infer IARow extends boolean[]
+      ? {
+          [X in keyof IARow]: bool.Or<
+            bool.Or<IARow[X], At<B, X, Y>>,
+            bool.Or<At<C, X, Y>, bool.Or<At<D, X, Y>, At<E, X, Y>>>
+          >;
+        }
+      : never;
+  };
+
+  declare const testOr5: test.Describe<
+    test.Expect<
+      Or5<
+        [[true, false, false, false, false, false]],
+        [[false, true, false, false, false, false]],
+        [[false, false, true, false, false, false]],
+        [[false, false, false, true, false, false]],
+        [[false, false, false, false, true, false]]
+      >,
+      [[true, true, true, true, true, false]]
+    >
+  >;
+
   export type Xor<A extends Grid<boolean>, B extends Grid<boolean>> = {
     [Y in keyof A]: A[Y] extends infer IARow extends boolean[]
       ? {
@@ -326,4 +384,23 @@ export namespace grid {
       [[false, true], [true, false]]
     >
   >;
+
+  export type Shift<TDir extends vec2.Dir, TGrid extends grid.Grid<any>> = {
+    '<': {
+      [Y in keyof TGrid]: TGrid[Y] extends [infer IFirst, ...infer IRow extends any[]]
+        ? [...IRow, IFirst]
+        : never;
+    };
+    '>': {
+      [Y in keyof TGrid]: TGrid[Y] extends [...infer IRow extends any[], infer ILast]
+        ? [ILast, ...IRow]
+        : never;
+    };
+    '^': TGrid extends [infer IFirst extends any[], ...infer IRows extends any[][]]
+      ? [...IRows, IFirst]
+      : never;
+    v: TGrid extends [...infer IRows extends any[][], infer ILast extends any[]]
+      ? [ILast, ...IRows]
+      : never;
+  }[TDir];
 }
