@@ -130,7 +130,7 @@ type MakeStepGrid<
     : never
   : never;
 
-type Solve1<TGrid extends GridType> = int.Half<grid.Count<MakeStepGrid<TGrid>, true>>;
+type Solve1<TGrid extends GridType> = int.Divide<grid.Count<MakeStepGrid<TGrid>, true>, 2>[0];
 
 type InputGrid = grid.Parse<Input>;
 
