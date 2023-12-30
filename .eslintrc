@@ -5,6 +5,7 @@
   "root": true,
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^test" }]
+    "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^(test|_)" }],
+    "no-undef": "warn"
   }
 }
