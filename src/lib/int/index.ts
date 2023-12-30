@@ -525,19 +525,14 @@ type DigitwiseDivide<
   TResult extends Digit[] = [],
   TMem extends Digit[] = [],
 > = TDividend extends [infer IHead extends Digit, ...infer IRest extends Digit[]]
-  ? [...TMem, IHead] extends infer INextMem extends Digit[]
+  ? TrimLeading0<[...TMem, IHead]> extends infer INextMem extends Digit[]
     ? CountFitDigits<INextMem, TDivisor> extends [
         count: infer ICount extends Digit,
         sum: infer IFit extends Digit[],
       ]
       ? ICount extends 0
         ? DigitwiseDivide<IRest, TDivisor, [...TResult, 0], INextMem>
-        : DigitwiseDivide<
-            IRest,
-            TDivisor,
-            [...TResult, ICount],
-            TrimLeading0<DigitwiseSubtract<INextMem, IFit>>
-          >
+        : DigitwiseDivide<IRest, TDivisor, [...TResult, ICount], DigitwiseSubtract<INextMem, IFit>>
       : never
     : never
   : [result: TrimLeading0<TResult>, remainder: TrimLeading0<TMem>];
@@ -550,6 +545,14 @@ declare const testDigitwiseDivide: test.Describe<
   test.Expect<DigitwiseDivide<[8], [5]>, [result: [1], remainder: [3]]>,
   test.Expect<DigitwiseDivide<[1, 6], [2]>, [result: [8], remainder: [0]]>,
   test.Expect<DigitwiseDivide<[1, 5], [2]>, [result: [7], remainder: [1]]>,
+  test.Expect<DigitwiseDivide<[1, 1], [2]>, [result: [5], remainder: [1]]>,
+  test.Expect<DigitwiseDivide<[2, 3], [2]>, [result: [1, 1], remainder: [1]]>,
+  test.Expect<DigitwiseDivide<[4, 5], [2]>, [result: [2, 2], remainder: [1]]>,
+  test.Expect<DigitwiseDivide<[6, 7], [2]>, [result: [3, 3], remainder: [1]]>,
+  test.Expect<DigitwiseDivide<[1, 6, 7], [2]>, [result: [8, 3], remainder: [1]]>,
+  test.Expect<DigitwiseDivide<[1, 3, 6], [2]>, [result: [6, 8], remainder: [0]]>,
+  test.Expect<DigitwiseDivide<[1, 3, 6, 7], [2]>, [result: [6, 8, 3], remainder: [1]]>,
+  test.Expect<DigitwiseDivide<[1, 3, 6, 7, 6], [2]>, [result: [6, 8, 3, 8], remainder: [0]]>,
   test.Expect<DigitwiseDivide<[1, 0, 0], [1, 0]>, [result: [1, 0], remainder: [0]]>,
   test.Expect<DigitwiseDivide<[1, 0, 5], [1, 0]>, [result: [1, 0], remainder: [5]]>,
   test.Expect<DigitwiseDivide<[1, 2, 3, 4], [5, 6]>, [result: [2, 2], remainder: [2]]>
@@ -582,6 +585,7 @@ declare const testDivide: test.Describe<
   test.Expect<Divide<8, 5>, [result: 1, remainder: 3]>,
   test.Expect<Divide<16, 2>, [result: 8, remainder: 0]>,
   test.Expect<Divide<15, 2>, [result: 7, remainder: 1]>,
+  test.Expect<Divide<13676, 2>, [result: 6838, remainder: 0]>,
   test.Expect<Divide<1, -1>, [result: -1, remainder: 0]>,
   test.Expect<Divide<-1, 1>, [result: -1, remainder: 0]>,
   test.Expect<Divide<-1, -1>, [result: 1, remainder: 0]>,
