@@ -1,7 +1,7 @@
 import { test } from '../test';
-import { Bit, Digit, ToInteger, Integer, FromInteger } from './types';
+import { Bit, Digit, Integer, StrToDigits, DigitsToStr } from './types';
 import { DigitwiseSubtract } from './Subtract';
-import { CompareDigits } from './Compare';
+import { CompareDigits, Compare } from './Compare';
 
 export type DigitAddResult = [carry: Bit, result: Digit];
 
@@ -76,6 +76,45 @@ declare const testDigitwiseAdd: test.Describe<
   test.Expect<DigitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 2, 1]>
 >;
 
+export type DigitwiseStrAdd<
+  TA extends string,
+  TB extends string,
+  TC extends Bit = 0,
+  TResult extends string = '',
+> = TA extends `${infer IARest}${Digit}`
+  ? TA extends `${IARest}${infer IA0 extends Digit}`
+    ? TB extends `${infer IBRest}${Digit}`
+      ? TB extends `${IBRest}${infer IB0 extends Digit}`
+        ? DigitAddMap[TC][IA0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
+          ? DigitwiseStrAdd<IARest, IBRest, IC, `${IR}${TResult}`>
+          : never
+        : never
+      : DigitAddMap[TC][IA0][0] extends [infer IC extends Bit, infer IR extends Digit]
+      ? DigitwiseStrAdd<IARest, '', IC, `${IR}${TResult}`>
+      : never
+    : never
+  : TB extends `${infer IBRest}${Digit}`
+  ? TB extends `${IBRest}${infer IB0 extends Digit}`
+    ? DigitAddMap[TC][0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
+      ? DigitwiseStrAdd<'', IBRest, IC, `${IR}${TResult}`>
+      : never
+    : never
+  : TC extends 1
+  ? `${TC}${TResult}`
+  : TResult;
+
+declare const testDigitwiseStrAdd: test.Describe<
+  test.Expect<DigitwiseStrAdd<'', ''>, ''>,
+  test.Expect<DigitwiseStrAdd<'', '0'>, '0'>,
+  test.Expect<DigitwiseStrAdd<'0', ''>, '0'>,
+  test.Expect<DigitwiseStrAdd<'1', ''>, '1'>,
+  test.Expect<DigitwiseStrAdd<'', '1'>, '1'>,
+  test.Expect<DigitwiseStrAdd<'1', '1'>, '2'>,
+  test.Expect<DigitwiseStrAdd<'10', '101'>, '111'>,
+  test.Expect<DigitwiseStrAdd<'010', '111'>, '121'>,
+  test.Expect<DigitwiseStrAdd<'875', '125'>, '1000'>
+>;
+
 export type AddIntegers<TA extends Integer, TB extends Integer> = {
   '+': {
     '+': Integer<'+', DigitwiseAdd<TA[1], TB[1]>>;
@@ -98,26 +137,36 @@ export type AddIntegers<TA extends Integer, TB extends Integer> = {
 export type Add<
   TA extends number | string,
   TB extends number | string,
-> = ToInteger<TA> extends infer IA extends Integer
-  ? ToInteger<TB> extends infer IB extends Integer
-    ? FromInteger<AddIntegers<IA, IB>>
-    : never
-  : never;
+> = `${TA}` extends `-${infer NA}`
+  ? `${TB}` extends `-${infer NB}`
+    ? `-${DigitwiseStrAdd<NA, NB>}`
+    : {
+        lt: DigitsToStr<DigitwiseSubtract<StrToDigits<`${TB}`>, StrToDigits<NA>>>;
+        eq: '0';
+        gt: `-${DigitsToStr<DigitwiseSubtract<StrToDigits<NA>, StrToDigits<`${TB}`>>>}`;
+      }[Compare<NA, TB>]
+  : `${TB}` extends `-${infer NB}`
+  ? {
+      lt: `-${DigitsToStr<DigitwiseSubtract<StrToDigits<NB>, StrToDigits<`${TA}`>>>}`;
+      eq: '0';
+      gt: DigitsToStr<DigitwiseSubtract<StrToDigits<`${TA}`>, StrToDigits<NB>>>;
+    }[Compare<TA, NB>]
+  : DigitwiseStrAdd<`${TA}`, `${TB}`>;
 
 declare const testAdd: test.Describe<
-  test.Expect<Add<0, 0>, 0>,
-  test.Expect<Add<1, 1>, 2>,
-  test.Expect<Add<0, 1>, 1>,
-  test.Expect<Add<1, 0>, 1>,
-  test.Expect<Add<12, 23>, 35>,
-  test.Expect<Add<875, 125>, 1000>,
-  test.Expect<Add<123, 123>, 246>,
-  test.Expect<Add<'123', 123>, 246>,
-  test.Expect<Add<123, '123'>, 246>,
-  test.Expect<Add<'123', '123'>, 246>,
-  test.Expect<Add<123, -123>, 0>,
-  test.Expect<Add<-123, -123>, -246>,
-  test.Expect<Add<-123, 0>, -123>,
-  test.Expect<Add<0, -123>, -123>,
-  test.Expect<Add<123, 123>, 246>
+  test.Expect<Add<0, 0>, '0'>,
+  test.Expect<Add<1, 1>, '2'>,
+  test.Expect<Add<0, 1>, '1'>,
+  test.Expect<Add<1, 0>, '1'>,
+  test.Expect<Add<12, 23>, '35'>,
+  test.Expect<Add<875, 125>, '1000'>,
+  test.Expect<Add<123, 123>, '246'>,
+  test.Expect<Add<'123', 123>, '246'>,
+  test.Expect<Add<123, '123'>, '246'>,
+  test.Expect<Add<'123', '123'>, '246'>,
+  test.Expect<Add<123, -123>, '0'>,
+  test.Expect<Add<-123, -123>, '-246'>,
+  test.Expect<Add<-123, 0>, '-123'>,
+  test.Expect<Add<0, -123>, '-123'>,
+  test.Expect<Add<123, 123>, '246'>
 >;

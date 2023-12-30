@@ -9,7 +9,7 @@ export type Integer<TSign extends Sign = Sign, TDigits extends Digit[] = Digit[]
   digits: TDigits,
 ];
 
-type StrToDigits<S extends string> = S extends `${infer IChar extends Digit}${infer IRest}`
+export type StrToDigits<S extends string> = S extends `${infer IChar extends Digit}${infer IRest}`
   ? [IChar, ...StrToDigits<IRest>]
   : [];
 
@@ -38,7 +38,7 @@ declare const testToInteger: test.Describe<
   test.Expect<ToInteger<-123>, Integer<'-', [1, 2, 3]>>
 >;
 
-type DigitsToStr<T extends Digit[]> = T extends [
+export type DigitsToStr<T extends Digit[]> = T extends [
   infer IChar extends Digit,
   ...infer IRest extends Digit[],
 ]
