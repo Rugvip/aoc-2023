@@ -1,5 +1,5 @@
 import { test } from './test';
-import { int } from './int';
+import type * as int from './int';
 
 export namespace union {
   export type ToIntersection<U> = (U extends any ? (k: U) => void : never) extends (

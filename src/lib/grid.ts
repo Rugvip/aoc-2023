@@ -1,7 +1,7 @@
 import { strings } from './strings';
 import { array } from './array';
 import { bool } from './bool';
-import { int } from './int';
+import type * as int from './int';
 import { counter } from './counter';
 import { tables } from './tables';
 import { test } from './test';

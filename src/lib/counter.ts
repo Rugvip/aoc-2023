@@ -1,5 +1,5 @@
 import { test } from './test';
-import { int } from './int';
+import type * as int from './int';
 import { tables } from './tables';
 
 /**

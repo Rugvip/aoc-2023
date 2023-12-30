@@ -1,4 +1,4 @@
-import { int } from './int';
+import type * as int from './int';
 import { counter } from './counter';
 import { test } from './test';
 

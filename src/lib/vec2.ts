@@ -1,4 +1,4 @@
-import { int } from './int';
+import type * as int from './int';
 import { test } from './test';
 import { union } from './union';
 
