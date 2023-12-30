@@ -1,6 +1,6 @@
 import { test } from '../test';
 import { Bit, Digit } from './types';
-import { DigitAddMap, DigitwiseStrAdd } from './Add';
+import { DigitAddMap, PositiveAdd } from './Add';
 import { TrimZeroes } from './utils';
 
 type DigitMultiplyResult = [carry: Digit, result: Digit];
@@ -53,7 +53,7 @@ declare const testDigitMultiplyMap: test.Describe<
   test.Expect<DigitMultiplyMap[9][9], [8, 1]>
 >;
 
-type DigitwiseStrMultiplyOne<
+type PositiveMultiplyOne<
   TA extends Digit,
   TB extends string,
   TC extends Digit = 0,
@@ -62,7 +62,7 @@ type DigitwiseStrMultiplyOne<
   ? TB extends `${IBRest}${infer IB0 extends Digit}`
     ? DigitMultiplyMap[TA][IB0] extends [infer IC extends Digit, infer IR extends Digit]
       ? DigitAddMap[0][IR][TC] extends [infer IC2 extends Bit, infer IR2 extends Digit]
-        ? DigitwiseStrMultiplyOne<TA, IBRest, DigitAddMap[IC2][IC][0][1], `${IR2}${TResult}`>
+        ? PositiveMultiplyOne<TA, IBRest, DigitAddMap[IC2][IC][0][1], `${IR2}${TResult}`>
         : never
       : never
     : never
@@ -70,18 +70,18 @@ type DigitwiseStrMultiplyOne<
   ? TResult
   : `${TC}${TResult}`;
 
-type DigitwiseStrMultiply<
+type PositiveMultiply<
   TA extends string,
   TB extends string,
   TPad extends string = '',
   TResult extends string = '0',
 > = TA extends `${infer IARest}${Digit}`
   ? TA extends `${IARest}${infer IA0 extends Digit}`
-    ? DigitwiseStrMultiply<
+    ? PositiveMultiply<
         IARest,
         TB,
         `${TPad}0`,
-        DigitwiseStrAdd<TResult, DigitwiseStrMultiplyOne<IA0, `${TB}${TPad}`>>
+        PositiveAdd<TResult, PositiveMultiplyOne<IA0, `${TB}${TPad}`>>
       >
     : never
   : TrimZeroes<TResult>;
@@ -91,11 +91,11 @@ export type Multiply<
   TB extends number | string,
 > = `${TA}` extends `-${infer NA}`
   ? `${TB}` extends `-${infer NB}`
-    ? DigitwiseStrMultiply<NA, NB>
-    : `-${DigitwiseStrMultiply<NA, `${TB}`>}`
+    ? PositiveMultiply<NA, NB>
+    : `-${PositiveMultiply<NA, `${TB}`>}`
   : `${TB}` extends `-${infer NB}`
-  ? `-${DigitwiseStrMultiply<`${TA}`, NB>}`
-  : DigitwiseStrMultiply<`${TA}`, `${TB}`>;
+  ? `-${PositiveMultiply<`${TA}`, NB>}`
+  : PositiveMultiply<`${TA}`, `${TB}`>;
 
 declare const testMultiply: test.Describe<
   test.Expect<Multiply<0, 0>, '0'>,

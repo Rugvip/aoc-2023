@@ -38,7 +38,7 @@ declare const testDigitSubtractMap: test.Describe<
   test.Expect<DigitSubtractMap[1][9][9], [1, 9]>
 >;
 
-export type DigitwiseStrSubtract<
+export type PositiveSubtract<
   TA extends string,
   TB extends string,
   TC extends Bit = 0,
@@ -48,32 +48,32 @@ export type DigitwiseStrSubtract<
     ? TB extends `${infer IBRest}${Digit}`
       ? TB extends `${IBRest}${infer IB0 extends Digit}`
         ? DigitSubtractMap[TC][IB0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
-          ? DigitwiseStrSubtract<IARest, IBRest, IC, `${IR}${TResult}`>
+          ? PositiveSubtract<IARest, IBRest, IC, `${IR}${TResult}`>
           : never
         : never
       : DigitSubtractMap[TC][0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
-      ? DigitwiseStrSubtract<IARest, '', IC, `${IR}${TResult}`>
+      ? PositiveSubtract<IARest, '', IC, `${IR}${TResult}`>
       : never
     : never
   : TB extends `${infer IBRest}${Digit}`
   ? TB extends `${IBRest}${infer IB0 extends Digit}`
     ? DigitSubtractMap[0][IB0][TC] extends [infer IC extends Bit, infer IR extends Digit]
-      ? DigitwiseStrSubtract<'', IBRest, IC, `${IR}${TResult}`>
+      ? PositiveSubtract<'', IBRest, IC, `${IR}${TResult}`>
       : never
     : never
   : TC extends 1
   ? never // subtraction should always be aligned to not result in a borrow
   : TrimZeroes<TResult>;
 
-declare const testDigitwiseStrSubtract: test.Describe<
-  test.Expect<DigitwiseStrSubtract<'', ''>, ''>,
-  test.Expect<DigitwiseStrSubtract<'', '0'>, '0'>,
-  test.Expect<DigitwiseStrSubtract<'0', ''>, '0'>,
-  test.Expect<DigitwiseStrSubtract<'1', ''>, '1'>,
-  test.Expect<DigitwiseStrSubtract<'', '1'>, never>,
-  test.Expect<DigitwiseStrSubtract<'1', '1'>, '0'>,
-  test.Expect<DigitwiseStrSubtract<'101', '10'>, '91'>,
-  test.Expect<DigitwiseStrSubtract<'100', '99'>, '1'>
+declare const testPositiveSubtract: test.Describe<
+  test.Expect<PositiveSubtract<'', ''>, ''>,
+  test.Expect<PositiveSubtract<'', '0'>, '0'>,
+  test.Expect<PositiveSubtract<'0', ''>, '0'>,
+  test.Expect<PositiveSubtract<'1', ''>, '1'>,
+  test.Expect<PositiveSubtract<'', '1'>, never>,
+  test.Expect<PositiveSubtract<'1', '1'>, '0'>,
+  test.Expect<PositiveSubtract<'101', '10'>, '91'>,
+  test.Expect<PositiveSubtract<'100', '99'>, '1'>
 >;
 
 export type Subtract<TA extends number | string, TB extends number | string> = Add<TA, Negate<TB>>;

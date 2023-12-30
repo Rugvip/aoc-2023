@@ -1,6 +1,6 @@
 import { test } from '../test';
 import { Bit, Digit } from './types';
-import { DigitwiseStrSubtract } from './Subtract';
+import { PositiveSubtract } from './Subtract';
 import { Compare } from './Compare';
 
 export type DigitAddResult = [carry: Bit, result: Digit];
@@ -44,7 +44,7 @@ declare const testDigitAddMap: test.Describe<
   test.Expect<DigitAddMap[1][9][9], [1, 9]>
 >;
 
-export type DigitwiseStrAdd<
+export type PositiveAdd<
   TA extends string,
   TB extends string,
   TC extends Bit = 0,
@@ -54,33 +54,33 @@ export type DigitwiseStrAdd<
     ? TB extends `${infer IBRest}${Digit}`
       ? TB extends `${IBRest}${infer IB0 extends Digit}`
         ? DigitAddMap[TC][IA0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
-          ? DigitwiseStrAdd<IARest, IBRest, IC, `${IR}${TResult}`>
+          ? PositiveAdd<IARest, IBRest, IC, `${IR}${TResult}`>
           : never
         : never
       : DigitAddMap[TC][IA0][0] extends [infer IC extends Bit, infer IR extends Digit]
-      ? DigitwiseStrAdd<IARest, '', IC, `${IR}${TResult}`>
+      ? PositiveAdd<IARest, '', IC, `${IR}${TResult}`>
       : never
     : never
   : TB extends `${infer IBRest}${Digit}`
   ? TB extends `${IBRest}${infer IB0 extends Digit}`
     ? DigitAddMap[TC][0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
-      ? DigitwiseStrAdd<'', IBRest, IC, `${IR}${TResult}`>
+      ? PositiveAdd<'', IBRest, IC, `${IR}${TResult}`>
       : never
     : never
   : TC extends 1
   ? `${TC}${TResult}`
   : TResult;
 
-declare const testDigitwiseStrAdd: test.Describe<
-  test.Expect<DigitwiseStrAdd<'', ''>, ''>,
-  test.Expect<DigitwiseStrAdd<'', '0'>, '0'>,
-  test.Expect<DigitwiseStrAdd<'0', ''>, '0'>,
-  test.Expect<DigitwiseStrAdd<'1', ''>, '1'>,
-  test.Expect<DigitwiseStrAdd<'', '1'>, '1'>,
-  test.Expect<DigitwiseStrAdd<'1', '1'>, '2'>,
-  test.Expect<DigitwiseStrAdd<'10', '101'>, '111'>,
-  test.Expect<DigitwiseStrAdd<'010', '111'>, '121'>,
-  test.Expect<DigitwiseStrAdd<'875', '125'>, '1000'>
+declare const testPositiveAdd: test.Describe<
+  test.Expect<PositiveAdd<'', ''>, ''>,
+  test.Expect<PositiveAdd<'', '0'>, '0'>,
+  test.Expect<PositiveAdd<'0', ''>, '0'>,
+  test.Expect<PositiveAdd<'1', ''>, '1'>,
+  test.Expect<PositiveAdd<'', '1'>, '1'>,
+  test.Expect<PositiveAdd<'1', '1'>, '2'>,
+  test.Expect<PositiveAdd<'10', '101'>, '111'>,
+  test.Expect<PositiveAdd<'010', '111'>, '121'>,
+  test.Expect<PositiveAdd<'875', '125'>, '1000'>
 >;
 
 export type Add<
@@ -88,19 +88,19 @@ export type Add<
   TB extends number | string,
 > = `${TA}` extends `-${infer NA}`
   ? `${TB}` extends `-${infer NB}`
-    ? `-${DigitwiseStrAdd<NA, NB>}`
+    ? `-${PositiveAdd<NA, NB>}`
     : {
-        lt: DigitwiseStrSubtract<`${TB}`, NA>;
+        lt: PositiveSubtract<`${TB}`, NA>;
         eq: '0';
-        gt: `-${DigitwiseStrSubtract<NA, `${TB}`>}`;
+        gt: `-${PositiveSubtract<NA, `${TB}`>}`;
       }[Compare<NA, TB>]
   : `${TB}` extends `-${infer NB}`
   ? {
-      lt: `-${DigitwiseStrSubtract<NB, `${TA}`>}`;
+      lt: `-${PositiveSubtract<NB, `${TA}`>}`;
       eq: '0';
-      gt: DigitwiseStrSubtract<`${TA}`, NB>;
+      gt: PositiveSubtract<`${TA}`, NB>;
     }[Compare<TA, NB>]
-  : DigitwiseStrAdd<`${TA}`, `${TB}`>;
+  : PositiveAdd<`${TA}`, `${TB}`>;
 
 declare const testAdd: test.Describe<
   test.Expect<Add<0, 0>, '0'>,
