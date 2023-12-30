@@ -56,7 +56,11 @@ export namespace counter {
         : Counter<tables.Dec[O], H>
       : never;
 
-  type Pad0<T extends number> = `${T}` extends `${number}${number}` ? `${T}` : `00${T}`;
+  type Pad0<T extends number> = `${T}` extends `${number}${number}${number}`
+    ? `${T}`
+    : `${T}` extends `${number}${number}`
+    ? `0${T}`
+    : `00${T}`;
 
   export type Zero = Counter<0, 0>;
   export type Done = Dec<Zero>;
@@ -81,6 +85,10 @@ export namespace counter {
     test.Expect<Value<Make<10>>, 10>,
     test.Expect<Value<Make<100>>, 100>,
     test.Expect<Value<Make<1000>>, 1000>,
+    test.Expect<Value<Make<101>>, 101>,
+    test.Expect<Value<Make<1001>>, 1001>,
+    test.Expect<Value<Make<1010>>, 1010>,
+    test.Expect<Value<Make<1100>>, 1100>,
     test.Expect<Value<Make<10000>>, 10000>,
     test.Expect<Value<Make<100000>>, 100000>,
     test.Expect<Value<Dec<Make<10>>>, 9>,
