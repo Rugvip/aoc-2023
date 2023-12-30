@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 import { Digit, Integer, ToInteger } from './types';
 
 type CompareResult = 'lt' | 'eq' | 'gt';

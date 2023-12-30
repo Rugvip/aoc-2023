@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 import { Bit, Digit, ToInteger, Integer, FromInteger } from './types';
 import { DigitwiseAdd, DigitAddMap } from './Add';
 

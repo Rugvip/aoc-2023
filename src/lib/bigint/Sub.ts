@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 import { Bit, Digit } from './types';
 import { TrimZeroes } from './utils';
 import { Compare } from './Compare';

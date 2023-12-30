@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 import { Digit } from './types';
 import { DigitAddMap, PositiveAdd } from './Add';
 import { TrimZeroes } from './utils';

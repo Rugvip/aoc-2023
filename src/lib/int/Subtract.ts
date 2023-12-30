@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 import { Bit, Digit, ToInteger, Integer, FromInteger } from './types';
 import { AddIntegers, DigitAddResult, FirstDigitAddResultRow } from './Add';
 

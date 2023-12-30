@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 import { Bit, Digit } from './types';
 import { PositiveSub } from './Sub';
 import { Compare } from './Compare';

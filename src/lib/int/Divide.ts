@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 import { CompareDigits } from './Compare';
 import { Digit, Integer, ToInteger, FromInteger, TrimLeading0 } from './types';
 import { DigitwiseAdd } from './Add';

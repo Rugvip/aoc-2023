@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 import { AddIntegers } from './Add';
 import { Integer, ToInteger, FromInteger } from './types';
 

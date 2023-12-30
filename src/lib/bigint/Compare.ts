@@ -1,4 +1,4 @@
-import { test } from '../test';
+import * as test from '../test';
 
 type CompareResult = 'lt' | 'eq' | 'gt';
 type FlipCompareResult<T extends CompareResult> = T extends 'lt'
