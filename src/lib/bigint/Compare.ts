@@ -1,5 +1,4 @@
 import { test } from '../test';
-import { Digit } from './types';
 
 type CompareResult = 'lt' | 'eq' | 'gt';
 type FlipCompareResult<T extends CompareResult> = T extends 'lt'
@@ -7,24 +6,6 @@ type FlipCompareResult<T extends CompareResult> = T extends 'lt'
   : T extends 'gt'
   ? 'lt'
   : 'eq';
-
-type CompareSameLengthDigits<TA extends Digit[], TB extends Digit[]> = [TA, TB] extends [
-  [infer IAHead extends Digit, ...infer IARest extends Digit[]],
-  [infer IBHead extends Digit, ...infer IBRest extends Digit[]],
-]
-  ? IAHead extends IBHead
-    ? CompareDigits<IARest, IBRest>
-    : '0123456789' extends `${string}${IAHead}${string}${IBHead}${string}`
-    ? 'lt'
-    : 'gt'
-  : 'eq';
-
-export type CompareDigits<
-  TA extends Digit[],
-  TB extends Digit[],
-> = TA['length'] extends TB['length']
-  ? CompareSameLengthDigits<TA, TB>
-  : Compare<TA['length'], TB['length']>;
 
 type CompareSameLengthRevStrDigits<
   TA extends string,

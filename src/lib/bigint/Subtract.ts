@@ -38,38 +38,6 @@ declare const testDigitSubtractMap: test.Describe<
   test.Expect<DigitSubtractMap[1][9][9], [1, 9]>
 >;
 
-export type DigitwiseSubtract<
-  TA extends Digit[],
-  TB extends Digit[],
-  TC extends Bit = 0,
-  TResult extends Digit[] = [],
-> = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
-  ? TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-    ? DigitSubtractMap[TC][IB0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
-      ? DigitwiseSubtract<IARest, IBRest, IC, [IR, ...TResult]>
-      : never
-    : DigitSubtractMap[TC][0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
-    ? DigitwiseSubtract<IARest, [], IC, [IR, ...TResult]>
-    : never
-  : TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-  ? DigitSubtractMap[0][IB0][TC] extends [infer IC extends Bit, infer IR extends Digit]
-    ? DigitwiseSubtract<[], IBRest, IC, [IR, ...TResult]>
-    : never
-  : TC extends 1
-  ? never // subtraction should always be aligned to not result in a borrow
-  : TResult;
-
-declare const testSubtractDigits: test.Describe<
-  test.Expect<DigitwiseSubtract<[], []>, []>,
-  test.Expect<DigitwiseSubtract<[], [0]>, [0]>,
-  test.Expect<DigitwiseSubtract<[0], []>, [0]>,
-  test.Expect<DigitwiseSubtract<[1], []>, [1]>,
-  test.Expect<DigitwiseSubtract<[], [1]>, never>,
-  test.Expect<DigitwiseSubtract<[1], [1]>, [0]>,
-  test.Expect<DigitwiseSubtract<[1, 0, 1], [1, 0]>, [0, 9, 1]>,
-  test.Expect<DigitwiseSubtract<[1, 0, 0], [9, 9]>, [0, 0, 1]>
->;
-
 export type DigitwiseStrSubtract<
   TA extends string,
   TB extends string,

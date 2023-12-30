@@ -1,7 +1,7 @@
 import { test } from '../test';
-import { Bit, Digit, Integer } from './types';
-import { DigitwiseStrSubtract, DigitwiseSubtract } from './Subtract';
-import { CompareDigits, Compare } from './Compare';
+import { Bit, Digit } from './types';
+import { DigitwiseStrSubtract } from './Subtract';
+import { Compare } from './Compare';
 
 export type DigitAddResult = [carry: Bit, result: Digit];
 
@@ -44,38 +44,6 @@ declare const testDigitAddMap: test.Describe<
   test.Expect<DigitAddMap[1][9][9], [1, 9]>
 >;
 
-export type DigitwiseAdd<
-  TA extends Digit[],
-  TB extends Digit[],
-  TC extends Bit = 0,
-  TResult extends Digit[] = [],
-> = TA extends [...infer IARest extends Digit[], infer IA0 extends Digit]
-  ? TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-    ? DigitAddMap[TC][IA0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
-      ? DigitwiseAdd<IARest, IBRest, IC, [IR, ...TResult]>
-      : never
-    : DigitAddMap[TC][IA0][0] extends [infer IC extends Bit, infer IR extends Digit]
-    ? DigitwiseAdd<IARest, [], IC, [IR, ...TResult]>
-    : never
-  : TB extends [...infer IBRest extends Digit[], infer IB0 extends Digit]
-  ? DigitAddMap[TC][0][IB0] extends [infer IC extends Bit, infer IR extends Digit]
-    ? DigitwiseAdd<[], IBRest, IC, [IR, ...TResult]>
-    : never
-  : TC extends 1
-  ? [TC, ...TResult]
-  : TResult;
-
-declare const testDigitwiseAdd: test.Describe<
-  test.Expect<DigitwiseAdd<[], []>, []>,
-  test.Expect<DigitwiseAdd<[], [0]>, [0]>,
-  test.Expect<DigitwiseAdd<[0], []>, [0]>,
-  test.Expect<DigitwiseAdd<[1], []>, [1]>,
-  test.Expect<DigitwiseAdd<[], [1]>, [1]>,
-  test.Expect<DigitwiseAdd<[1], [1]>, [2]>,
-  test.Expect<DigitwiseAdd<[1, 0], [1, 0, 1]>, [1, 1, 1]>,
-  test.Expect<DigitwiseAdd<[0, 1, 0], [1, 1, 1]>, [1, 2, 1]>
->;
-
 export type DigitwiseStrAdd<
   TA extends string,
   TB extends string,
@@ -114,25 +82,6 @@ declare const testDigitwiseStrAdd: test.Describe<
   test.Expect<DigitwiseStrAdd<'010', '111'>, '121'>,
   test.Expect<DigitwiseStrAdd<'875', '125'>, '1000'>
 >;
-
-export type AddIntegers<TA extends Integer, TB extends Integer> = {
-  '+': {
-    '+': Integer<'+', DigitwiseAdd<TA[1], TB[1]>>;
-    '-': {
-      lt: Integer<'-', DigitwiseSubtract<TB[1], TA[1]>>;
-      eq: Integer<'+', [0]>;
-      gt: Integer<'+', DigitwiseSubtract<TA[1], TB[1]>>;
-    }[CompareDigits<TA[1], TB[1]>];
-  };
-  '-': {
-    '+': {
-      lt: Integer<'+', DigitwiseSubtract<TB[1], TA[1]>>;
-      eq: Integer<'+', [0]>;
-      gt: Integer<'-', DigitwiseSubtract<TA[1], TB[1]>>;
-    }[CompareDigits<TA[1], TB[1]>];
-    '-': Integer<'-', DigitwiseAdd<TA[1], TB[1]>>;
-  };
-}[TA[0]][TB[0]];
 
 export type Add<
   TA extends number | string,
