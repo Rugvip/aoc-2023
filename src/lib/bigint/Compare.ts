@@ -1,5 +1,5 @@
 import { test } from '../test';
-import { Digit, Integer, ToInteger } from './types';
+import { Digit } from './types';
 
 type CompareResult = 'lt' | 'eq' | 'gt';
 type FlipCompareResult<T extends CompareResult> = T extends 'lt'
@@ -26,20 +26,42 @@ export type CompareDigits<
   ? CompareSameLengthDigits<TA, TB>
   : Compare<TA['length'], TB['length']>;
 
-type CompareIntegers<TA extends Integer, TB extends Integer> = TA[0] extends TB[0]
-  ? CompareDigits<TA[1], TB[1]> extends infer IResult extends CompareResult
-    ? TA[0] extends '-'
-      ? FlipCompareResult<IResult>
-      : IResult
-    : never
-  : TA[0] extends '-'
-  ? 'lt'
-  : 'gt';
+type CompareSameLengthRevStrDigits<
+  TA extends string,
+  TB extends string,
+> = TA extends `${infer IAHead}${infer IARest}`
+  ? TB extends `${infer IBHead}${infer IBRest}`
+    ? IAHead extends IBHead
+      ? CompareSameLengthRevStrDigits<IARest, IBRest>
+      : '0123456789' extends `${string}${IAHead}${string}${IBHead}${string}`
+      ? 'lt'
+      : 'gt'
+    : 'eq'
+  : 'eq';
 
-export type Compare<TA extends number, TB extends number> = CompareIntegers<
-  ToInteger<TA>,
-  ToInteger<TB>
->;
+type CompareStr<
+  TA extends string,
+  TB extends string,
+  RA extends string = TA,
+  RB extends string = TB,
+> = RA extends `${string}${infer IARest}`
+  ? RB extends `${string}${infer IBRest}`
+    ? CompareStr<TA, TB, IARest, IBRest>
+    : 'gt'
+  : RB extends `${infer _}${string}`
+  ? 'lt'
+  : CompareSameLengthRevStrDigits<TA, TB>;
+
+export type Compare<
+  TA extends number | string,
+  TB extends number | string,
+> = `${TA}` extends `-${infer NA}`
+  ? `${TB}` extends `-${infer NB}`
+    ? FlipCompareResult<CompareStr<NA, NB>>
+    : 'lt'
+  : `${TB}` extends `-${string}`
+  ? 'gt'
+  : CompareStr<`${TA}`, `${TB}`>;
 
 declare const testCompare: test.Describe<
   test.Expect<Compare<5, 8>, 'lt'>,
