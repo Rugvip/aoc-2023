@@ -1,5 +1,5 @@
 import { test } from '../test';
-import { Add, AddIntegers } from './Add';
+import { AddIntegers } from './Add';
 
 export type { Compare, Min, Max } from './Compare';
 export type { Divide } from './Divide';
@@ -87,23 +87,6 @@ declare const testFromInteger: test.Describe<
   test.Expect<FromInteger<Integer<'-', [0]>>, 0>,
   test.Expect<FromInteger<Integer<'-', [1]>>, -1>,
   test.Expect<FromInteger<Integer<'-', [1, 2, 3]>>, -123>
->;
-
-export type Sum<TN extends number[]> = TN extends [
-  infer IHead extends number,
-  ...infer IRest extends number[],
-]
-  ? Add<IHead, Sum<IRest>>
-  : 0;
-
-declare const testSum: test.Describe<
-  test.Expect<Sum<[]>, 0>,
-  test.Expect<Sum<[0]>, 0>,
-  test.Expect<Sum<[0, 0]>, 0>,
-  test.Expect<Sum<[1]>, 1>,
-  test.Expect<Sum<[99]>, 99>,
-  test.Expect<Sum<[1, 1, 1, 1, 1, 1]>, 6>,
-  test.Expect<Sum<[-1, 1]>, 0>
 >;
 
 export type Inc<TA extends number | string> = ToInteger<TA> extends infer IA extends Integer
