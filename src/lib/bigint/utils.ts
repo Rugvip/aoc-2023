@@ -1,8 +1,8 @@
 import { test } from '../test';
 import { Add } from './Add';
 
-export type Negate<T extends string | number> = T extends 0
-  ? 0
+export type Negate<T extends string | number> = `${T}` extends '0'
+  ? '0'
   : `${T}` extends `-${infer N}`
   ? N
   : `-${T}` extends `${infer N}`
