@@ -111,7 +111,7 @@ type StrToDigits<S extends string> = S extends `${infer IChar extends Digit}${in
   ? [IChar, ...StrToDigits<IRest>]
   : [];
 
-type TrimLeading0<T extends Digit[]> = T extends [0, ...infer IRest extends Digit[]]
+export type TrimLeading0<T extends Digit[]> = T extends [0, ...infer IRest extends Digit[]]
   ? TrimLeading0<IRest>
   : T extends []
   ? [0]
