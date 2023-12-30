@@ -1,6 +1,6 @@
 import { test } from '../test';
-import { Bit, Digit, Integer, StrToDigits, DigitsToStr } from './types';
-import { DigitwiseSubtract } from './Subtract';
+import { Bit, Digit, Integer } from './types';
+import { DigitwiseStrSubtract, DigitwiseSubtract } from './Subtract';
 import { CompareDigits, Compare } from './Compare';
 
 export type DigitAddResult = [carry: Bit, result: Digit];
@@ -141,15 +141,15 @@ export type Add<
   ? `${TB}` extends `-${infer NB}`
     ? `-${DigitwiseStrAdd<NA, NB>}`
     : {
-        lt: DigitsToStr<DigitwiseSubtract<StrToDigits<`${TB}`>, StrToDigits<NA>>>;
+        lt: DigitwiseStrSubtract<`${TB}`, NA>;
         eq: '0';
-        gt: `-${DigitsToStr<DigitwiseSubtract<StrToDigits<NA>, StrToDigits<`${TB}`>>>}`;
+        gt: `-${DigitwiseStrSubtract<NA, `${TB}`>}`;
       }[Compare<NA, TB>]
   : `${TB}` extends `-${infer NB}`
   ? {
-      lt: `-${DigitsToStr<DigitwiseSubtract<StrToDigits<NB>, StrToDigits<`${TA}`>>>}`;
+      lt: `-${DigitwiseStrSubtract<NB, `${TA}`>}`;
       eq: '0';
-      gt: DigitsToStr<DigitwiseSubtract<StrToDigits<`${TA}`>, StrToDigits<NB>>>;
+      gt: DigitwiseStrSubtract<`${TA}`, NB>;
     }[Compare<TA, NB>]
   : DigitwiseStrAdd<`${TA}`, `${TB}`>;
 

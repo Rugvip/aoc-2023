@@ -2,11 +2,11 @@ import { test } from '../test';
 import { AddIntegers } from './Add';
 import { Integer, ToInteger, FromInteger } from './types';
 
-export type Negate<T extends number> = T extends 0
+export type Negate<T extends number | string> = T extends 0
   ? 0
-  : `${T}` extends `-${infer N extends number}`
+  : `${T}` extends `-${infer N}`
   ? N
-  : `-${T}` extends `${infer N extends number}`
+  : `-${T}` extends `${infer N}`
   ? N
   : never;
 
@@ -45,3 +45,9 @@ declare const testDec: test.Describe<
   test.Expect<Dec<1>, 0>,
   test.Expect<Dec<1000000>, 999999>
 >;
+
+export type TrimZeroes<S extends string> = S extends '0'
+  ? S
+  : S extends `0${infer I}`
+  ? TrimZeroes<I>
+  : S;

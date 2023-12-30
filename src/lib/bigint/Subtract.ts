@@ -1,6 +1,7 @@
 import { test } from '../test';
-import { Bit, Digit, ToInteger, Integer, FromInteger } from './types';
-import { AddIntegers, DigitAddResult, FirstDigitAddResultRow } from './Add';
+import { Bit, Digit } from './types';
+import { Negate, TrimZeroes } from './utils';
+import { Add, DigitAddResult, FirstDigitAddResultRow } from './Add';
 
 type RotateDigitAddResultRowRight<T extends DigitAddResult[]> = T extends [
   ...infer IRest extends DigitAddResult[],
@@ -69,29 +70,60 @@ declare const testSubtractDigits: test.Describe<
   test.Expect<DigitwiseSubtract<[1, 0, 0], [9, 9]>, [0, 0, 1]>
 >;
 
-export type Subtract<
-  TA extends number | string,
-  TB extends number | string,
-> = ToInteger<TA> extends infer IA extends Integer
-  ? ToInteger<TB> extends infer IB extends Integer
-    ? FromInteger<AddIntegers<IA, Integer<IB[0] extends '+' ? '-' : '+', IB[1]>>>
+export type DigitwiseStrSubtract<
+  TA extends string,
+  TB extends string,
+  TC extends Bit = 0,
+  TResult extends string = '',
+> = TA extends `${infer IARest}${Digit}`
+  ? TA extends `${IARest}${infer IA0 extends Digit}`
+    ? TB extends `${infer IBRest}${Digit}`
+      ? TB extends `${IBRest}${infer IB0 extends Digit}`
+        ? DigitSubtractMap[TC][IB0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
+          ? DigitwiseStrSubtract<IARest, IBRest, IC, `${IR}${TResult}`>
+          : never
+        : never
+      : DigitSubtractMap[TC][0][IA0] extends [infer IC extends Bit, infer IR extends Digit]
+      ? DigitwiseStrSubtract<IARest, '', IC, `${IR}${TResult}`>
+      : never
     : never
-  : never;
+  : TB extends `${infer IBRest}${Digit}`
+  ? TB extends `${IBRest}${infer IB0 extends Digit}`
+    ? DigitSubtractMap[0][IB0][TC] extends [infer IC extends Bit, infer IR extends Digit]
+      ? DigitwiseStrSubtract<'', IBRest, IC, `${IR}${TResult}`>
+      : never
+    : never
+  : TC extends 1
+  ? never // subtraction should always be aligned to not result in a borrow
+  : TrimZeroes<TResult>;
+
+declare const testDigitwiseStrSubtract: test.Describe<
+  test.Expect<DigitwiseStrSubtract<'', ''>, ''>,
+  test.Expect<DigitwiseStrSubtract<'', '0'>, '0'>,
+  test.Expect<DigitwiseStrSubtract<'0', ''>, '0'>,
+  test.Expect<DigitwiseStrSubtract<'1', ''>, '1'>,
+  test.Expect<DigitwiseStrSubtract<'', '1'>, never>,
+  test.Expect<DigitwiseStrSubtract<'1', '1'>, '0'>,
+  test.Expect<DigitwiseStrSubtract<'101', '10'>, '91'>,
+  test.Expect<DigitwiseStrSubtract<'100', '99'>, '1'>
+>;
+
+export type Subtract<TA extends number | string, TB extends number | string> = Add<TA, Negate<TB>>;
 
 declare const testSubtract: test.Describe<
-  test.Expect<Subtract<0, 0>, 0>,
-  test.Expect<Subtract<0, 1>, -1>,
-  test.Expect<Subtract<1, 0>, 1>,
-  test.Expect<Subtract<1, 1>, 0>,
-  test.Expect<Subtract<-1, 1>, -2>,
-  test.Expect<Subtract<1, -1>, 2>,
-  test.Expect<Subtract<-1, -1>, 0>,
-  test.Expect<Subtract<0, 100>, -100>,
-  test.Expect<Subtract<200, 100>, 100>,
-  test.Expect<Subtract<1000, 200>, 800>,
-  test.Expect<Subtract<123, 456>, -333>,
-  test.Expect<Subtract<123, -456>, 579>,
-  test.Expect<Subtract<123, -123>, 246>,
-  test.Expect<Subtract<101, 10>, 91>,
-  test.Expect<Subtract<100, 99>, 1>
+  test.Expect<Subtract<0, 0>, '0'>,
+  test.Expect<Subtract<0, 1>, '-1'>,
+  test.Expect<Subtract<1, 0>, '1'>,
+  test.Expect<Subtract<1, 1>, '0'>,
+  test.Expect<Subtract<-1, 1>, '-2'>,
+  test.Expect<Subtract<1, -1>, '2'>,
+  test.Expect<Subtract<-1, -1>, '0'>,
+  test.Expect<Subtract<0, 100>, '-100'>,
+  test.Expect<Subtract<200, 100>, '100'>,
+  test.Expect<Subtract<1000, 200>, '800'>,
+  test.Expect<Subtract<123, 456>, '-333'>,
+  test.Expect<Subtract<123, -456>, '579'>,
+  test.Expect<Subtract<123, -123>, '246'>,
+  test.Expect<Subtract<101, 10>, '91'>,
+  test.Expect<Subtract<100, 99>, '1'>
 >;
