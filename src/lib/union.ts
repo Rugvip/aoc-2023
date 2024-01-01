@@ -1,5 +1,5 @@
 import * as test from './test';
-import * as int from './int';
+import * as bigint from './bigint';
 import * as union from './union';
 
 export type ToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
@@ -46,10 +46,10 @@ declare const testToArray: test.Describe<
 
 type RangeImpl<TA extends number, TLen extends number> = TLen extends 0
   ? never
-  : TA | RangeImpl<int.Inc<TA>, int.Dec<TLen>>;
-export type Range<TA extends number, TB extends number> = int.Compare<TA, TB> extends 'gt'
+  : TA | RangeImpl<bigint.Inc<TA>, bigint.Dec<TLen>>;
+export type Range<TA extends number, TB extends number> = bigint.Compare<TA, TB> extends 'gt'
   ? Range<TB, TA>
-  : RangeImpl<TA, int.Inc<int.Subtract<TB, TA>>>;
+  : RangeImpl<TA, bigint.Inc<bigint.Subtract<TB, TA>>>;
 
 declare const testRange: test.Describe<
   test.Expect<Range<0, 0>, 0>,
@@ -72,7 +72,7 @@ type MinMax<
       TOp,
       undefined extends TCurrent
         ? INext
-        : int.Compare<INext, TCurrent & number> extends TOp
+        : bigint.Compare<INext, TCurrent & number> extends TOp
         ? INext
         : TCurrent
     >
@@ -92,3 +92,14 @@ declare const testMax: test.Describe<
   test.Expect<Max<-5 | -12345 | 123456 | 123>, 123456>,
   test.Expect<Max<0>, 0>
 >;
+
+export type Sum<
+  N extends number | string,
+  TSum extends string = '0',
+  TPop = union.Pop<N>,
+> = TPop extends {
+  rest: infer IRest extends number | string;
+  next: infer INext extends number | string;
+}
+  ? Sum<IRest, bigint.Add<TSum, INext>>
+  : TSum;
