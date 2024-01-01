@@ -136,7 +136,7 @@ function main(command, pathArg, ...args) {
   if (command === 'sum') {
     sumExports(filePath, ...args);
   } else {
-    printExports(filePath, ...args);
+    printExports(filePath, pathArg, ...args);
   }
 }
 
