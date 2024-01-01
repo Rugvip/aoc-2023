@@ -1,5 +1,5 @@
 import { Input } from '../input/24';
-import { counter, bigint, strings } from './lib';
+import { array, counter, bigint, strings } from './lib';
 
 // type Input1 = `19, 13, 30 @ -2, 1, -2
 // 18, 19, 22 @ -1, -1, -2
@@ -104,3 +104,36 @@ export declare const solution1_75: Solve<Input, 75, 110>;
 export declare const solution1_110: Solve<Input, 110, 150>;
 export declare const solution1_150: Solve<Input, 150, 200>;
 export declare const solution1_200: Solve<Input, 200>;
+
+type PrimeSieveFilter<TArr extends (number | null)[], N extends number | null> = {
+  [K in keyof TArr]: TArr[K] extends null
+    ? null
+    : TArr[K] extends N
+    ? N
+    : bigint.Div<TArr[K], N>[1] extends '0' // Faster than the actual sieve since we don't have array assignment
+    ? null
+    : TArr[K];
+};
+
+type PrimeSieve<
+  TArr extends (number | null)[] = array.MakeCount<398, 2>,
+  TCounter extends counter.Counter = counter.Zero,
+> = counter.Value<TCounter> extends TArr['length']
+  ? TArr
+  : PrimeSieve<
+      TArr[counter.Value<TCounter>] extends null
+        ? TArr
+        : PrimeSieveFilter<TArr, TArr[counter.Value<TCounter>]>,
+      counter.Inc<TCounter>
+    >;
+
+type InterestingPrimes = array.DropN<array.Remove<PrimeSieve, null>, 15>;
+
+type InterestingFactors<TBigN extends string> =
+  InterestingPrimes[number] extends infer IPrime extends number
+    ? IPrime extends any
+      ? bigint.Div<TBigN, IPrime>[1] extends '0'
+        ? IPrime
+        : never
+      : never
+    : never;
