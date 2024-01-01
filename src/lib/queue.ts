@@ -1,3 +1,5 @@
+import * as test from './test';
+
 type IncTable<TTable extends number[] = []> = TTable['length'] extends 100
   ? TTable
   : IncTable<[...TTable, [...TTable, any]['length']]>;
@@ -11,10 +13,10 @@ export type Empty = '' | 0 | [];
 
 export type Pop<T extends Queue> = '' extends T
   ? (T extends string[] ? T : never) extends [
-      infer IHead extends string,
+      `${infer ICount extends number}|${infer IHead extends string}`,
       ...infer IRest extends string[],
     ]
-    ? Pop<100 | IHead | IRest>
+    ? Pop<ICount | IHead | IRest>
     : undefined
   : [
       head: T extends `${infer IHead};${string}` ? IHead : never,
@@ -24,8 +26,28 @@ export type Pop<T extends Queue> = '' extends T
         | (T extends string[] ? T : never),
     ];
 
+declare const testPop: test.Describe<
+  test.Expect<Pop<Empty>, undefined>,
+  test.Expect<Pop<Push<Empty, 'test'>>, [item: 'test', rest: Empty]>,
+  test.Expect<Pop<3 | 'a;b;c;' | []>, [item: 'a', rest: 2 | 'b;c;' | []]>,
+  test.Expect<Pop<0 | '' | ['2|a;b;']>, [item: 'a', rest: 1 | 'b;' | []]>
+>;
+
 export type Push<T extends Queue, TItem extends string> = IncTable[T extends number
   ? T
   : never] extends infer INextCount extends number
   ? INextCount | `${T extends string ? T : never}${TItem};` | (T extends string[] ? T : never)
-  : `${TItem};` | 1 | [T extends string ? T : never, ...(T extends string[] ? T : never)];
+  :
+      | `${TItem};`
+      | 1
+      | [
+          `${T extends number ? T : never}|${T extends string ? T : never}`,
+          ...(T extends string[] ? T : never),
+        ];
+
+declare const testPush: test.Describe<
+  test.Expect<Push<Empty, 'test'>, 1 | 'test;' | []>,
+  test.Expect<Push<1 | 'a;' | [], 'test'>, 2 | 'a;test;' | []>,
+  test.Expect<Push<99 | 'a;' | [], 'test'>, 100 | 'a;test;' | []>,
+  test.Expect<Push<100 | 'a;' | [], 'test'>, 1 | 'test;' | ['100|a;']>
+>;
