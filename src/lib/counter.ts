@@ -42,6 +42,8 @@ export type Make<N extends number = 0> = N extends 0
     : Counter<int.FromInteger<int.Integer<'+', D>>, 0>
   : never;
 
+export type For<TArr extends any[]> = Dec<Make<TArr['length']>>;
+
 export type Inc<TCounter extends Counter> =
   TCounter extends `${infer H extends number},${infer O extends number}`
     ? O extends 999
