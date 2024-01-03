@@ -29,6 +29,22 @@ declare const testBulkAdd: test.Describe<
   >
 >;
 
+export type RemoveValues<TMap extends Map, UValues extends string> = TMap extends any
+  ? TMap extends [infer IKey, infer IItems extends string]
+    ? [IKey, IItems extends UValues ? never : IItems]
+    : never
+  : never;
+
+declare const testBulkRemoveValues: test.Describe<
+  test.Expect<RemoveValues<Empty, never>, never>,
+  test.Expect<RemoveValues<['1', 'a'], 'a'>, ['1', never]>,
+  test.Expect<RemoveValues<['1', 'a' | 'b'], 'a'>, ['1', 'b']>,
+  test.Expect<
+    RemoveValues<['1', 'a' | 'b'] | ['2', 'a'] | ['3', 'c'], 'a'>,
+    ['1', 'b'] | ['2', never] | ['3', 'c']
+  >
+>;
+
 export type Add<TMap extends Map, TKey extends string, TValue extends string> = [
   TKey,
   any,
