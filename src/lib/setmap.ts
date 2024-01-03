@@ -69,13 +69,13 @@ export type Get<TMap extends Map, TKey extends string> = [TKey, any] extends TMa
   ? TMap extends [TKey, infer IItems extends string]
     ? IItems
     : never
-  : null;
+  : never;
 
 declare const testGet: test.Describe<
-  test.Expect<Get<Empty, '1'>, null>,
+  test.Expect<Get<Empty, '1'>, never>,
   test.Expect<Get<['1', 'a'], '1'>, 'a'>,
   test.Expect<Get<['1', 'a' | 'b'], '1'>, 'a' | 'b'>,
-  test.Expect<Get<['1', 'a' | 'b'], '2'>, null>,
+  test.Expect<Get<['1', 'a' | 'b'], '2'>, never>,
   test.Expect<Get<['1', 'a' | 'b'] | ['2', 'c'], '1'>, 'a' | 'b'>,
   test.Expect<Get<['1', 'a' | 'b'] | ['2', 'c'], '2'>, 'c'>
 >;
