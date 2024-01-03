@@ -7,6 +7,7 @@ export type * as bigint from './bigint';
 export type * as objects from './objects';
 export type * as parser from './parser';
 export type * as queue from './queue';
+export type * as setmap from './setmap';
 export type * as strings from './strings';
 export type * as tables from './tables';
 export type * as test from './test';
