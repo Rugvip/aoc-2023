@@ -90,3 +90,48 @@ declare const testRemove: test.Describe<
   test.Expect<Remove<['1', 'a' | 'b'] | ['2', 'c'], '1'>, ['2', 'c']>,
   test.Expect<Remove<['1', 'a' | 'b'] | ['2', 'c'], '2'>, ['1', 'a' | 'b']>
 >;
+
+export type Merge<A extends Map, B extends Map> = [A] extends [never]
+  ? B
+  : A extends [infer AKey, infer AItems]
+  ? [AKey, any] extends B
+    ? B extends [AKey, infer BItems]
+      ? [AKey, AItems | BItems]
+      : B
+    : A
+  : never;
+
+declare const testMerge: test.Describe<
+  test.Expect<Merge<Empty, Empty>, Empty>,
+  test.Expect<Merge<['1', 'a'], Empty>, ['1', 'a']>,
+  test.Expect<Merge<Empty, ['1', 'a']>, ['1', 'a']>,
+  test.Expect<Merge<['1', 'a'], ['1', 'b']>, ['1', 'a' | 'b']>,
+  test.Expect<Merge<['1', 'a' | 'b'], ['1', 'b' | 'c']>, ['1', 'a' | 'b' | 'c']>,
+  test.Expect<
+    Merge<['1', 'a'] | ['2', 'a' | 'b'], ['2', 'b' | 'c'] | ['3', 'c']>,
+    ['1', 'a'] | ['2', 'a' | 'b' | 'c'] | ['3', 'c']
+  >
+>;
+
+export type UnionMerge<U extends Map> = [U] extends [never]
+  ? never
+  : Keys<U> extends infer UKey
+  ? UKey extends any
+    ? [UKey, U extends [UKey, infer IItems] ? IItems : never]
+    : never
+  : never;
+
+type Keys<U extends Map> = [U] extends [[infer UKey, any]] ? UKey : never;
+
+declare const testUnionMerge: test.Describe<
+  test.Expect<UnionMerge<Empty | Empty>, Empty>,
+  test.Expect<UnionMerge<['1', 'a'] | Empty>, ['1', 'a']>,
+  test.Expect<UnionMerge<Empty | ['1', 'a']>, ['1', 'a']>,
+  test.Expect<UnionMerge<['1', 'a'] | ['1', 'b']>, ['1', 'a' | 'b']>,
+  test.Expect<UnionMerge<['1', 'a'] | ['2', 'b']>, ['1', 'a'] | ['2', 'b']>,
+  test.Expect<UnionMerge<['1', 'a' | 'b'] | ['1', 'b' | 'c']>, ['1', 'a' | 'b' | 'c']>,
+  test.Expect<
+    UnionMerge<['1', 'a'] | ['2', 'a' | 'b'] | ['2', 'b' | 'c'] | ['3', 'c']>,
+    ['1', 'a'] | ['2', 'a' | 'b' | 'c'] | ['3', 'c']
+  >
+>;
