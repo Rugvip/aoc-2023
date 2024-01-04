@@ -23,6 +23,8 @@ export type Make<TItem, TWidth extends number, THeight extends number = TWidth> 
   array.Make<TWidth, TItem>
 >;
 
+export type Copy<TItem, TGrid extends Grid> = Make<TItem, Width<TGrid>, Height<TGrid>>;
+
 export type Iter = vec2.Vec2;
 
 export type IterZero = vec2.Zero;
