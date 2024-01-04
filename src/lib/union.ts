@@ -59,36 +59,38 @@ declare const testRange: test.Describe<
 >;
 
 type MinMax<
-  N extends number,
+  N extends number | string,
   TOp extends 'lt' | 'gt',
-  TCurrent extends number | undefined = undefined,
+  TCurrent extends number | string | undefined = undefined,
   TPop = union.Pop<N>,
 > = TPop extends {
-  rest: infer IRest extends number;
-  next: infer INext extends number;
+  rest: infer IRest extends number | string;
+  next: infer INext extends number | string;
 }
   ? MinMax<
       IRest,
       TOp,
       undefined extends TCurrent
         ? INext
-        : bigint.Compare<INext, TCurrent & number> extends TOp
+        : bigint.Compare<INext, TCurrent> extends TOp
         ? INext
         : TCurrent
     >
   : TCurrent;
 
-export type Min<N extends number> = MinMax<N, 'lt'>;
-export type Max<N extends number> = MinMax<N, 'gt'>;
+export type Min<N extends number | string> = MinMax<N, 'lt'>;
+export type Max<N extends number | string> = MinMax<N, 'gt'>;
 
 declare const testMin: test.Describe<
   test.Expect<Min<5 | 2 | 3>, 2>,
+  test.Expect<Min<'5' | 2 | '3'>, 2>,
   test.Expect<Min<-5 | -12345 | 123456 | 123>, -12345>,
   test.Expect<Min<0>, 0>
 >;
 
 declare const testMax: test.Describe<
   test.Expect<Max<5 | 2 | 3>, 5>,
+  test.Expect<Max<'5' | 2 | '3'>, '5'>,
   test.Expect<Max<-5 | -12345 | 123456 | 123>, 123456>,
   test.Expect<Max<0>, 0>
 >;
