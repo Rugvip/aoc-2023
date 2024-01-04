@@ -1,5 +1,5 @@
 import { Input } from '../input/21';
-import { array, int, grid } from './lib';
+import { array, bigint, counter, grid } from './lib';
 
 // type Input1 = `...........
 // .....###.#.
@@ -13,6 +13,8 @@ import { array, int, grid } from './lib';
 // .##..##.##.
 // ...........
 // `;
+
+type Parsed = grid.Parse<Input>;
 
 type PathGrid = Parsed extends infer IGrid extends grid.Grid<string>
   ? {
@@ -65,12 +67,47 @@ type ExpandWalk<TGrid extends grid.Grid<boolean>> = grid.Or4<
   ShiftGridDown<TGrid>
 >;
 
-type NextWalkGrid<TGrid extends grid.Grid<boolean>> = grid.And<ExpandWalk<TGrid>, PathGrid>;
+type NextWalkGrid<TGrid extends grid.Grid<boolean>, TMask extends grid.Grid<boolean>> = grid.And<
+  ExpandWalk<TGrid>,
+  TMask
+>;
 
-type NWalkGrid<TCount extends number, TGrid extends grid.Grid<boolean>> = TCount extends 0
+type RepeatWalkGrid<
+  TCount extends number,
+  TGrid extends grid.Grid<boolean>,
+  TMask extends grid.Grid<boolean>,
+  TCounter extends counter.Counter = counter.Make<TCount>,
+> = TCounter extends counter.Zero
   ? TGrid
-  : NWalkGrid<int.Dec<TCount>, NextWalkGrid<TGrid>>;
+  : RepeatWalkGrid<TCount, NextWalkGrid<TGrid, TMask>, TMask, counter.Dec<TCounter>>;
 
-type Parsed = grid.Parse<Input>;
+type Solve1<TSteps extends number> = grid.Count<RepeatWalkGrid<TSteps, WalkGrid, PathGrid>, true>;
 
-export declare const solution1: grid.Count<NWalkGrid<64, WalkGrid>, true>;
+export declare const solution1: Solve1<64>;
+
+type Solve2<TSteps extends number> = [
+  bigint.Div<bigint.Sub<TSteps, 65>, 131>[0],
+  Solve1<64>,
+  Solve1<65>,
+  Solve1<130>,
+  Solve1<131>,
+] extends [
+  infer IScale extends string,
+  infer ICenterEven extends number,
+  infer ICenterOdd extends number,
+  infer ITotalEven extends number,
+  infer ITotalOdd extends number,
+]
+  ? bigint.Add<
+      bigint.Add<
+        bigint.Mul<bigint.Pow<IScale, 2>, ICenterEven>,
+        bigint.Mul<bigint.Pow<bigint.Inc<IScale>, 2>, ICenterOdd>
+      >,
+      bigint.Mul<
+        bigint.Mul<IScale, bigint.Inc<IScale>>,
+        bigint.Sub<bigint.Add<ITotalEven, ITotalOdd>, bigint.Add<ICenterEven, ICenterOdd>>
+      >
+    >
+  : never;
+
+export declare const solution2: Solve2<26501365>;
