@@ -29,6 +29,7 @@ export type Pop<T extends Queue> = '' extends T
 declare const testPop: test.Describe<
   test.Expect<Pop<Empty>, undefined>,
   test.Expect<Pop<Push<Empty, 'test'>>, [item: 'test', rest: Empty]>,
+  test.Expect<Pop<Pop<Push<Push<Empty, 'a'>, 'b'>[1]>>, [item: 'a', rest: Empty]>,
   test.Expect<Pop<3 | 'a;b;c;' | []>, [item: 'a', rest: 2 | 'b;c;' | []]>,
   test.Expect<Pop<0 | '' | ['2|a;b;']>, [item: 'a', rest: 1 | 'b;' | []]>
 >;
@@ -36,7 +37,7 @@ declare const testPop: test.Describe<
 export type Push<T extends Queue, TItem extends string> = IncTable[T extends number
   ? T
   : never] extends infer INextCount extends number
-  ? INextCount | `${T extends string ? T : never}${TItem};` | (T extends string[] ? T : never)
+  ? INextCount | `${TItem};${T extends string ? T : never}` | (T extends string[] ? T : never)
   :
       | `${TItem};`
       | 1
@@ -47,7 +48,7 @@ export type Push<T extends Queue, TItem extends string> = IncTable[T extends num
 
 declare const testPush: test.Describe<
   test.Expect<Push<Empty, 'test'>, 1 | 'test;' | []>,
-  test.Expect<Push<1 | 'a;' | [], 'test'>, 2 | 'a;test;' | []>,
-  test.Expect<Push<99 | 'a;' | [], 'test'>, 100 | 'a;test;' | []>,
+  test.Expect<Push<1 | 'a;' | [], 'test'>, 2 | 'test;a;' | []>,
+  test.Expect<Push<99 | 'a;' | [], 'test'>, 100 | 'test;a;' | []>,
   test.Expect<Push<100 | 'a;' | [], 'test'>, 1 | 'test;' | ['100|a;']>
 >;
