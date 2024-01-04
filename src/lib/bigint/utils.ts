@@ -1,5 +1,6 @@
 import * as test from '../test';
 import { Add } from './Add';
+import { Mul } from './Mul';
 
 export type Negate<T extends string | number> = `${T}` extends '0'
   ? '0'
@@ -12,6 +13,12 @@ export type Negate<T extends string | number> = `${T}` extends '0'
 export type IsNegative<T extends string | number> = `${T}` extends `-${string}` ? true : false;
 
 export type SignOf<T extends string | number> = `${T}` extends `-${string}` ? '-' : '+';
+
+export type Pow<
+  A extends string | number,
+  B extends string | number,
+  R extends string = '1',
+> = `${B}` extends '0' ? R : Pow<A, Dec<B>, Mul<R, A>>;
 
 export type Abs<T extends string | number> = `${T}` extends `-${infer N}` ? N : `${T}`;
 

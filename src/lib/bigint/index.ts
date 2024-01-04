@@ -4,4 +4,4 @@ export type { Mul } from './Mul';
 export type { Sub } from './Sub';
 export type { Add } from './Add';
 export type { Bit, Digit, Sign } from './types';
-export type { Negate, IsNegative, Abs, Inc, Dec, SignOf } from './utils';
+export type { Negate, IsNegative, Pow, Abs, Inc, Dec, SignOf } from './utils';
