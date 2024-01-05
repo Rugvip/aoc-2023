@@ -1,5 +1,6 @@
 import * as test from './test';
 import * as bigint from './bigint';
+import * as int from './int';
 import * as union from './union';
 
 export type ToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
@@ -46,10 +47,10 @@ declare const testToArray: test.Describe<
 
 type RangeImpl<TA extends number, TLen extends number> = TLen extends 0
   ? never
-  : TA | RangeImpl<bigint.Inc<TA>, bigint.Dec<TLen>>;
-export type Range<TA extends number, TB extends number> = bigint.Compare<TA, TB> extends 'gt'
+  : TA | RangeImpl<int.Inc<TA>, int.Dec<TLen>>;
+export type Range<TA extends number, TB extends number> = int.Compare<TA, TB> extends 'gt'
   ? Range<TB, TA>
-  : RangeImpl<TA, bigint.Inc<bigint.Subtract<TB, TA>>>;
+  : RangeImpl<TA, int.Inc<int.Subtract<TB, TA>>>;
 
 declare const testRange: test.Describe<
   test.Expect<Range<0, 0>, 0>,
