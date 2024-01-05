@@ -306,11 +306,9 @@ type CountRemovable<
           ? counter.Inc<TRemovable>
           : (
               USupporting extends any
-                ? [Exclude<TSupportedBy[USupporting], counter.Value<TIt>>] extends [never]
-                  ? 'no other supports'
-                  : 'supported'
+                ? HasOtherSupports<TSupportedBy, USupporting, counter.Value<TIt>>
                 : never
-            ) extends 'supported'
+            ) extends true
           ? counter.Inc<TRemovable>
           : TRemovable
         : never
@@ -327,3 +325,71 @@ type Solve1<TInput extends string> = SupportTables<
   : never;
 
 export declare const solution1: Solve1<Input>;
+
+type HasOtherSupports<
+  TSupportedBy extends number[],
+  TId extends number,
+  UExclude extends number = never,
+> = [Exclude<TSupportedBy[TId], TId | UExclude>] extends [never] ? false : true;
+
+type FallingUnionSize<
+  UFalling extends number,
+  TIt extends counter.Counter,
+  TCounter extends counter.Counter = counter.Zero,
+> = TIt extends counter.Done
+  ? counter.Value<TCounter>
+  : FallingUnionSize<
+      UFalling,
+      counter.Dec<TIt>,
+      counter.Value<TIt> extends UFalling ? counter.Inc<TCounter> : TCounter
+    >;
+
+type ExpandFalling<
+  TSupporting extends number[],
+  TSupportedBy extends number[],
+  UFalling extends number,
+> = TSupporting[UFalling] extends infer UFallingSupported extends number
+  ? (
+      UFallingSupported extends any
+        ? HasOtherSupports<TSupportedBy, UFallingSupported, UFalling> extends false
+          ? UFallingSupported
+          : never
+        : never
+    ) extends infer UNextFalling extends number
+    ? [Exclude<UNextFalling, UFalling>] extends [never]
+      ? UFalling
+      : ExpandFalling<TSupporting, TSupportedBy, UFalling | UNextFalling>
+    : never
+  : never;
+
+type CountTotalFalling<
+  TSupporting extends number[],
+  TSupportedBy extends number[],
+  TIt extends counter.Counter = counter.For<TSupporting>,
+  TSum extends number = 0,
+> = TIt extends counter.Done
+  ? TSum
+  : CountTotalFalling<
+      TSupporting,
+      TSupportedBy,
+      counter.Dec<TIt>,
+      int.Add<
+        TSum,
+        FallingUnionSize<
+          Exclude<ExpandFalling<TSupporting, TSupportedBy, counter.Value<TIt>>, counter.Value<TIt>>,
+          counter.For<TSupporting>
+        >
+      >
+    >;
+
+type Solve2<TInput extends string> = SupportTables<
+  ApplyGravity<ParseBlocks<TInput>>,
+  BlockCount<TInput>
+> extends {
+  supporting: infer ISupporting extends number[];
+  supportedBy: infer ISupportedBy extends number[];
+}
+  ? CountTotalFalling<ISupporting, ISupportedBy>
+  : never;
+
+export declare const solution2: Solve2<Input>;
