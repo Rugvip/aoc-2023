@@ -119,3 +119,26 @@ For example, `yarn run print 4` prints the output of day 4.
 | 23  | ⭐️ ⭐️ |
 | 24  | ⭐️ ⭐️ |
 | 25  | ⭐️ ⭐️ |
+
+## Challenges
+
+There are many properties of TypeScript compiler that makes it significantly more difficult to solve these challenges:
+
+- There are no arithmetic operations of any kind, they all had to be implemented from scratch.
+- It's slow compared to a regular language. A lot of problems that you can brute-force in other languages require more clever approaches upfront.
+- The available data structures are limited, and they are all immutable. Many common operations on string, array and object operations are slow. All mutating object (hashmap) operations are excessively slow to the point of being unusable.
+- Type instantiations are limited, you can't have more that `2^24` instances of any type since this is the maximum number of entries a JavaScript `Map` can hold. In particular you can't have too many different template literals (strings). For some of the more complex problems this means that you need to make sure you use a mix of different data structures in the solution, relying too much on any particular structure might cause you to hit this limit.
+- The above also applies to conditionals - yep, you're limited in how many unique conditional statements you can have in certain situations.
+- Unions are great and usually fast, but it's very costly to convert unions back to other data structures unless you have a limited search space. They're limited in how many items they can hold.
+- Tuples are fairly fast as long as their size is static. After a couple of hundred items resizing starts becoming slow, and around a thousand it's too slow to use.
+
+## Insights
+
+These are a few things that I learned about how to best use the TypeScript type system to solve these challenges:
+
+- Tail-call optimization should be used everywhere. All recursive types should use an accumulator.
+- Template literals (strings) is the fastest data structure for most use cases. They're fast for integer arithmetic, queues, even faster than tuples for tuple-like things like storing vectors. They're however bad at applying operations to each element, and index lookups, where tuples are better.
+- Objects are basically useless, they only situations where you want to use them is when you want to create a static lookup map that doesn't change and you can't use integer keys.
+- The best way that I found to implement a mutable hashmap is to use a union of key-value tuples. Comparatively this structure is very fast at mutations, although care needs to be taken to make sure you don't exceed a couple of hundred or maybe thousand unique keys.
+- Use unions where possible, but be prepared to refactor to use tuples or template literals if the union gets too big.
+- Array (tuple) map operations using mapped object types are fast and powerful when working with fixed-size data. Although you can't apply any operations to the indices, since that will cause a conversion to a regular and very slow object.
