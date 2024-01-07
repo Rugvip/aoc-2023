@@ -1,5 +1,5 @@
 import { Input } from '../input/16';
-import { counter, grid, int, vec2 } from './lib';
+import { counter, grid, int, queue, setmap, vec2 } from './lib';
 
 // type Input1 = `.|...\\....
 // |.-.\\.....
@@ -13,98 +13,197 @@ import { counter, grid, int, vec2 } from './lib';
 // ..//.|....
 // `;
 
-type Dir = '^' | '>' | 'v' | '<';
-type Cell = '|' | '-' | '\\' | '/';
-type Step<TVec extends vec2.Vec2 = vec2.Vec2, TDir extends Dir = Dir> = `${TVec}:${TDir}`;
+type SplitCell = '|' | '-';
+type ReflectCell = '/' | '\\';
+type Cell = '.' | SplitCell | ReflectCell;
 
 type NextStepsFrom<
   TLensGrid extends grid.Grid<'.' | Cell>,
-  TPos extends vec2.Vec2,
-  TDir extends Dir,
-> = grid.Vec2Step<TLensGrid, TPos, TDir> extends infer INextPos extends vec2.Vec2
-  ? [INextPos] extends [never]
-    ? []
-    : {
-        '.': [Step<INextPos, TDir>];
-        '|': TDir extends '^' | 'v'
-          ? [Step<INextPos, TDir>]
-          : [Step<INextPos, 'v'>, Step<INextPos, '^'>];
-        '-': TDir extends '<' | '>'
-          ? [Step<INextPos, TDir>]
-          : [Step<INextPos, '>'>, Step<INextPos, '<'>];
-        '\\': {
-          '^': [Step<INextPos, '<'>];
-          '>': [Step<INextPos, 'v'>];
-          v: [Step<INextPos, '>'>];
-          '<': [Step<INextPos, '^'>];
-        }[TDir];
-        '/': {
-          '^': [Step<INextPos, '>'>];
-          '>': [Step<INextPos, '^'>];
-          v: [Step<INextPos, '<'>];
-          '<': [Step<INextPos, 'v'>];
-        }[TDir];
-      }[grid.AtVec2<TLensGrid, INextPos>]
-  : never;
-
-type StepGrid<
-  TLensGrid extends grid.Grid<'.' | Cell>,
-  TStepQueue extends Step[],
-  TEnergyGrid extends grid.Grid<Dir> = grid.Make<
-    never,
-    grid.Width<TLensGrid>,
-    grid.Height<TLensGrid>
-  >,
-  TCurrentStep extends Step = never,
-> = [TCurrentStep] extends [never]
-  ? TStepQueue extends [infer IStep extends Step, ...infer IRestSteps extends Step[]]
-    ? StepGrid<TLensGrid, IRestSteps, TEnergyGrid, IStep>
-    : TEnergyGrid
-  : TCurrentStep extends Step<infer IPos extends vec2.Vec2, infer IDir extends Dir>
-  ? grid.AtVec2<TEnergyGrid, IPos> extends infer ICurrentEnergy extends Dir
-    ? IDir extends ICurrentEnergy
-      ? StepGrid<TLensGrid, TStepQueue, TEnergyGrid>
-      : grid.Vec2Set<
-          TEnergyGrid,
-          IPos,
-          ICurrentEnergy | IDir
-        > extends infer INextEnergyGrid extends grid.Grid<Dir>
-      ? NextStepsFrom<TLensGrid, IPos, IDir> extends [
-          infer INextStep extends Step,
-          ...infer INextSteps extends Step[],
-        ]
-        ? StepGrid<TLensGrid, [...TStepQueue, ...INextSteps], INextEnergyGrid, INextStep>
-        : StepGrid<TLensGrid, TStepQueue, INextEnergyGrid>
-      : never
+  TStep extends grid.Step,
+> = TStep extends grid.Step<infer IDir extends vec2.Dir, infer IPos extends vec2.Vec2>
+  ? grid.Vec2Step<TLensGrid, IPos, IDir> extends infer INextPos extends vec2.Vec2
+    ? [INextPos] extends [never]
+      ? ''
+      : {
+          '.': `${grid.Step<IDir, INextPos>};`;
+          '|': IDir extends '^' | 'v'
+            ? `${grid.Step<IDir, INextPos>};`
+            : `${grid.Step<'v', INextPos>};${grid.Step<'^', INextPos>};`;
+          '-': IDir extends '<' | '>'
+            ? `${grid.Step<IDir, INextPos>};`
+            : `${grid.Step<'>', INextPos>};${grid.Step<'<', INextPos>};`;
+          '\\': {
+            '^': `${grid.Step<'<', INextPos>};`;
+            '>': `${grid.Step<'v', INextPos>};`;
+            v: `${grid.Step<'>', INextPos>};`;
+            '<': `${grid.Step<'^', INextPos>};`;
+          }[IDir];
+          '/': {
+            '^': `${grid.Step<'>', INextPos>};`;
+            '>': `${grid.Step<'^', INextPos>};`;
+            v: `${grid.Step<'<', INextPos>};`;
+            '<': `${grid.Step<'v', INextPos>};`;
+          }[IDir];
+        }[grid.AtVec2<TLensGrid, INextPos>]
     : never
   : never;
 
-type ScoreGrid<
-  TEnergyGrid extends grid.Grid<string>,
-  TIter extends grid.Iter = grid.IterZero,
+type PushEach<
+  TQueue extends queue.Queue,
+  TSteps extends string,
+> = TSteps extends `${infer IHead};${infer IRest}`
+  ? PushEach<queue.Push<TQueue, IHead>, IRest>
+  : TQueue;
+
+type StepGridImpl<
+  TLensGrid extends grid.Grid<'.' | Cell>,
+  TStepQueue extends queue.Queue = queue.Empty,
+  TSeen extends string = ';',
+  TVisited extends string = ';',
   TCounter extends counter.Counter = counter.Zero,
-> = TIter extends grid.IterDone
-  ? counter.Value<TCounter>
-  : ScoreGrid<
-      TEnergyGrid,
-      grid.IterNext<TEnergyGrid, TIter>,
-      [grid.AtVec2<TEnergyGrid, TIter>] extends [never] ? TCounter : counter.Inc<TCounter>
-    >;
+> = queue.Pop<TStepQueue> extends [
+  head: infer IHead extends grid.Step,
+  rest: infer INextQueue extends queue.Queue,
+]
+  ? TSeen extends `${string};${IHead};${string}`
+    ? StepGridImpl<TLensGrid, INextQueue, TSeen, TVisited, TCounter>
+    : StepGridImpl<
+        TLensGrid,
+        PushEach<INextQueue, NextStepsFrom<TLensGrid, IHead>>,
+        `${TSeen}${IHead};`,
+        `${TVisited}${grid.StepPos<IHead>};`,
+        TVisited extends `${string};${grid.StepPos<IHead>};${string}`
+          ? TCounter
+          : counter.Inc<TCounter>
+      >
+  : counter.Value<counter.Dec<TCounter>>;
 
-type MaxScore<TLensGrid extends grid.Grid<'.' | Cell>, TStartSteps extends Step[]> = {
-  [I in keyof TStartSteps]: ScoreGrid<StepGrid<TLensGrid, [TStartSteps[I]]>>;
-};
+type StepGrid<TLensGrid extends grid.Grid<'.' | Cell>, TStart extends grid.Step> = StepGridImpl<
+  TLensGrid,
+  queue.Push<queue.Empty, TStart>
+>;
 
-type PointsAroundAtOffset<TGrid extends grid.Grid<string>, TOffset extends number> = [
-  Step<vec2.Vec2<TOffset, -1>, 'v'>,
-  Step<vec2.Vec2<TOffset, grid.Height<TGrid>>, '^'>,
-  Step<vec2.Vec2<-1, TOffset>, '>'>,
-  Step<vec2.Vec2<grid.Width<TGrid>, TOffset>, '<'>,
+type Solve1<TInput extends string> = StepGrid<grid.Parse<TInput>, grid.Step<'>', vec2.Vec2<-1, 0>>>;
+
+export declare const solution1: Solve1<Input>;
+
+type StepsAroundAtOffset<TGrid extends grid.Grid<string>, TOffset extends number> = [
+  grid.Step<'v', vec2.Vec2<TOffset, -1>>,
+  grid.Step<'^', vec2.Vec2<TOffset, grid.Height<TGrid>>>,
+  grid.Step<'>', vec2.Vec2<-1, TOffset>>,
+  grid.Step<'<', vec2.Vec2<grid.Width<TGrid>, TOffset>>,
 ];
 
-type Parsed = grid.Parse<Input>;
+type AllStepsAround<
+  TGrid extends grid.Grid<string>,
+  TCounter extends counter.Counter = counter.For<TGrid>,
+  TSteps extends grid.Step[] = [],
+> = TCounter extends counter.Done
+  ? TSteps
+  : AllStepsAround<
+      TGrid,
+      counter.Dec<TCounter>,
+      [...TSteps, ...StepsAroundAtOffset<TGrid, counter.Value<TCounter>>]
+    >;
 
-export declare const solution1: ScoreGrid<StepGrid<Parsed, [Step<vec2.Vec2<-1, 0>, '>'>]>>;
+type AddVisited<TVisited extends setmap.Map, TStep extends grid.Step> = TStep extends grid.Step<
+  any,
+  vec2.Vec2<infer IX, infer IY>
+>
+  ? setmap.Add<TVisited, IX, IY>
+  : never;
 
-// TODO: Finding the max here is currently a manual (and tedious) step.
-export declare const solution2: int.Max<MaxScore<Parsed, PointsAroundAtOffset<Parsed, 69>>[number]>;
+type TraceToSplit<
+  TLensGrid extends grid.Grid<'.' | Cell>,
+  TStart extends grid.Step,
+  TStep extends grid.Step = TStart,
+  TVisited extends setmap.Map = setmap.Empty,
+> = NextStepsFrom<TLensGrid, TStep> extends `${infer IHead extends grid.Step};${infer IRest}`
+  ? IRest extends `${infer IOther extends grid.Step};`
+    ? [visited: AddVisited<TVisited, IHead>, split: `${IHead};${IOther};`]
+    : IHead extends TStart
+    ? [visited: TVisited, split: '']
+    : TraceToSplit<TLensGrid, TStart, IHead, AddVisited<TVisited, IHead>>
+  : [visited: TVisited, split: ''];
+
+type Trace<TLensGrid extends grid.Grid<'.' | Cell>, TStep extends grid.Step> = TraceToSplit<
+  TLensGrid,
+  TStep
+>;
+
+type ValueSum<
+  TMap extends setmap.Map,
+  TIt extends counter.Counter = counter.Make<110>,
+  TSum extends number = 0,
+> = TIt extends counter.Done
+  ? TSum
+  : ValueSum<
+      TMap,
+      counter.Dec<TIt>,
+      setmap.Get<TMap, counter.Value<TIt>> extends infer ISum extends number
+        ? int.Add<TSum, ISum>
+        : TSum
+    >;
+
+type UnionCount<
+  U extends number,
+  TIt extends counter.Counter = counter.Make<110>,
+  TCounter extends counter.Counter = counter.Zero,
+> = TIt extends counter.Done
+  ? counter.Value<TCounter>
+  : UnionCount<
+      U,
+      counter.Dec<TIt>,
+      counter.Value<TIt> extends U ? counter.Inc<TCounter> : TCounter
+    >;
+
+type VisitedSum<TVisited extends setmap.Map> = setmap.Keys<TVisited> extends infer UKey
+  ? ValueSum<UKey extends any ? [UKey, UnionCount<setmap.Get<TVisited, UKey>>] : never>
+  : never;
+
+type StepGridWithTracing<
+  TLensGrid extends grid.Grid<'.' | Cell>,
+  TStepQueue extends string = '',
+  TSeen extends string = ';',
+  TVisited extends setmap.Map = setmap.Empty,
+> = TStepQueue extends `${infer IHead extends grid.Step};${infer INextQueue}`
+  ? TSeen extends `${string};${IHead};${string}`
+    ? StepGridWithTracing<TLensGrid, INextQueue, TSeen, TVisited>
+    : Trace<TLensGrid, IHead> extends [
+        infer IVisited extends setmap.Map,
+        infer ISplit extends string,
+      ]
+    ? StepGridWithTracing<
+        TLensGrid,
+        `${ISplit}${INextQueue}`,
+        `${TSeen}${IHead};`,
+        TVisited | IVisited
+      >
+    : Trace<TLensGrid, IHead> extends [
+        infer IVisited extends setmap.Map,
+        infer ISplit extends string,
+      ]
+    ? StepGridWithTracing<TLensGrid, `${ISplit}${INextQueue}`, TSeen, TVisited | IVisited>
+    : never
+  : VisitedSum<setmap.UnionMerge<TVisited>>;
+
+type Solve2Impl<
+  TLensGrid extends grid.Grid<'.' | Cell>,
+  TSteps extends grid.Step[],
+  TIt extends counter.Counter = counter.For<TSteps>,
+  TMax extends number = 0,
+> = TIt extends counter.Done
+  ? TMax
+  : Solve2Impl<
+      TLensGrid,
+      TSteps,
+      counter.Dec<TIt>,
+      int.Max<StepGridWithTracing<TLensGrid, `${TSteps[counter.Value<TIt>]};`>, TMax>
+    >;
+
+type Solve2<TInput extends string> = Solve2Impl<
+  grid.Parse<TInput>,
+  AllStepsAround<grid.Parse<TInput>>
+>;
+
+export declare const solution2: Solve2<Input>;
