@@ -73,7 +73,7 @@ type MinMax<
       TOp,
       undefined extends TCurrent
         ? INext
-        : bigint.Compare<INext, TCurrent> extends TOp
+        : bigint.Compare<INext, TCurrent & (string | number)> extends TOp
         ? INext
         : TCurrent
     >
