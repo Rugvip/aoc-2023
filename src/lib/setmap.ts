@@ -1,14 +1,14 @@
 import * as test from './test';
 
-export type Map = [string, string];
+export type Map = [any, any];
 export type Empty = never;
 
-export type BulkAdd<TMap extends Map, UEntries extends string> = [UEntries] extends [never]
+export type BulkAdd<TMap extends Map, UEntries> = [UEntries] extends [never]
   ? TMap
   : [UEntries] extends [`${infer IKey}=${string}`]
   ?
       | (IKey extends TMap[0]
-          ? TMap extends [IKey, infer IItems extends string]
+          ? TMap extends [IKey, infer IItems]
             ? [IKey, IItems | ([UEntries] extends [`${IKey}=${infer IValue}`] ? IValue : never)]
             : never
           : [IKey, [UEntries] extends [`${IKey}=${infer IValue}`] ? IValue : never])
@@ -29,8 +29,8 @@ declare const testBulkAdd: test.Describe<
   >
 >;
 
-export type RemoveValues<TMap extends Map, UValues extends string> = TMap extends any
-  ? TMap extends [infer IKey, infer IItems extends string]
+export type RemoveValues<TMap extends Map, UValues> = TMap extends any
+  ? TMap extends [infer IKey, infer IItems]
     ? [IKey, IItems extends UValues ? never : IItems]
     : never
   : never;
@@ -45,11 +45,8 @@ declare const testBulkRemoveValues: test.Describe<
   >
 >;
 
-export type Add<TMap extends Map, TKey extends string, TValue extends string> = [
-  TKey,
-  any,
-] extends TMap
-  ? TMap extends [TKey, infer IItems extends string]
+export type Add<TMap extends Map, TKey, TValue> = [TKey, any] extends TMap
+  ? TMap extends [TKey, infer IItems]
     ? [TKey, IItems | TValue]
     : TMap
   : TMap | [TKey, TValue];
@@ -65,8 +62,8 @@ declare const testAdd: test.Describe<
   test.Expect<Add<['1', 'a' | 'b'] | ['2', 'c'], '2', 'd'>, ['1', 'a' | 'b'] | ['2', 'c' | 'd']>
 >;
 
-export type Get<TMap extends Map, TKey extends string> = [TKey, any] extends TMap
-  ? TMap extends [TKey, infer IItems extends string]
+export type Get<TMap extends Map, TKey> = [TKey, any] extends TMap
+  ? TMap extends [TKey, infer IItems]
     ? IItems
     : never
   : never;
@@ -80,7 +77,7 @@ declare const testGet: test.Describe<
   test.Expect<Get<['1', 'a' | 'b'] | ['2', 'c'], '2'>, 'c'>
 >;
 
-export type Remove<TMap extends Map, TKey extends string> = TMap extends [TKey, any] ? never : TMap;
+export type Remove<TMap extends Map, TKey> = TMap extends [TKey, any] ? never : TMap;
 
 declare const testRemove: test.Describe<
   test.Expect<Remove<Empty, '1'>, never>,
@@ -121,7 +118,7 @@ export type UnionMerge<U extends Map> = [U] extends [never]
     : never
   : never;
 
-type Keys<U extends Map> = [U] extends [[infer UKey, any]] ? UKey : never;
+export type Keys<U extends Map> = [U] extends [[infer UKey, any]] ? UKey : never;
 
 declare const testUnionMerge: test.Describe<
   test.Expect<UnionMerge<Empty | Empty>, Empty>,
