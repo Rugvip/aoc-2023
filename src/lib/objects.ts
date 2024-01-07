@@ -42,3 +42,15 @@ declare const testSet: test.Describe<
   test.Expect<Set<{ a: 1; b: 3 }, 'a', 2>, { a: 2; b: 3 }>,
   test.Expect<Set<{ b: 2 }, 'a', 1>, { a: 1; b: 2 }>
 >;
+
+export type FromEntries<TEntries extends [string, any][]> =
+  TEntries[number] extends infer UEntires extends [string, any]
+    ? { [K in UEntires[0]]: UEntires extends [K, infer IValues] ? IValues : never }
+    : never;
+
+declare const testFromEntries: test.Describe<
+  test.Expect<FromEntries<[]>, {}>,
+  test.Expect<FromEntries<[['a', 1]]>, { a: 1 }>,
+  test.Expect<FromEntries<[['a', 1], ['b', 2]]>, { a: 1; b: 2 }>,
+  test.Expect<FromEntries<[['a', 1], ['a', 2]]>, { a: 1 | 2 }>
+>;
